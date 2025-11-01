@@ -26,7 +26,7 @@ app.use("/uploads/notes", express.static(path.join(__dirname, "uploads/notes")))
 app.use("/uploads/assignments", express.static(path.join(__dirname, "uploads/assignments")));
 
 // ✅ Serve frontend
-app.use(express.static(path.join(__dirname, "../frontend")));
+app.use(express.static(path.join(__dirname, "../docs")));
 
 // ✅ Debug route for videos
 app.get("/api/test-video", (req, res) => {
