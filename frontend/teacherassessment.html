@@ -1,0 +1,2425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillUp - Assessment Evaluation</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary-red: #ff4757;
+      --primary-red-dark: #ff3742;
+      --primary-red-light: #ff6b6b;
+      --accent-red: #ff8e8e;
+      --light-red: rgba(255, 71, 87, 0.1);
+      --dark-red: rgba(255, 71, 87, 0.3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --text-primary: #ffffff;
+      --text-secondary: #adb5bd;
+      --sidebar-bg: linear-gradient(180deg, #ff4757, #ff3742);
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      background: var(--bg-main);
+      min-height: 100vh;
+    }
+    
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 71, 87, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 71, 87, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Loading Animation */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-red);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Dashboard Layout */
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+    
+    /* Sidebar Styles */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(255, 71, 87, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #1a1d29, #252937);
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: #ff3742;
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg,#ff4757, transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: white;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+    }
+
+    /* Logout at bottom */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-dark));
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--dark-red);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-container {
+      position: relative;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--primary-red);
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      padding: 40px 30px;
+      background: var(--bg-secondary);
+      margin: 30px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--dark-red);
+    }
+
+    .welcome::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.05), rgba(255, 142, 142, 0.05));
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes welcomeGlow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .welcome-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .welcome h1 {
+      color: var(--text-primary);
+      font-size: 36px;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6)); }
+    }
+
+    .welcome p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      max-width: 600px;
+    }
+
+    /* Content Sections */
+    .content-section {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      padding: 2rem;
+      margin: 0 30px 2rem;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    /* Filter Controls */
+    .filter-controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-select {
+      padding: 0.8rem 1.2rem;
+      border-radius: 10px;
+      border: 1px solid var(--dark-red);
+      background: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      min-width: 200px;
+    }
+    
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 1.2rem;
+      text-align: left;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .data-table th {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      background: rgba(255, 71, 87, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .data-table tr:hover {
+      background: var(--light-red);
+    }
+    
+    .student-cell {
+      display: flex;
+      align-items: center;
+    }
+    
+    .student-avatar-small {
+      width: 35px;
+      height: 35px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 1rem;
+      font-size: 0.9rem;
+    }
+    
+    .student-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .student-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .student-email {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .status-badge {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .status-pending {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--primary-red);
+    }
+    
+    .status-completed {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--primary-red);
+    }
+    
+    .status-draft {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--primary-red);
+    }
+    
+    .action-btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+    }
+    
+    .btn-secondary {
+      background: var(--light-red);
+      color: var(--primary-red);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--dark-red);
+    }
+    
+    /* Evaluation Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 2rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .evaluation-modal {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid var(--dark-red);
+    }
+    
+    .modal-overlay.active .evaluation-modal {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      padding: 2rem;
+      border-bottom: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.3s ease;
+    }
+    
+    .close-modal:hover {
+      color: var(--primary-red);
+    }
+    
+    .modal-body {
+      padding: 2rem;
+    }
+    
+    .student-info-modal {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .student-avatar-large {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 1.5rem;
+      font-size: 1.3rem;
+    }
+    
+    .assessment-details {
+      margin-bottom: 2rem;
+      color: var(--text-secondary);
+    }
+    
+    .assessment-details h4 {
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .question-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--dark-red);
+    }
+    
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    
+    .question-text {
+      font-weight: 600;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+    
+    .student-answer {
+      background: var(--bg-main);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid var(--primary-red);
+      color: var(--text-secondary);
+    }
+    
+    .evaluation-controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    
+    .score-input {
+      width: 80px;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--dark-red);
+      background: var(--bg-main);
+      color: var(--text-primary);
+    }
+    
+    .score-input:disabled {
+      background-color: var(--card-bg);
+      cursor: not-allowed;
+    }
+    
+    .feedback-textarea {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--dark-red);
+      font-family: 'Inter', sans-serif;
+      resize: vertical;
+      min-height: 100px;
+      background: var(--bg-main);
+      color: var(--text-primary);
+    }
+    
+    .feedback-textarea:disabled {
+      background-color: var(--card-bg);
+      cursor: not-allowed;
+    }
+    
+    .total-score-section {
+      background: var(--light-red);
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin: 2rem 0;
+      text-align: center;
+      border: 1px solid var(--dark-red);
+    }
+    
+    .total-score {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-red);
+    }
+    
+    .modal-footer {
+      padding: 2rem;
+      border-top: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+    
+    /* Disabled state for evaluated submissions */
+    .disabled-controls .score-input,
+    .disabled-controls .feedback-textarea {
+      background-color: var(--card-bg);
+      cursor: not-allowed;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      display: block;
+      opacity: 0.5;
+      color: var(--primary-red);
+    }
+    
+    .empty-state h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    /* Success Popup Styles */
+    .success-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .success-popup-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .success-popup {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 3rem;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid var(--dark-red);
+    }
+    
+    .success-popup-overlay.active .success-popup {
+      transform: translateY(0);
+    }
+    
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 2rem;
+      position: relative;
+    }
+    
+    .check-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid var(--primary-red);
+    }
+    
+    .check-icon::before {
+      top: 3px;
+      left: -2px;
+      width: 30px;
+      transform-origin: 100% 50%;
+      border-radius: 100px 0 0 100px;
+    }
+    
+    .check-icon::after {
+      top: 0;
+      left: 30px;
+      width: 60px;
+      transform-origin: 0 50%;
+      border-radius: 0 100px 100px 0;
+      animation: rotate-circle 4.25s ease-in;
+    }
+    
+    .check-icon::before, .check-icon::after {
+      content: '';
+      height: 100px;
+      position: absolute;
+      background: var(--bg-secondary);
+      transform: rotate(-45deg);
+    }
+    
+    .icon-line {
+      height: 5px;
+      background-color: var(--primary-red);
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+    
+    .icon-line.line-tip {
+      top: 46px;
+      left: 14px;
+      width: 25px;
+      transform: rotate(45deg);
+      animation: icon-line-tip 0.75s;
+    }
+    
+    .icon-line.line-long {
+      top: 38px;
+      right: 8px;
+      width: 47px;
+      transform: rotate(-45deg);
+      animation: icon-line-long 0.75s;
+    }
+    
+    .icon-circle {
+      top: -4px;
+      left: -4px;
+      z-index: 10;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: absolute;
+      box-sizing: content-box;
+      border: 4px solid rgba(255, 71, 87, 0.5);
+    }
+    
+    .icon-fix {
+      top: 8px;
+      width: 5px;
+      left: 26px;
+      z-index: 1;
+      height: 85px;
+      position: absolute;
+      transform: rotate(-45deg);
+      background-color: var(--bg-secondary);
+    }
+    
+    @keyframes rotate-circle {
+      0% { transform: rotate(-45deg); }
+      5% { transform: rotate(-45deg); }
+      12% { transform: rotate(-405deg); }
+      100% { transform: rotate(-405deg); }
+    }
+    
+    @keyframes icon-line-tip {
+      0% { width: 0; left: 1px; top: 19px; }
+      54% { width: 0; left: 1px; top: 19px; }
+      70% { width: 50px; left: -8px; top: 37px; }
+      84% { width: 17px; left: 21px; top: 48px; }
+      100% { width: 25px; left: 14px; top: 45px; }
+    }
+    
+    @keyframes icon-line-long {
+      0% { width: 0; right: 46px; top: 54px; }
+      65% { width: 0; right: 46px; top: 54px; }
+      84% { width: 55px; right: 0px; top: 35px; }
+      100% { width: 47px; right: 8px; top: 38px; }
+    }
+    
+    /* Notification Dropdown */
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--dark-red);
+      z-index: 1000;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .notification-clear {
+      background: transparent;
+      border: none;
+      color: var(--primary-red);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      padding: 10px 0;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--dark-red);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      background: var(--light-red);
+    }
+
+    .notification-item.unread {
+      background: var(--light-red);
+    }
+
+    .notification-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .notification-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+    
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      background: rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 5s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-10px) translateX(20px); }
+      75% { transform: translateY(-15px) translateX(-10px); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .evaluation-modal {
+        max-width: 95%;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        max-width: 320px;
+      }
+      
+      .main-content {
+        padding: 1rem;
+        padding-top: 6rem;
+      }
+      
+      .topbar {
+        padding: 0 20px;
+      }
+      
+      .welcome {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+      
+      .content-section {
+        margin: 0 20px 2rem;
+      }
+      
+      .filter-controls {
+        flex-direction: column;
+      }
+      
+      .filter-select {
+        min-width: 100%;
+      }
+      
+      .modal-body {
+        padding: 1rem;
+      }
+      
+      .modal-header {
+        padding: 1.5rem;
+      }
+      
+      .modal-footer {
+        padding: 1.5rem;
+        flex-direction: column;
+      }
+      
+      .evaluation-controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .notification-dropdown {
+        width: 280px;
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Loading Animation -->
+  <div class="loading-container" id="loadingContainer">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your dashboard...</div>
+  </div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="teacherdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="teacherstudent.html"><i class="fas fa-users"></i> Students</a></li>
+        <li><a href="#" class="active"><i class="fas fa-clipboard-check"></i> Assessments</a></li>
+        <li><a href="teacheranalytics.html"><i class="fas fa-chart-line"></i> Analytics</a></li>
+        <li><a href="teachermessages.html"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="teacherschedule.html"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+        <li><a href="teacherprofile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">Assessment Evaluation</div>
+        </div>
+        
+        <div class="user-info">
+          <!-- Single Notification Container -->
+          <div class="notification-container">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="notification-clear" id="clearNotifications">Clear All</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be populated here -->
+              </div>
+            </div>
+          </div>
+          <div class="avatar">
+            <span id="userInitials">AJ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Section -->
+      <section class="welcome">
+        <div class="welcome-content">
+          <h1 id="welcomeMessage">Assessment Evaluation</h1>
+          <p id="welcomeSubtitle">Evaluate student assignments and final tests</p>
+        </div>
+      </section>
+      
+      <!-- Filter Controls -->
+      <div class="content-section">
+        <div class="filter-controls">
+          <select class="filter-select" id="assessmentTypeFilter">
+            <option value="">All Types</option>
+            <option value="assignment">Assignment</option>
+            <option value="final-test">Final Test</option>
+          </select>
+          <select class="filter-select" id="statusFilter">
+            <option value="">All Statuses</option>
+            <option value="submitted">Pending Evaluation</option>
+            <option value="draft">Draft Evaluation</option>
+            <option value="completed">Evaluated</option>
+          </select>
+        </div>
+        
+        <div class="section-header">
+          <h2 class="section-title">Student Submissions</h2>
+          <div id="submissionCount">0 submissions</div>
+        </div>
+        
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Assessment</th>
+                <th>Type</th>
+                <th>Submitted Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="assignmentsTableBody">
+              <tr>
+                <td colspan="7" class="empty-state">
+                  <i class="fas fa-clipboard-list"></i>
+                  <h3>Loading submissions...</h3>
+                  <p>Please wait while we fetch student submissions</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evaluation Modal -->
+  <div class="modal-overlay" id="evaluationModal">
+    <div class="evaluation-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Evaluate Submission</h2>
+        <button class="close-modal" id="closeModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="student-info-modal">
+          <div class="student-avatar-large" id="modalStudentAvatar">JD</div>
+          <div>
+            <h3 id="modalStudentName">John Doe</h3>
+            <p id="modalStudentEmail">john.doe@example.com</p>
+          </div>
+        </div>
+        
+        <div class="assessment-details">
+          <h4>Assessment: <span id="modalAssignmentTitle">Final Exam</span></h4>
+          <p>Course: <span id="modalCourseName">Advanced Mathematics</span></p>
+          <p>Type: <span id="modalAssessmentType">Final Test</span></p>
+          <p>Submitted: <span id="modalSubmittedDate">June 15, 2023</span></p>
+          <p>Max Score: <span id="modalMaxScore">100</span></p>
+        </div>
+        
+        <div id="questionsContainer">
+          <!-- Questions will be dynamically inserted here -->
+        </div>
+        
+        <div class="total-score-section">
+          <h4>Final Score</h4>
+          <div class="total-score" id="totalScoreDisplay">0 / 100</div>
+          <div id="passFailStatus" class="status-badge status-pending" style="margin-top: 10px;">Not Evaluated</div>
+        </div>
+        
+        <div class="overall-feedback">
+          <h4>Overall Feedback</h4>
+          <textarea class="feedback-textarea" id="overallFeedback" placeholder="Provide overall feedback for the student..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn btn-secondary" id="saveDraftBtn">Save Draft</button>
+        <button class="action-btn btn-primary" id="submitEvaluationBtn">Submit Evaluation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Popup -->
+  <div class="success-popup-overlay" id="successPopup">
+    <div class="success-popup">
+      <div class="success-checkmark">
+        <div class="check-icon">
+          <span class="icon-line line-tip"></span>
+          <span class="icon-line line-long"></span>
+          <div class="icon-circle"></div>
+          <div class="icon-fix"></div>
+        </div>
+      </div>
+      <h3>Success!</h3>
+      <p id="successMessage">Evaluation submitted successfully!</p>
+      <button class="action-btn btn-primary" id="closeSuccessPopup">OK</button>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="evaluation-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Logout</h2>
+        <button class="close-modal" id="closeLogoutModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn btn-secondary" id="cancelLogoutBtn">Cancel</button>
+        <button class="action-btn btn-primary" id="confirmLogoutBtn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { 
+    getAuth, 
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import { 
+    getFirestore, 
+    collection, 
+    query, 
+    where, 
+    getDocs,
+    doc,
+    getDoc,
+    updateDoc,
+    setDoc,
+    orderBy,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+    authDomain: "growup-93f5d.firebaseapp.com",
+    projectId: "growup-93f5d",
+    storageBucket: "growup-93f5d.firebasestorage.app",
+    messagingSenderId: "775742235468",
+    appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+    measurementId: "G-FWBKTSQDS9"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // DOM Elements
+  const loadingContainer = document.getElementById('loadingContainer');
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const closeSidebar = document.getElementById('closeSidebar');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const notificationIcon = document.getElementById('notificationIcon');
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  const notificationBadge = document.getElementById('notificationBadge');
+  const notificationList = document.getElementById('notificationList');
+  const clearNotifications = document.getElementById('clearNotifications');
+  const userInitials = document.getElementById('userInitials');
+  const welcomeMessage = document.getElementById('welcomeMessage');
+  const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+  const assessmentTypeFilter = document.getElementById('assessmentTypeFilter');
+  const statusFilter = document.getElementById('statusFilter');
+  const submissionCount = document.getElementById('submissionCount');
+  const assignmentsTableBody = document.getElementById('assignmentsTableBody');
+  const evaluationModal = document.getElementById('evaluationModal');
+  const closeModal = document.getElementById('closeModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalStudentAvatar = document.getElementById('modalStudentAvatar');
+  const modalStudentName = document.getElementById('modalStudentName');
+  const modalStudentEmail = document.getElementById('modalStudentEmail');
+  const modalAssignmentTitle = document.getElementById('modalAssignmentTitle');
+  const modalCourseName = document.getElementById('modalCourseName');
+  const modalAssessmentType = document.getElementById('modalAssessmentType');
+  const modalSubmittedDate = document.getElementById('modalSubmittedDate');
+  const modalMaxScore = document.getElementById('modalMaxScore');
+  const questionsContainer = document.getElementById('questionsContainer');
+  const overallFeedback = document.getElementById('overallFeedback');
+  const saveDraftBtn = document.getElementById('saveDraftBtn');
+  const submitEvaluationBtn = document.getElementById('submitEvaluationBtn');
+  const totalScoreDisplay = document.getElementById('totalScoreDisplay');
+  const passFailStatus = document.getElementById('passFailStatus');
+  const successPopup = document.getElementById('successPopup');
+  const closeSuccessPopup = document.getElementById('closeSuccessPopup');
+  const successMessage = document.getElementById('successMessage');
+  const logoutModal = document.getElementById('logoutModal');
+  const closeLogoutModal = document.getElementById('closeLogoutModal');
+  const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+  const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+
+  // Current teacher data
+  let currentTeacher = null;
+  let submissions = [];
+  let currentEvaluation = null;
+  let currentSubmissionStatus = null;
+  let notifications = [];
+
+  // Check authentication state
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("User authenticated:", user.uid);
+      try {
+        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+        
+        if (teacherDoc.exists()) {
+          currentTeacher = { id: user.uid, ...teacherDoc.data() };
+          console.log("Teacher data loaded:", currentTeacher);
+          
+          // Update UI with teacher info
+          userInitials.textContent = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+          welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
+          welcomeSubtitle.textContent = `Evaluate student assignments and final tests`;
+          
+          // Set up real-time notifications
+          setupNotifications();
+          
+          // Load all submissions
+          await loadSubmissions();
+          
+          // Hide loading animation
+          setTimeout(() => {
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+          }, 1000);
+          
+        } else {
+          console.error("Teacher document not found for user:", user.uid);
+          window.location.href = "teachersignin.html";
+        }
+      } catch (error) {
+        console.error("Error getting teacher document:", error);
+        showError("Authentication error: " + error.message);
+      }
+    } else {
+      console.log("User not authenticated, redirecting to login");
+      window.location.href = "teachersignin.html";
+    }
+  });
+
+  // Helper function to get initials
+  function getInitials(firstName, lastName) {
+    if (!firstName || !lastName) return "TU";
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  }
+
+  // Load all submissions (assignments and final tests) for the current teacher
+  async function loadSubmissions() {
+    try {
+      submissions = [];
+      
+      console.log("Loading submissions from Firestore for teacher:", currentTeacher.id);
+      
+      // Get teacher's courses first
+      const teacherCourses = await getTeacherCourses();
+      
+      console.log("Teacher courses:", teacherCourses);
+      
+      // Load assignment submissions
+      const assignmentSubmissionsQuery = query(collection(db, "submissions"));
+      const assignmentSubmissionsSnapshot = await getDocs(assignmentSubmissionsQuery);
+      
+      console.log("All assignment submissions in database:", assignmentSubmissionsSnapshot.size);
+      
+      for (const doc of assignmentSubmissionsSnapshot.docs) {
+        const submission = doc.data();
+        
+        // Check if this submission belongs to the teacher
+        const belongsToTeacher = await checkIfSubmissionBelongsToTeacher(submission, teacherCourses);
+        
+        if (belongsToTeacher) {
+          await processSubmission(doc, 'assignment');
+        }
+      }
+      
+      // Load test submissions
+      try {
+        const testSubmissionsQuery = query(collection(db, "testSubmissions"));
+        const testSubmissionsSnapshot = await getDocs(testSubmissionsQuery);
+        console.log("All test submissions in database:", testSubmissionsSnapshot.size);
+        
+        for (const doc of testSubmissionsSnapshot.docs) {
+          const submission = doc.data();
+          
+          // Check if this submission belongs to the teacher
+          const belongsToTeacher = await checkIfSubmissionBelongsToTeacher(submission, teacherCourses);
+          
+          if (belongsToTeacher) {
+            await processSubmission(doc, 'final-test');
+          }
+        }
+      } catch (error) {
+        console.log("Error loading test submissions:", error.message);
+      }
+      
+      console.log("Total submissions loaded for teacher:", submissions.length);
+      
+      // Update submission count
+      submissionCount.textContent = `${submissions.length} submissions`;
+      
+      // Display submissions
+      displaySubmissions(submissions);
+      
+    } catch (error) {
+      console.error("Error loading submissions:", error);
+      showError("Error loading submissions: " + error.message);
+    }
+  }
+
+  // Get teacher's courses
+  async function getTeacherCourses() {
+    try {
+      const coursesQuery = query(
+        collection(db, "courses"),
+        where("instructorId", "==", currentTeacher.id)
+      );
+      const coursesSnapshot = await getDocs(coursesQuery);
+      const courses = [];
+      
+      coursesSnapshot.forEach(doc => {
+        courses.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      console.log("Teacher courses found:", courses.length);
+      return courses;
+    } catch (error) {
+      console.error("Error getting teacher courses:", error);
+      return [];
+    }
+  }
+
+  // Check if a submission belongs to the current teacher
+  async function checkIfSubmissionBelongsToTeacher(submission, teacherCourses) {
+    // Method 1: Check if submission has instructorId matching current teacher
+    if (submission.instructorId === currentTeacher.id) {
+      return true;
+    }
+    
+    // Method 2: Check if submission has teacherId matching current teacher
+    if (submission.teacherId === currentTeacher.id) {
+      return true;
+    }
+    
+    // Method 3: Check if submission has evaluatorId matching current teacher
+    if (submission.evaluatorId === currentTeacher.id) {
+      return true;
+    }
+    
+    // Method 4: Check if submission's course is in teacher's courses
+    if (submission.courseId) {
+      const courseBelongsToTeacher = teacherCourses.some(course => course.id === submission.courseId);
+      if (courseBelongsToTeacher) {
+        return true;
+      }
+    }
+    
+    // Method 5: Check course name against teacher's courses
+    if (submission.courseName) {
+      const courseBelongsToTeacher = teacherCourses.some(course => 
+        course.courseName === submission.courseName || 
+        course.title === submission.courseName
+      );
+      if (courseBelongsToTeacher) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  // Process a single submission document
+  async function processSubmission(doc, type) {
+    const submission = doc.data();
+    
+    console.log("Processing submission:", submission);
+    
+    // Set max score to 100 for all assessments
+    const maxScore = 100;
+    
+    // Determine status based on evaluated field or status field
+    let status = 'submitted';
+    if (submission.evaluated === true || submission.status === 'completed') {
+      status = 'completed';
+    } else if (submission.status === 'draft') {
+      status = 'draft';
+    }
+    
+    submissions.push({
+      id: doc.id,
+      ...submission,
+      maxScore: maxScore,
+      studentInitials: getInitialsFromName(submission.studentName),
+      assignmentTitle: submission.assignmentTitle || 'Unknown Assessment',
+      courseName: submission.courseName || 'General Course',
+      assessmentType: type,
+      submittedDate: submission.submittedAt ? 
+        submission.submittedAt.toDate().toLocaleDateString() : 'Unknown Date',
+      status: status,
+      collectionType: type === 'final-test' ? 'testSubmissions' : 'submissions'
+    });
+  }
+
+  // Helper function to get initials from full name
+  function getInitialsFromName(fullName) {
+    if (!fullName) return "??";
+    const names = fullName.split(' ');
+    if (names.length >= 2) {
+      return (names[0].charAt(0) + names[1].charAt(0)).toUpperCase();
+    }
+    return fullName.substring(0, 2).toUpperCase();
+  }
+
+  // Display submissions in the table
+  function displaySubmissions(submissionsToShow) {
+    console.log("Displaying submissions:", submissionsToShow);
+    
+    if (submissionsToShow.length === 0) {
+      assignmentsTableBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h3>No submissions found</h3>
+            <p>No assignments or tests have been submitted for your courses yet.</p>
+            <p><small>Check the browser console for more details.</small></p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    assignmentsTableBody.innerHTML = '';
+    
+    submissionsToShow.forEach(submission => {
+      const row = document.createElement('tr');
+      
+      // Determine status badge class
+      let statusClass = 'status-pending';
+      let statusText = 'Submitted';
+      
+      if (submission.status === 'completed' || submission.evaluated === true) {
+        statusClass = 'status-completed';
+        statusText = 'Evaluated';
+      } else if (submission.status === 'draft') {
+        statusClass = 'status-draft';
+        statusText = 'Draft';
+      }
+      
+      // Determine assessment type display
+      const assessmentType = submission.assessmentType === 'final-test' ? 'Final Test' : 'Assignment';
+      
+      // Determine button text and class based on status
+      const isEvaluated = submission.status === 'completed' || submission.evaluated === true;
+      const buttonClass = isEvaluated ? 'btn-secondary' : 'btn-primary';
+      const buttonText = isEvaluated ? 'View' : 'Evaluate';
+      
+      row.innerHTML = `
+        <td>
+          <div class="student-cell">
+            <div class="student-avatar-small">${submission.studentInitials}</div>
+            <div class="student-info">
+              <div class="student-name">${submission.studentName}</div>
+              <div class="student-email">${submission.studentEmail}</div>
+            </div>
+          </div>
+        </td>
+        <td>${submission.courseName}</td>
+        <td>${submission.assignmentTitle}</td>
+        <td>${assessmentType}</td>
+        <td>${submission.submittedDate}</td>
+        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+        <td>
+          <button class="action-btn ${buttonClass}" 
+                  onclick="openEvaluationModal('${submission.id}')">
+            ${buttonText}
+          </button>
+        </td>
+      `;
+      
+      assignmentsTableBody.appendChild(row);
+    });
+  }
+
+  // Open evaluation modal
+  window.openEvaluationModal = async (submissionId) => {
+    try {
+      const submission = submissions.find(s => s.id === submissionId);
+      
+      if (!submission) {
+        alert('Submission not found');
+        return;
+      }
+      
+      console.log("Opening evaluation for submission:", submission);
+      
+      // Set modal content
+      modalStudentAvatar.textContent = submission.studentInitials;
+      modalStudentName.textContent = submission.studentName;
+      modalStudentEmail.textContent = submission.studentEmail;
+      modalAssignmentTitle.textContent = submission.assignmentTitle;
+      modalCourseName.textContent = submission.courseName;
+      modalAssessmentType.textContent = submission.assessmentType === 'final-test' ? 'Final Test' : 'Assignment';
+      modalSubmittedDate.textContent = submission.submittedDate;
+      modalMaxScore.textContent = 100; // Always show 100 as max score
+      
+      // Store current submission status
+      currentSubmissionStatus = submission.status;
+      
+      // Check if submission is already evaluated
+      const isEvaluated = submission.status === 'completed' || submission.evaluated === true;
+      
+      if (isEvaluated) {
+        modalTitle.textContent = "View Submission";
+        saveDraftBtn.style.display = 'none';
+        submitEvaluationBtn.style.display = 'none';
+      } else {
+        modalTitle.textContent = "Evaluate Submission";
+        saveDraftBtn.style.display = 'block';
+        submitEvaluationBtn.style.display = 'block';
+      }
+      
+      // Clear previous questions
+      questionsContainer.innerHTML = '';
+      
+      // Extract questions and answers from the answers array
+      let questionsData = [];
+      
+      if (submission.answers && Array.isArray(submission.answers)) {
+        questionsData = submission.answers.map((answerObj, index) => {
+          // Get existing evaluation for this question if available
+          const existingEvaluation = submission.evaluations && 
+            submission.evaluations.find(evaluation => evaluation.questionIndex === index);
+          
+          return {
+            question: answerObj.questionText || `Question ${index + 1}`,
+            answer: answerObj.answer || 'No answer provided',
+            maxScore: answerObj.points || 100,
+            existingScore: existingEvaluation ? existingEvaluation.score : '',
+            existingFeedback: existingEvaluation ? existingEvaluation.feedback : ''
+          };
+        });
+        console.log("Found questions in answers array:", questionsData);
+      } else {
+        // Fallback if no answers array
+        questionsData = [{
+          question: 'Complete Assessment',
+          answer: submission.answer || 'No specific answer data available',
+          maxScore: 100,
+          existingScore: submission.score || '',
+          existingFeedback: submission.feedback || ''
+        }];
+      }
+      
+      console.log("Final questions data to display:", questionsData);
+      
+      // Calculate total max score and distribute points
+      const totalQuestions = questionsData.length;
+      const basePointsPerQuestion = Math.floor(100 / totalQuestions);
+      let remainingPoints = 100 - (basePointsPerQuestion * totalQuestions);
+      
+      // Add questions to modal
+      questionsData.forEach((question, index) => {
+        // Distribute points (some questions might get 1 extra point if not divisible evenly)
+        let questionMaxScore = basePointsPerQuestion;
+        if (remainingPoints > 0) {
+          questionMaxScore++;
+          remainingPoints--;
+        }
+        
+        const questionSection = document.createElement('div');
+        questionSection.className = `question-section ${isEvaluated ? 'disabled-controls' : ''}`;
+        
+        questionSection.innerHTML = `
+          <div class="question-header">
+            <h4>Question ${index + 1}</h4>
+            <div>Max Score: ${questionMaxScore}</div>
+          </div>
+          <div class="question-text">
+            ${question.question || 'Question text not available'}
+          </div>
+          <div class="student-answer">
+            <strong>Student's Answer:</strong><br>
+            ${question.answer || 'No answer provided'}
+          </div>
+          <div class="evaluation-controls">
+            <label>Score:</label>
+            <input type="number" class="score-input" id="score-${index}" 
+                   min="0" max="${questionMaxScore}" 
+                   value="${question.existingScore}" 
+                   placeholder="0" ${isEvaluated ? 'disabled' : ''}>
+            <span>/ ${questionMaxScore}</span>
+          </div>
+          <div>
+            <label>Feedback:</label>
+            <textarea class="feedback-textarea" id="feedback-${index}" 
+                      placeholder="Provide feedback for this answer..." ${isEvaluated ? 'disabled' : ''}>${question.existingFeedback}</textarea>
+          </div>
+        `;
+        
+        questionsContainer.appendChild(questionSection);
+      });
+      
+      // Set overall feedback if it exists
+      overallFeedback.value = submission.feedback || '';
+      overallFeedback.disabled = isEvaluated;
+      
+      // Update total score display and pass/fail status
+      updateTotalScoreDisplay();
+      
+      // Store current evaluation data
+      currentEvaluation = {
+        submissionId: submissionId,
+        assignmentId: submission.assignmentId,
+        testId: submission.testId,
+        studentId: submission.studentId,
+        courseId: submission.courseId,
+        assessmentType: submission.assessmentType,
+        currentStatus: submission.status,
+        evaluated: submission.evaluated,
+        maxScore: 100, // Always 100
+        collectionType: submission.collectionType,
+        totalQuestions: questionsData.length
+      };
+      
+      // Add event listeners to score inputs to update total score (only if not evaluated)
+      if (!isEvaluated) {
+        document.querySelectorAll('.score-input').forEach(input => {
+          input.addEventListener('input', updateTotalScoreDisplay);
+        });
+      }
+      
+      // Show modal
+      evaluationModal.classList.add('active');
+      
+    } catch (error) {
+      console.error("Error opening evaluation modal:", error);
+      alert('Error loading assessment details: ' + error.message);
+    }
+  };
+
+  // Update total score display and pass/fail status
+  function updateTotalScoreDisplay() {
+    if (!currentEvaluation) return;
+    
+    let totalScore = 0;
+    const maxTotalScore = 100; // Always 100
+    
+    for (let i = 0; i < currentEvaluation.totalQuestions; i++) {
+      const scoreInput = document.getElementById(`score-${i}`);
+      if (scoreInput) {
+        const score = parseInt(scoreInput.value) || 0;
+        totalScore += score;
+      }
+    }
+    
+    // Ensure total score doesn't exceed 100
+    totalScore = Math.min(totalScore, maxTotalScore);
+    
+    totalScoreDisplay.textContent = `${totalScore} / ${maxTotalScore}`;
+    
+    // Update pass/fail status
+    const passPercentage = (totalScore / maxTotalScore) * 100;
+    if (passPercentage >= 70) {
+      passFailStatus.textContent = 'PASS';
+      passFailStatus.className = 'status-badge status-completed';
+    } else {
+      passFailStatus.textContent = 'FAIL';
+      passFailStatus.className = 'status-badge status-pending';
+    }
+  }
+
+  // Close evaluation modal
+  closeModal.addEventListener('click', () => {
+    evaluationModal.classList.remove('active');
+    currentEvaluation = null;
+    currentSubmissionStatus = null;
+  });
+
+  // Save evaluation as draft
+  saveDraftBtn.addEventListener('click', async () => {
+    if (!currentEvaluation) return;
+    
+    // Check if already evaluated
+    if (currentSubmissionStatus === 'completed' || currentEvaluation.evaluated === true) {
+      alert('This submission has already been evaluated and cannot be modified.');
+      return;
+    }
+    
+    try {
+      const evaluations = [];
+      let totalScore = 0;
+      
+      for (let i = 0; i < currentEvaluation.totalQuestions; i++) {
+        const scoreInput = document.getElementById(`score-${i}`);
+        const feedbackInput = document.getElementById(`feedback-${i}`);
+        
+        if (scoreInput && feedbackInput) {
+          const score = parseInt(scoreInput.value) || 0;
+          const maxScore = parseInt(scoreInput.max) || 10;
+          const feedback = feedbackInput.value;
+          
+          evaluations.push({
+            questionIndex: i,
+            score: score,
+            maxScore: maxScore,
+            feedback: feedback
+          });
+          
+          totalScore += score;
+        }
+      }
+      
+      // Ensure total score doesn't exceed 100
+      totalScore = Math.min(totalScore, 100);
+      
+      const passPercentage = (totalScore / 100) * 100;
+      const isPass = passPercentage >= 70;
+      
+      // Update submission in the correct collection
+      const collectionName = currentEvaluation.collectionType || 'submissions';
+      const submissionRef = doc(db, collectionName, currentEvaluation.submissionId);
+      
+      const updateData = {
+        evaluations: evaluations,
+        feedback: overallFeedback.value,
+        grade: totalScore,
+        maxScore: 100,
+        status: 'draft',
+        isPass: isPass,
+        evaluatedAt: new Date(),
+        evaluatorId: currentTeacher.id,
+        evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`
+      };
+      
+      console.log("Saving draft evaluation:", updateData);
+      await updateDoc(submissionRef, updateData);
+      
+      successMessage.textContent = 'Evaluation saved as draft successfully!';
+      successPopup.classList.add('active');
+      await loadSubmissions();
+      
+    } catch (error) {
+      console.error("Error saving evaluation draft:", error);
+      alert('Error saving evaluation draft: ' + error.message);
+    }
+  });
+
+  // Submit final evaluation
+  submitEvaluationBtn.addEventListener('click', async () => {
+    if (!currentEvaluation) return;
+    
+    // Check if already evaluated
+    if (currentSubmissionStatus === 'completed' || currentEvaluation.evaluated === true) {
+      alert('This submission has already been evaluated and cannot be modified.');
+      return;
+    }
+    
+    try {
+      const evaluations = [];
+      let totalScore = 0;
+      
+      for (let i = 0; i < currentEvaluation.totalQuestions; i++) {
+        const scoreInput = document.getElementById(`score-${i}`);
+        const feedbackInput = document.getElementById(`feedback-${i}`);
+        
+        if (scoreInput && feedbackInput) {
+          const score = parseInt(scoreInput.value) || 0;
+          const maxScore = parseInt(scoreInput.max) || 10;
+          const feedback = feedbackInput.value;
+          
+          evaluations.push({
+            questionIndex: i,
+            score: score,
+            maxScore: maxScore,
+            feedback: feedback
+          });
+          
+          totalScore += score;
+        }
+      }
+      
+      // Ensure total score doesn't exceed 100
+      totalScore = Math.min(totalScore, 100);
+      
+      const passPercentage = (totalScore / 100) * 100;
+      const isPass = passPercentage >= 70;
+      
+      // Update submission in the correct collection
+      const collectionName = currentEvaluation.collectionType || 'submissions';
+      const submissionRef = doc(db, collectionName, currentEvaluation.submissionId);
+      
+      const updateData = {
+        evaluations: evaluations,
+        feedback: overallFeedback.value,
+        grade: totalScore,
+        maxScore: 100,
+        status: 'completed',
+        evaluated: true,
+        isPass: isPass,
+        evaluatedAt: new Date(),
+        evaluatorId: currentTeacher.id,
+        evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`
+      };
+      
+      console.log("Submitting final evaluation:", updateData);
+      await updateDoc(submissionRef, updateData);
+      
+      successMessage.textContent = 'Evaluation submitted successfully! Results have been sent to the student.';
+      successPopup.classList.add('active');
+      
+      evaluationModal.classList.remove('active');
+      currentEvaluation = null;
+      currentSubmissionStatus = null;
+      await loadSubmissions();
+      
+    } catch (error) {
+      console.error("Error submitting evaluation:", error);
+      alert('Error submitting evaluation: ' + error.message);
+    }
+  });
+
+  // Close success popup
+  closeSuccessPopup.addEventListener('click', () => {
+    successPopup.classList.remove('active');
+  });
+
+  // Filter submissions based on selected filters
+  function filterSubmissions() {
+    const assessmentType = assessmentTypeFilter.value;
+    const status = statusFilter.value;
+    
+    let filteredSubmissions = submissions;
+    
+    if (assessmentType) {
+      filteredSubmissions = filteredSubmissions.filter(s => s.assessmentType === assessmentType);
+    }
+    
+    if (status) {
+      filteredSubmissions = filteredSubmissions.filter(s => s.status === status);
+    }
+    
+    submissionCount.textContent = `${filteredSubmissions.length} submissions`;
+    displaySubmissions(filteredSubmissions);
+  }
+
+  // Add event listeners to filters
+  assessmentTypeFilter.addEventListener('change', filterSubmissions);
+  statusFilter.addEventListener('change', filterSubmissions);
+
+  // Sidebar toggle functionality
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      mainContent.classList.add('sidebar-open');
+    });
+  }
+
+  if (closeSidebar) {
+    closeSidebar.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      mainContent.classList.remove('sidebar-open');
+    });
+  }
+
+  // Close sidebar on outside click
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('active')) {
+      if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+        sidebar.classList.remove('active');
+        mainContent.classList.remove('sidebar-open');
+      }
+    }
+  });
+
+  // Notification bell toggle
+  if (notificationIcon) {
+    notificationIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (notificationDropdown) {
+        notificationDropdown.classList.toggle('active');
+      }
+    });
+  }
+
+  // Close notification dropdown when clicking outside
+  document.addEventListener('click', () => {
+    if (notificationDropdown && notificationDropdown.classList.contains('active')) {
+      notificationDropdown.classList.remove('active');
+    }
+  });
+
+  // Set up real-time notifications
+  function setupNotifications() {
+    // Generate demo notifications based on submissions
+    notifications = [];
+    
+    if (submissions.length > 0) {
+      submissions.forEach(submission => {
+        const notificationTypes = [
+          {
+            type: 'submission',
+            icon: 'fa-clipboard-check',
+            title: 'New Submission',
+            message: `${submission.studentName} submitted ${submission.assignmentTitle}`,
+            time: new Date(),
+            read: false
+          },
+          {
+            type: 'evaluation',
+            icon: 'fa-check-circle',
+            title: 'Evaluation Reminder',
+            message: `${submission.studentName}'s submission is pending evaluation`,
+            time: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+            read: false
+          }
+        ];
+        
+        // Add one random notification per submission for demo
+        const randomNotification = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+        notifications.push(randomNotification);
+      });
+    }
+    
+    // Sort notifications by time (newest first)
+    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    // Update notification count and display
+    updateNotificationDisplay();
+  }
+  
+  // Update notification display
+  function updateNotificationDisplay() {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationBadge.textContent = unreadCount;
+    
+    // Update notification dropdown
+    notificationList.innerHTML = '';
+    
+    if (notifications.length === 0) {
+      notificationList.innerHTML = `
+        <div class="notification-empty">
+          <i class="fas fa-bell-slash"></i>
+          <p>No notifications</p>
+          <small>You're all caught up!</small>
+        </div>
+      `;
+    } else {
+      notifications.forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
+        notificationItem.addEventListener('click', () => markNotificationAsRead(notification));
+        
+        notificationItem.innerHTML = `
+          <div class="notification-title">${notification.title}</div>
+          <div class="notification-message">${notification.message}</div>
+          <div class="notification-time">${formatDate(notification.time)}</div>
+        `;
+        
+        notificationList.appendChild(notificationItem);
+      });
+    }
+  }
+  
+  // Mark notification as read
+  function markNotificationAsRead(notification) {
+    notification.read = true;
+    updateNotificationDisplay();
+  }
+  
+  // Helper function to format date
+  function formatDate(date) {
+    if (!date) return "Never";
+    
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  }
+
+  // Clear notifications
+  if (clearNotifications) {
+    clearNotifications.addEventListener('click', () => {
+      notifications = [];
+      updateNotificationDisplay();
+    });
+  }
+
+  // Logout functionality
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      logoutModal.classList.add('active');
+    });
+  }
+
+  if (closeLogoutModal) {
+    closeLogoutModal.addEventListener('click', () => {
+      logoutModal.classList.remove('active');
+    });
+  }
+
+  if (cancelLogoutBtn) {
+    cancelLogoutBtn.addEventListener('click', () => {
+      logoutModal.classList.remove('active');
+    });
+  }
+
+  if (confirmLogoutBtn) {
+    confirmLogoutBtn.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+    });
+  }
+
+  // Close modal when clicking outside
+  evaluationModal.addEventListener('click', (e) => {
+    if (e.target === evaluationModal) {
+      evaluationModal.classList.remove('active');
+      currentEvaluation = null;
+      currentSubmissionStatus = null;
+    }
+  });
+
+  // Show error message
+  function showError(message) {
+    assignmentsTableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Error</h3>
+          <p>${message}</p>
+          <p><small>Check browser console for details</small></p>
+        </td>
+      </tr>
+    `;
+  }
+
+  // Create floating particles
+  function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+    
+    const numberOfParticles = 20;
+
+    for (let i = 0; i < numberOfParticles; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+      particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+      particle.style.animationDelay = Math.random() * 5 + 's';
+      particle.style.backgroundColor = `rgba(255, 71, 87, ${Math.random() * 0.3})`;
+      particlesContainer.appendChild(particle);
+    }
+  }
+
+  // Initialize particles when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    createParticles();
+  });
+</script>
+</body>
+</html>

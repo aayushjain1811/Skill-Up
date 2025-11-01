@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - SkillUp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <style>
+    :root {
+      --primary: #ffffff;
+      --primary-dark: #f8f9fa;
+      --accent: #08d9d6;
+      --light: #4361ee;
+      --success: #00f5ff;
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+      --gray: #adb5bd;
+      --error: #ff4757;
+      --warning: #ffa502;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(67, 97, 238, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 97, 238, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 5%;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+      position: relative;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 5%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .signup-container {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      width: 100%;
+      max-width: 500px;
+      padding: 3rem;
+      margin: 2rem 0;
+      backdrop-filter: blur(20px);
+      animation: fadeIn 0.8s ease-out;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .signup-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.05), rgba(0, 245, 255, 0.05));
+      animation: glow 4s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes glow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .signup-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .signup-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: float 3s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .signup-header h1 {
+      font-size: 2rem;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      animation: textGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(0, 245, 255, 0.6)); }
+    }
+
+    .signup-header p {
+      color: var(--gray);
+      font-size: 1rem;
+    }
+
+    form {
+      position: relative;
+      z-index: 2;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: 2px solid rgba(67, 97, 238, 0.3);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: var(--bg-main);
+      color: var(--primary);
+    }
+
+    .form-group input:focus {
+      border-color: var(--light);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    .form-group input.invalid {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.2);
+    }
+
+    .password-toggle {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 38px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray);
+      font-size: 0.9rem;
+      transition: color 0.3s ease;
+    }
+
+    .toggle-password:hover {
+      color: var(--success);
+    }
+
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      gap: 0.5rem;
+    }
+
+    .terms input {
+      margin-top: 0.2rem;
+      accent-color: var(--light);
+    }
+
+    .terms label {
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+
+    .terms a {
+      color: var(--success);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .terms a:hover {
+      color: var(--light);
+      text-decoration: underline;
+    }
+
+    .recaptcha-container {
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+
+    .signup-button {
+      width: 100%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .signup-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .signup-button:hover::before {
+      left: 100%;
+    }
+
+    .signup-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    .signup-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .signin-link {
+      text-align: center;
+      color: var(--gray);
+    }
+
+    .signin-link a {
+      color: var(--success);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .signin-link a:hover {
+      color: var(--light);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message, .success-message, .domain-notification {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      display: none;
+      animation: slideIn 0.5s ease;
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .error-message {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--error);
+      border-left: 4px solid var(--error);
+    }
+
+    .success-message {
+      background: rgba(0, 245, 255, 0.2);
+      color: var(--success);
+      border-left: 4px solid var(--success);
+    }
+
+    .domain-notification {
+      background: rgba(255, 165, 2, 0.2);
+      color: var(--warning);
+      border-left: 4px solid var(--warning);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .domain-notification i {
+      font-size: 1.2rem;
+      margin-top: 2px;
+    }
+
+    .domain-notification.error {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--error);
+      border-left: 4px solid var(--error);
+    }
+
+    .footer {
+      background: var(--bg-secondary);
+      color: var(--gray);
+      padding: 2rem 5%;
+      text-align: center;
+      border-top: 1px solid rgba(67, 97, 238, 0.2);
+      position: relative;
+      z-index: 1;
+    }
+
+    .copyright {
+      font-size: 0.9rem;
+    }
+
+    /* SkillBot Styles - Half size of index page version */
+    #skillbot-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      height: 350px;
+      z-index: 1000;
+      pointer-events: none;
+      transition: all 0.5s ease;
+    }
+
+    #skillbot-container canvas {
+      border-radius: 20px;
+      transition: all 0.5s ease;
+      pointer-events: auto;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .skillbot-message {
+      position: absolute;
+      bottom: 100%;
+      right: 50px;
+      background: linear-gradient(135deg, rgba(67, 97, 238, 0.95), rgba(0, 245, 255, 0.95));
+      color: var(--primary);
+      padding: 15px 20px;
+      border-radius: 20px 20px 5px 20px;
+      max-width: 280px;
+      font-size: 0.95rem;
+      box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .skillbot-message.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .skillbot-message::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 30px;
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 0px solid transparent;
+      border-top: 15px solid rgba(0, 245, 255, 0.95);
+    }
+
+    /* SkillBot states for modal interaction */
+    .skillbot-blurred {
+      filter: blur(4px);
+      opacity: 0.5;
+      transition: 0.3s;
+    }
+    
+    .skillbot-hidden {
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .signup-container {
+        padding: 2rem;
+        margin: 1rem;
+      }
+
+      .signup-header h1 {
+        font-size: 1.8rem;
+      }
+
+      .recaptcha-container {
+        transform: scale(0.9);
+        transform-origin: center;
+      }
+
+      #skillbot-container {
+        width: 150px;
+        height: 188px;
+        bottom: 10px;
+        right: 10px;
+      }
+
+      .skillbot-message {
+        max-width: 200px;
+        font-size: 0.8rem;
+        padding: 10px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a href="../index.html" class="logo">SkillUp</a>
+  </header>
+
+  <main class="main-content">
+    <div class="signup-container">
+      <div class="error-message" id="errorMessage"></div>
+      <div class="success-message" id="successMessage"></div>
+      <div class="domain-notification" id="domainNotification"></div>
+      
+      <div class="signup-header">
+        <div class="signup-icon">🎓</div>
+        <h1>Student Sign Up</h1>
+        <p>Create your account to start your learning journey</p>
+      </div>
+      
+      <form id="studentSignupForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" placeholder="First name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" placeholder="Last name" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+        </div>
+        
+        <div class="form-group password-toggle">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Create a password" required>
+          <button type="button" class="toggle-password" id="togglePassword">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        
+        <div class="form-group password-toggle">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+          <button type="button" class="toggle-password" id="toggleConfirmPassword">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        
+        <div class="terms">
+          <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+          <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+        </div>
+        
+        <div class="recaptcha-container">
+          <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" data-theme="dark"></div>
+        </div>
+        
+        <button type="submit" class="signup-button" id="signupButton">
+          <span id="buttonText">Create Account</span>
+        </button>
+        
+        <div class="signin-link">
+          Already have an account? <a href="signin.html">Sign in as Student</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- SkillBot Container -->
+  <div id="skillbot-container">
+    <div class="skillbot-message" id="skillbotMessage">👋 Welcome future learner! I'm SkillBot — let's get you started with SkillUp.</div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="copyright">© 2023 SkillUp. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+      authDomain: "growup-93f5d.firebaseapp.com",
+      projectId: "growup-93f5d",
+      storageBucket: "growup-93f5d.firebasestorage.app",
+      messagingSenderId: "775742235468",
+      appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+      measurementId: "G-FWBKTSQDS9"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM Elements
+    const signupForm = document.getElementById('studentSignupForm');
+    const signupButton = document.getElementById('signupButton');
+    const buttonText = document.getElementById('buttonText');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const domainNotification = document.getElementById('domainNotification');
+
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const emailInput = document.getElementById('email');
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    const agreeTermsCheckbox = document.getElementById('agreeTerms');
+
+    const trustedDomains = [
+      "gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", 
+      "protonmail.com", "aol.com", "zoho.com", "yandex.com", "mail.com"
+    ];
+
+    const blockedDomains = [
+      "tempmail.com", "10minutemail.com", "guerrillamail.com", "mailinator.com",
+      "throwawaymail.com", "fakeinbox.com", "trashmail.com", "disposablemail.com",
+      "tempmailaddress.com", "getairmail.com", "mytemp.email", "temp-mail.org",
+      "tempail.com", "maildrop.cc", "getnada.com", "yopmail.com", "sharklasers.com"
+    ];
+
+    const teacherDomains = ["@teacherschool.org", "@faculty.edu", "@teach.example.com"];
+
+    // SkillBot Implementation
+    class SkillBot {
+      constructor() {
+        this.container = document.getElementById('skillbot-container');
+        this.messageElement = document.getElementById('skillbotMessage');
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.robot = null;
+        this.clock = new THREE.Clock();
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.messageTimeout = null;
+        this.idleTimer = null;
+        this.isModalOpen = false;
+        this.messageQueue = [];
+        this.isProcessingMessage = false;
+        
+        // Motivational messages
+        this.motivationalMessages = [
+          "📚 Learning today builds your tomorrow.",
+          "✨ Your future self will thank you for starting now.",
+          "🧠 SkillUp — where your ideas grow stronger."
+        ];
+        
+        this.init();
+        this.setupMessagePlan();
+        this.setupScrollBehavior();
+        this.setupClickInteraction();
+      }
+      
+      init() {
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(50, 300/350, 0.1, 1000);
+        this.camera.position.z = 5;
+        
+        this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        this.renderer.setSize(300, 350);
+        this.renderer.setClearColor(0x000000, 0);
+        this.container.appendChild(this.renderer.domElement);
+        
+        const ambient = new THREE.AmbientLight(0x404040, 1.5);
+        const point1 = new THREE.PointLight(0x4361ee, 2, 100);
+        point1.position.set(3, 3, 3);
+        const point2 = new THREE.PointLight(0x00f5ff, 1.5, 100);
+        point2.position.set(-3, -2, 2);
+        
+        this.scene.add(ambient, point1, point2);
+        
+        this.createEnhancedRobot();
+        this.setupEventListeners();
+        this.animate();
+      }
+      
+      setupMessagePlan() {
+        // 🟢 1. On Page Load (Greeting)
+        setTimeout(() => {
+          this.showMessage("👋 Welcome future learner! I'm SkillBot — let's get you started with SkillUp.");
+        }, 1500);
+        
+        // 🟠 2. While User Is Typing Name
+        firstNameInput.addEventListener('focus', () => {
+          this.showMessage("💫 Great! Let's personalize your journey — enter your full name.");
+        });
+        
+        lastNameInput.addEventListener('focus', () => {
+          this.showMessage("💫 Great! Let's personalize your journey — enter your full name.");
+        });
+        
+        // 🔵 3. While Typing Email
+        emailInput.addEventListener('focus', () => {
+          this.showMessage("📧 Use a valid email so we can send your course updates and certificates!");
+        });
+        
+        // 🟣 4. While Typing Password
+        passwordInput.addEventListener('focus', () => {
+          this.showMessage("🔒 Create a strong password — learning is valuable, so keep it secure!");
+        });
+        
+        // 🟡 5. On Hover Over 'Sign Up' Button
+        signupButton.addEventListener('mouseenter', () => {
+          this.showMessage("🚀 Ready to begin your SkillUp journey? Let's go!");
+        });
+        
+        // Start idle timer for motivational messages
+        this.startIdleTimer();
+      }
+      
+      setupScrollBehavior() {
+        window.addEventListener('scroll', () => {
+          // Keep SkillBot always visible in the corner
+          // No changes on scroll for this implementation
+        });
+      }
+      
+      setupClickInteraction() {
+        // Make the skillbot canvas clickable
+        const canvas = this.container.querySelector('canvas');
+        if (canvas) {
+          canvas.addEventListener('click', () => {
+            this.showMessage("👋 Hi! I'm SkillBot, your learning assistant! I'm here to guide you through the signup process.");
+          });
+        }
+      }
+      
+      startIdleTimer() {
+        this.resetIdleTimer();
+        
+        // Reset timer on user interaction
+        ['mousemove', 'click', 'keypress', 'scroll'].forEach(event => {
+          document.addEventListener(event, () => {
+            this.resetIdleTimer();
+          });
+        });
+      }
+      
+      resetIdleTimer() {
+        if (this.idleTimer) {
+          clearTimeout(this.idleTimer);
+        }
+        
+        this.idleTimer = setTimeout(() => {
+          // Show random motivational message
+          const randomIndex = Math.floor(Math.random() * this.motivationalMessages.length);
+          this.showMessage(this.motivationalMessages[randomIndex]);
+        }, 10000); // 10 seconds
+      }
+      
+      createEnhancedRobot() {
+        this.robot = new THREE.Group();
+        
+        // Body with gradient-like effect
+        const bodyGeometry = new THREE.SphereGeometry(0.4, 32, 32);
+        const bodyMaterial = new THREE.MeshPhongMaterial({
+          color: 0x4361ee,
+          emissive: 0x1a2555,
+          shininess: 90,
+          specular: 0x00f5ff
+        });
+        this.body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        this.robot.add(this.body);
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(0.25, 32, 32);
+        const headMaterial = new THREE.MeshPhongMaterial({
+          color: 0x3a0ca3,
+          emissive: 0x1a0551,
+          shininess: 100,
+          specular: 0x00f5ff
+        });
+        this.head = new THREE.Mesh(headGeometry, headMaterial);
+        this.head.position.y = 0.55;
+        this.robot.add(this.head);
+        
+        // Antenna
+        const antennaGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.2, 16);
+        const antennaMaterial = new THREE.MeshPhongMaterial({
+          color: 0x00f5ff,
+          emissive: 0x00f5ff,
+          emissiveIntensity: 0.5
+        });
+        const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
+        antenna.position.y = 0.2;
+        this.head.add(antenna);
+        
+        // Antenna glow
+        const glowGeometry = new THREE.SphereGeometry(0.04, 16, 16);
+        const glowMaterial = new THREE.MeshPhongMaterial({
+          color: 0x00f5ff,
+          emissive: 0x00f5ff,
+          emissiveIntensity: 1,
+          transparent: true,
+          opacity: 0.8
+        });
+        this.antennaGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+        this.antennaGlow.position.y = 0.125;
+        antenna.add(this.antennaGlow);
+        
+        // Eyes
+        const eyeGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+        const eyeMaterial = new THREE.MeshPhongMaterial({
+          color: 0xffffff,
+          emissive: 0xffffff,
+          emissiveIntensity: 0.3
+        });
+        
+        this.leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        this.leftEye.position.set(-0.09, 0.025, 0.21);
+        this.head.add(this.leftEye);
+        
+        this.rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        this.rightEye.position.set(0.09, 0.025, 0.21);
+        this.head.add(this.rightEye);
+        
+        // Pupils
+        const pupilGeometry = new THREE.SphereGeometry(0.03, 16, 16);
+        const pupilMaterial = new THREE.MeshPhongMaterial({
+          color: 0x00f5ff,
+          emissive: 0x00f5ff,
+          emissiveIntensity: 0.8
+        });
+        
+        this.leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+        this.leftPupil.position.z = 0.04;
+        this.leftEye.add(this.leftPupil);
+        
+        this.rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+        this.rightPupil.position.z = 0.04;
+        this.rightEye.add(this.rightPupil);
+        
+        // Chest panel
+        const panelGeometry = new THREE.BoxGeometry(0.3, 0.2, 0.025);
+        const panelMaterial = new THREE.MeshPhongMaterial({
+          color: 0x00f5ff,
+          emissive: 0x00f5ff,
+          emissiveIntensity: 0.4,
+          transparent: true,
+          opacity: 0.8
+        });
+        this.chestPanel = new THREE.Mesh(panelGeometry, panelMaterial);
+        this.chestPanel.position.set(0, 0.1, 0.375);
+        this.robot.add(this.chestPanel);
+        
+        // Arms
+        const armGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.4, 16);
+        const armMaterial = new THREE.MeshPhongMaterial({
+          color: 0x3a0ca3,
+          emissive: 0x1a0551,
+          shininess: 80
+        });
+        
+        this.leftArm = new THREE.Mesh(armGeometry, armMaterial);
+        this.leftArm.position.set(-0.475, 0.15, 0);
+        this.leftArm.rotation.z = Math.PI / 6;
+        this.robot.add(this.leftArm);
+        
+        this.rightArm = new THREE.Mesh(armGeometry, armMaterial);
+        this.rightArm.position.set(0.475, 0.15, 0);
+        this.rightArm.rotation.z = -Math.PI / 6;
+        this.robot.add(this.rightArm);
+        
+        // Hands
+        const handGeometry = new THREE.SphereGeometry(0.075, 16, 16);
+        const handMaterial = new THREE.MeshPhongMaterial({
+          color: 0x4361ee,
+          emissive: 0x1a2555,
+          shininess: 90
+        });
+        
+        const leftHand = new THREE.Mesh(handGeometry, handMaterial);
+        leftHand.position.y = -0.225;
+        this.leftArm.add(leftHand);
+        
+        const rightHand = new THREE.Mesh(handGeometry, handMaterial);
+        rightHand.position.y = -0.225;
+        this.rightArm.add(rightHand);
+        
+        this.scene.add(this.robot);
+      }
+      
+      setupEventListeners() {
+        document.addEventListener('mousemove', (e) => {
+          this.mouseX = (e.clientX / window.innerWidth - 0.5) * 0.5;
+          this.mouseY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+        });
+
+        // Hover interaction for wave animation
+        this.container.addEventListener('mouseenter', () => {
+          this.wave();
+        });
+      }
+
+      wave() {
+        // Wave animation using GSAP
+        if (this.rightArm) {
+          gsap.to(this.rightArm.rotation, {
+            z: -Math.PI / 2,
+            duration: 0.3,
+            ease: "power2.out",
+            yoyo: true,
+            repeat: 1
+          });
+        }
+      }
+
+      showMessage(text) {
+        if (this.messageTimeout) {
+          clearTimeout(this.messageTimeout);
+        }
+
+        this.messageElement.textContent = text;
+        this.messageElement.classList.add('active');
+
+        this.messageTimeout = setTimeout(() => {
+          this.messageElement.classList.remove('active');
+        }, 4000);
+        
+        // Reset idle timer
+        this.resetIdleTimer();
+      }
+      
+      showSuccessMessage() {
+        this.showMessage("🎉 Welcome aboard! Redirecting you to your learning dashboard…");
+      }
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+
+        // Smooth floating animation
+        const time = this.clock.getElapsedTime();
+        this.robot.position.y = Math.sin(time * 0.8) * 0.05;
+        this.robot.rotation.y = Math.sin(time * 0.5) * 0.05;
+
+        // Head follows mouse
+        if (this.head) {
+          this.head.rotation.y = this.mouseX * 0.5;
+          this.head.rotation.x = this.mouseY * 0.3;
+        }
+
+        // Eyes follow mouse
+        if (this.leftPupil && this.rightPupil) {
+          this.leftPupil.position.x = this.mouseX * 0.025;
+          this.leftPupil.position.y = this.mouseY * 0.025;
+          this.rightPupil.position.x = this.mouseX * 0.025;
+          this.rightPupil.position.y = this.mouseY * 0.025;
+        }
+
+        // Pulsing antenna glow
+        if (this.antennaGlow) {
+          this.antennaGlow.scale.setScalar(1 + Math.sin(time * 3) * 0.2);
+        }
+
+        // Breathing chest panel
+        if (this.chestPanel) {
+          this.chestPanel.material.emissiveIntensity = 0.4 + Math.sin(time * 2) * 0.2;
+        }
+
+        this.renderer.render(this.scene, this.camera);
+      }
+    }
+
+    // Initialize SkillBot
+    const skillBot = new SkillBot();
+
+    // Check if email domain is valid
+    function isValidEmailDomain(email) {
+      const domain = email.split('@')[1];
+      if (blockedDomains.includes(domain)) return false;
+      if (trustedDomains.includes(domain)) return true;
+      return false;
+    }
+
+    // Check if email is a teacher email
+    function isTeacherEmail(email) {
+      return teacherDomains.some(domain => email.endsWith(domain));
+    }
+
+    // Show domain notification
+    function showDomainNotification(type, message) {
+      const icon = type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+      domainNotification.className = `domain-notification ${type}`;
+      domainNotification.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <div>${message}</div>
+      `;
+      domainNotification.style.display = 'flex';
+    }
+
+    // Hide domain notification
+    function hideDomainNotification() {
+      domainNotification.style.display = 'none';
+    }
+
+    // Validate email domain
+    function validateEmailDomain(email) {
+      const domain = email.split('@')[1];
+      if (blockedDomains.includes(domain)) {
+        emailInput.classList.add('invalid');
+        showDomainNotification('error', `Email addresses from ${domain} are not allowed.`);
+        return false;
+      }
+      if (trustedDomains.includes(domain)) {
+        emailInput.classList.remove('invalid');
+        hideDomainNotification();
+        return true;
+      }
+      emailInput.classList.add('invalid');
+      showDomainNotification('error', `Email addresses from ${domain} are not supported.`);
+      return false;
+    }
+
+    // Toggle password visibility
+    togglePassword.addEventListener('click', () => {
+      const icon = togglePassword.querySelector('i');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+
+    // Toggle confirm password visibility
+    toggleConfirmPassword.addEventListener('click', () => {
+      const icon = toggleConfirmPassword.querySelector('i');
+      if (confirmPasswordInput.type === 'password') {
+        confirmPasswordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        confirmPasswordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+
+    // Email input validation
+    emailInput.addEventListener('blur', () => {
+      const email = emailInput.value.trim();
+      if (email && email.includes('@')) {
+        validateEmailDomain(email);
+      } else {
+        emailInput.classList.remove('invalid');
+        hideDomainNotification();
+      }
+    });
+
+    emailInput.addEventListener('input', () => {
+      const email = emailInput.value.trim();
+      if (email && email.includes('@')) {
+        validateEmailDomain(email);
+      } else {
+        emailInput.classList.remove('invalid');
+        hideDomainNotification();
+      }
+    });
+
+    // Form submission
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const recaptchaResponse = grecaptcha.getResponse();
+      if (!recaptchaResponse) {
+        showError('Please complete the reCAPTCHA verification');
+        return;
+      }
+
+      signupButton.disabled = true;
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const agreeTerms = document.getElementById('agreeTerms').checked;
+
+      if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        showError('Please fill in all fields');
+        resetButtonState();
+        return;
+      }
+
+      if (!agreeTerms) {
+        showError('Please agree to the Terms of Service and Privacy Policy');
+        resetButtonState();
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showError('Passwords do not match');
+        resetButtonState();
+        return;
+      }
+
+      if (password.length < 6) {
+        showError('Password must be at least 6 characters long');
+        resetButtonState();
+        return;
+      }
+
+      if (!isValidEmailDomain(email)) {
+        const domain = email.split('@')[1];
+        showError(`Email addresses from ${domain} are not supported.`);
+        resetButtonState();
+        return;
+      }
+
+      if (isTeacherEmail(email)) {
+        showError('Teacher email domains cannot be used for student accounts.');
+        resetButtonState();
+        return;
+      }
+
+      try {
+        buttonText.innerHTML = '<span class="spinner"></span> Creating Account...';
+
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        const fullName = `${firstName} ${lastName}`;
+
+        await user.updateProfile({
+          displayName: fullName
+        });
+
+        await db.collection("users").doc(user.uid).set({
+          firstName: firstName,
+          lastName: lastName,
+          name: fullName,
+          email: email,
+          role: "student",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          profileComplete: false,
+          enrolledCourses: [],
+          enrollments: {},
+          notifications: [],
+          recentChats: []
+        });
+
+        // Show success message from SkillBot
+        skillBot.showSuccessMessage();
+        
+        // Redirect to SkillUp dashboard after 2 seconds
+        setTimeout(() => {
+          window.location.href = 'dashboard.html'; // Replace with your actual dashboard URL
+        }, 2000);
+
+      } catch (error) {
+        console.error(error);
+        let errorMsg = "An error occurred during sign up.";
+        
+        switch (error.code) {
+          case "auth/email-already-in-use":
+            errorMsg = "An account with this email already exists.";
+            break;
+          case "auth/invalid-email":
+            errorMsg = "Invalid email address format.";
+            break;
+          case "auth/weak-password":
+            errorMsg = "Password is too weak. Please choose a stronger password.";
+            break;
+          case "auth/operation-not-allowed":
+            errorMsg = "Email/password accounts are not enabled. Please contact support.";
+            break;
+          default:
+            errorMsg = error.message;
+        }
+        
+        showError(errorMsg);
+        resetButtonState();
+        grecaptcha.reset();
+      }
+    });
+
+    // Reset button state
+    function resetButtonState() {
+      signupButton.disabled = false;
+      buttonText.innerHTML = 'Create Account';
+    }
+
+    // Show error message
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      setTimeout(() => {
+        errorMessage.style.display = 'none';
+      }, 5000);
+    }
+
+    // Show success message
+    function showSuccess(message) {
+      successMessage.textContent = message;
+      successMessage.style.display = 'block';
+      setTimeout(() => {
+        successMessage.style.display = 'none';
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillUp - My Students</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary-red: #ff4757;
+      --primary-red-dark: #ff3742;
+      --primary-red-light: #ff6b6b;
+      --accent-red: #ff8e8e;
+      --light-red: rgba(255, 71, 87, 0.1);
+      --dark-red: rgba(255, 71, 87, 0.3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --text-primary: #ffffff;
+      --text-secondary: #adb5bd;
+      --sidebar-bg: linear-gradient(180deg, #ff4757, #ff3742);
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      background: var(--bg-main);
+      min-height: 100vh;
+    }
+    
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 71, 87, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 71, 87, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Loading Screen */
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+    
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-red);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    
+    .loading-text {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* Dashboard Layout */
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    /* Sidebar Styles */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(255, 71, 87, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #252937, #1a1d29);
+    }
+
+    @keyframes sidebarGlow {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: #ff3742;
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #ff3742, transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: white;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+    }
+
+    /* Logout at bottom */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-dark));
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--dark-red);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-container {
+      position: relative;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--primary-red);
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Stats Cards */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      padding: 0 30px;
+      margin: 40px 0; /* Added top and bottom margin */
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 25px;
+      border-radius: 20px;
+      border: 1px solid var(--dark-red);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.1), rgba(255, 142, 142, 0.1));
+      transform: translateX(-100%);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+      transform: translateX(0);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(255, 71, 87, 0.2);
+    }
+
+    .stat-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      margin-right: 20px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    /* Sections */
+    .section {
+      margin: 40px 30px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(45deg, var(--primary-red), var(--accent-red));
+      border-radius: 2px;
+    }
+
+    /* Search Section */
+    .search-container {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 1.5rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      margin-bottom: 2rem;
+    }
+    
+    .search-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .search-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .search-box {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border: 1px solid var(--dark-red);
+      border-radius: 8px;
+      background: var(--bg-main);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.1);
+      background: var(--bg-secondary);
+    }
+
+    /* Student Cards */
+    .students-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .student-card {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .student-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(255, 71, 87, 0.2);
+    }
+    
+    .student-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+    }
+    
+    .student-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-right: 1rem;
+    }
+    
+    .student-info {
+      flex: 1;
+    }
+    
+    .student-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    
+    .student-email {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .student-body {
+      padding: 1.5rem;
+    }
+    
+    .student-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .detail-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+    
+    .detail-value {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .progress-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    
+    .progress-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    .progress-percentage {
+      font-weight: 600;
+      color: var(--primary-red);
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      animation: progressShimmer 2s infinite;
+    }
+    
+    @keyframes progressShimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+    
+    .student-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    /* Buttons */
+    .btn {
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+    }
+    
+    .btn-secondary {
+      background: var(--light-red);
+      color: var(--primary-red);
+      border: 1px solid var(--dark-red);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--dark-red);
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+    }
+    
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+      color: var(--primary-red);
+    }
+    
+    .empty-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .empty-description {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+    
+    /* Notification Dropdown */
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--dark-red);
+      z-index: 1000;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .notification-clear {
+      background: transparent;
+      border: none;
+      color: var(--primary-red);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      padding: 10px 0;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--dark-red);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      background: var(--light-red);
+    }
+
+    .notification-item.unread {
+      background: var(--light-red);
+    }
+
+    .notification-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .notification-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    /* Student Details Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    .student-modal {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    
+    .modal-overlay.active .student-modal {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      padding: 1.5rem 2rem;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 20px 20px 0 0;
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+    }
+    
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .modal-body {
+      padding: 2rem;
+    }
+    
+    .student-modal-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .student-modal-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-right: 1.5rem;
+    }
+    
+    .student-modal-info {
+      flex: 1;
+    }
+    
+    .student-modal-name {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    
+    .student-modal-email {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .student-modal-course {
+      font-size: 1rem;
+      color: var(--primary-red);
+      font-weight: 500;
+    }
+    
+    .modal-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .modal-stat {
+      background: var(--light-red);
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .modal-stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary-red);
+      margin-bottom: 0.3rem;
+    }
+    
+    .modal-stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    .modal-progress-section {
+      margin-bottom: 2rem;
+    }
+    
+    .modal-progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-progress-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    
+    .modal-progress-value {
+      font-weight: 600;
+      color: var(--primary-red);
+    }
+    
+    .modal-progress-bar {
+      height: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    
+    .modal-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+    
+    .modal-progress-text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+    
+    /* Mobile Menu Button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 999;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .students-container {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .sidebar {
+        width: 100%;
+        max-width: 320px;
+      }
+      
+      .main-content {
+        padding: 1rem;
+        padding-top: 6rem;
+      }
+      
+      .topbar {
+        padding: 0 20px;
+      }
+      
+      .section {
+        margin: 20px;
+      }
+      
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .students-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .search-box {
+        flex-direction: column;
+      }
+      
+      .notification-dropdown {
+        width: 280px;
+        right: 10px;
+      }
+      
+      .student-modal-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .student-modal-avatar {
+        margin-right: 0;
+        margin-bottom: 1rem;
+      }
+      
+      .modal-actions {
+        flex-direction: column;
+      }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      background: rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 5s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-10px) translateX(20px); }
+      75% { transform: translateY(-15px) translateX(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your students...</div>
+  </div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="teacherdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="#" class="active"><i class="fas fa-users"></i> Students</a></li>
+        <li><a href="teacherassessment.html"><i class="fas fa-clipboard-check"></i> Assessments</a></li>
+        <li><a href="teacheranalytics.html"><i class="fas fa-chart-line"></i> Analytics</a></li>
+        <li><a href="teachermessages.html"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="teacherschedule.html"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+        <li><a href="teacherprofile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">My Students</div>
+        </div>
+        
+        <div class="user-info">
+          <!-- Single Notification Container -->
+          <div class="notification-container">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="notification-clear" id="clearNotifications">Clear All</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be populated here -->
+              </div>
+            </div>
+          </div>
+          <div class="avatar">
+            <span id="userInitials">AJ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="totalStudents">0</div>
+              <div class="stat-label">Total Students</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="avgProgress">0%</div>
+              <div class="stat-label">Average Progress</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="topPerformer">0%</div>
+              <div class="stat-label">Top Performer</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="needsAttention">0</div>
+              <div class="stat-label">Need Attention</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Section -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">Find Students</h2>
+          <button class="btn btn-secondary" id="clearSearch">
+            <span>Clear Search</span>
+          </button>
+        </div>
+        <div class="search-container">
+          <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by student name, email, or course...">
+            <button class="btn btn-primary" id="searchButton">
+              <span>Search</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Students List -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">My Students</h2>
+        </div>
+        <div class="students-container" id="studentsList">
+          <!-- Students will be dynamically added here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <div class="empty-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3 class="empty-title">No Students Found</h3>
+          <p class="empty-description" id="emptyDescription">You don't have any students enrolled in your courses yet.</p>
+          <button class="btn btn-primary" onclick="shareCourses()">Share Your Courses</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Student Details Modal -->
+  <div class="modal-overlay" id="studentModal">
+    <div class="student-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Student Details</h2>
+        <button class="close-modal" id="closeStudentModal">✕</button>
+      </div>
+      <div class="modal-body" id="studentModalBody">
+        <!-- Student details will be populated here -->
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signOut 
+  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  import { 
+    getFirestore, 
+    collection, 
+    query, 
+    where, 
+    getDocs,
+    doc,
+    getDoc,
+    onSnapshot,
+    updateDoc,
+    deleteDoc,
+    orderBy,
+    limit,
+    addDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+    authDomain: "growup-93f5d.firebaseapp.com",
+    projectId: "growup-93f5d",
+    storageBucket: "growup-93f5d.firebasestorage.app",
+    messagingSenderId: "775742235468",
+    appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+    measurementId: "G-FWBKTSQDS9"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // DOM elements
+  const loadingScreen = document.getElementById('loadingScreen');
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const closeSidebar = document.getElementById('closeSidebar');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const notificationIcon = document.getElementById('notificationIcon');
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  const notificationBadge = document.getElementById('notificationBadge');
+  const notificationList = document.getElementById('notificationList');
+  const clearNotifications = document.getElementById('clearNotifications');
+  const userInitials = document.getElementById('userInitials');
+  const totalStudents = document.getElementById('totalStudents');
+  const avgProgress = document.getElementById('avgProgress');
+  const topPerformer = document.getElementById('topPerformer');
+  const needsAttention = document.getElementById('needsAttention');
+  const studentsList = document.getElementById('studentsList');
+  const emptyState = document.getElementById('emptyState');
+  const emptyDescription = document.getElementById('emptyDescription');
+  const searchInput = document.getElementById('searchInput');
+  const searchButton = document.getElementById('searchButton');
+  const clearSearch = document.getElementById('clearSearch');
+  const studentModal = document.getElementById('studentModal');
+  const studentModalBody = document.getElementById('studentModalBody');
+  const closeStudentModalBtn = document.getElementById('closeStudentModal');
+
+  // Current teacher data and students
+  let currentTeacher = null;
+  let allStudents = [];
+  let filteredStudents = [];
+  let notifications = [];
+  let unsubscribeNotifications = null;
+
+  // Check authentication state
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try {
+        // Get teacher data from Firestore
+        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+        
+        if (teacherDoc.exists()) {
+          currentTeacher = { id: user.uid, ...teacherDoc.data() };
+          
+          // Populate teacher info
+          populateTeacherInfo();
+          
+          // Load students data
+          await loadTeacherStudents();
+          
+          // Set up real-time notifications - Use teacher's notifications subcollection
+          setupRealtimeNotifications();
+          
+          // Hide loading screen
+          setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+          }, 500);
+          
+        } else {
+          console.error("Teacher document not found");
+          window.location.href = "teachersignin.html";
+        }
+      } catch (error) {
+        console.error("Error getting teacher document:", error);
+        loadingScreen.classList.add('hidden');
+      }
+    } else {
+      window.location.href = "teachersignin.html";
+    }
+  });
+
+  // Populate teacher info
+  function populateTeacherInfo() {
+    const teacher = currentTeacher;
+    const initials = getInitials(teacher.firstName, teacher.lastName);
+    
+    // Navigation
+    userInitials.textContent = initials;
+  }
+
+  // Load teacher's students with assignment data
+  async function loadTeacherStudents() {
+    try {
+      allStudents = [];
+      
+      console.log("Loading students for teacher:", currentTeacher.id);
+      
+      // Get ALL users from the users collection
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      console.log(`Found ${usersSnapshot.size} users in database`);
+      
+      // Get ALL courses for course name mapping
+      const coursesSnapshot = await getDocs(collection(db, "courses"));
+      const courseMap = {};
+      coursesSnapshot.forEach(doc => {
+        courseMap[doc.id] = doc.data().name;
+      });
+      
+      let enrollmentCount = 0;
+      
+      // Process each user to find students enrolled with this teacher
+      for (const userDoc of usersSnapshot.docs) {
+        const userData = userDoc.data();
+        
+        // Check if user has enrollments (students will have enrollments)
+        if (userData.enrollments) {
+          // Check each enrollment to see if this teacher is assigned
+          for (const courseId in userData.enrollments) {
+            const enrollment = userData.enrollments[courseId];
+            
+            // Check if this enrollment has our teacher assigned
+            if (enrollment.teacherId === currentTeacher.id) {
+              enrollmentCount++;
+              
+              const courseName = courseMap[courseId] || "Unknown Course";
+              
+              // Get assignment data for this course and student
+              const assignmentData = await getAssignmentData(courseId, userDoc.id);
+              
+              // Create a separate student record for each course enrollment
+              allStudents.push({
+                id: userDoc.id,
+                enrollmentId: `${userDoc.id}_${courseId}`, // Unique ID for this enrollment
+                firstName: userData.firstName || "Student",
+                lastName: userData.lastName || "User",
+                email: userData.email || "No email",
+                courseId: courseId,
+                courseName: courseName,
+                progress: enrollment.progress || 0,
+                lastActivity: enrollment.lastAccessed ? 
+                  formatDate(enrollment.lastAccessed.toDate()) : "Never",
+                enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
+                assignmentsCompleted: assignmentData.completedAssignments,
+                totalAssignments: assignmentData.totalAssignments,
+                performance: getPerformanceFromProgress(enrollment.progress || 0),
+                teacherName: enrollment.teacherName || `${currentTeacher.firstName} ${currentTeacher.lastName}`
+              });
+              
+              console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}`);
+            }
+          }
+        }
+      }
+      
+      console.log(`Found ${enrollmentCount} student-course enrollments with teacher ${currentTeacher.id}`);
+      
+      filteredStudents = [...allStudents];
+      
+      // Update stats
+      updateStats();
+      
+      // Render students
+      renderStudents();
+      
+    } catch (error) {
+      console.error("Error loading teacher students:", error);
+      // Show error state
+      emptyState.style.display = "block";
+      studentsList.style.display = "none";
+      emptyDescription.textContent = `Error loading students: ${error.message}. Please try refreshing the page.`;
+    }
+  }
+
+  // Get assignment data for a student in a course
+  async function getAssignmentData(courseId, studentId) {
+    try {
+      // Get total assignments from the course's assignments subcollection
+      const assignmentsRef = collection(db, "courses", courseId, "assignments");
+      const assignmentsSnapshot = await getDocs(assignmentsRef);
+      const totalAssignments = assignmentsSnapshot.size;
+      
+      // Get completed assignments from submissions
+      const submissionsRef = collection(db, "submissions");
+      const submissionsQuery = query(
+        submissionsRef, 
+        where("courseId", "==", courseId),
+        where("studentId", "==", studentId),
+        where("status", "==", "completed")
+      );
+      const submissionsSnapshot = await getDocs(submissionsQuery);
+      const completedAssignments = submissionsSnapshot.size;
+      
+      return {
+        totalAssignments,
+        completedAssignments
+      };
+    } catch (error) {
+      console.error("Error getting assignment data:", error);
+      return {
+        totalAssignments: 0,
+        completedAssignments: 0
+      };
+    }
+  }
+
+  // Update statistics
+  function updateStats() {
+    if (allStudents.length === 0) {
+      totalStudents.textContent = "0";
+      avgProgress.textContent = "0%";
+      topPerformer.textContent = "0%";
+      needsAttention.textContent = "0";
+      return;
+    }
+    
+    // Total students - count unique students, not enrollments
+    const uniqueStudentIds = [...new Set(allStudents.map(student => student.id))];
+    totalStudents.textContent = uniqueStudentIds.length;
+    
+    // Average progress - average of all enrollments
+    const totalProgress = allStudents.reduce((sum, student) => sum + student.progress, 0);
+    const averageProgress = Math.round(totalProgress / allStudents.length);
+    avgProgress.textContent = `${averageProgress}%`;
+    
+    // Top performer - highest progress among all enrollments
+    const topProgress = Math.max(...allStudents.map(student => student.progress));
+    topPerformer.textContent = `${topProgress}%`;
+    
+    // Students needing attention (progress < 40%) - count unique students
+    const studentsNeedingAttention = new Set();
+    allStudents.forEach(student => {
+      if (student.progress < 40) {
+        studentsNeedingAttention.add(student.id);
+      }
+    });
+    needsAttention.textContent = studentsNeedingAttention.size;
+  }
+
+  // Render students list
+  function renderStudents() {
+    if (filteredStudents.length === 0) {
+      studentsList.style.display = "none";
+      emptyState.style.display = "block";
+      
+      if (searchInput.value.trim() !== "") {
+        emptyDescription.textContent = `No students found matching "${searchInput.value}". Try a different search term.`;
+      } else {
+        emptyDescription.textContent = "You don't have any students enrolled in your courses yet.";
+      }
+      
+      return;
+    }
+    
+    studentsList.style.display = "grid";
+    emptyState.style.display = "none";
+    
+    // Clear current list
+    studentsList.innerHTML = "";
+    
+    // Create student cards
+    filteredStudents.forEach(student => {
+      const studentCard = createStudentCard(student);
+      studentsList.appendChild(studentCard);
+    });
+  }
+
+  // Create student card element
+  function createStudentCard(student) {
+    const card = document.createElement('div');
+    card.className = 'student-card';
+    
+    const initials = getInitials(student.firstName, student.lastName);
+    
+    // Determine performance color
+    let performanceColor = "#10b981"; // Default green for good
+    if (student.performance === "Needs Improvement") performanceColor = "#f59e0b"; // Yellow
+    if (student.performance === "Needs Attention") performanceColor = "#ef4444"; // Red
+    
+    card.innerHTML = `
+      <div class="student-header">
+        <div class="student-avatar">${initials}</div>
+        <div class="student-info">
+          <div class="student-name">${student.firstName} ${student.lastName}</div>
+          <div class="student-email">${student.email}</div>
+          <div class="student-course" style="font-size: 0.9rem; margin-top: 5px; color: rgba(255,255,255,0.8);">
+            <i class="fas fa-book"></i> ${student.courseName}
+          </div>
+        </div>
+      </div>
+      
+      <div class="student-body">
+        <div class="student-details">
+          <div class="detail-item">
+            <div class="detail-label">Course</div>
+            <div class="detail-value">${student.courseName}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Enrolled</div>
+            <div class="detail-value">${student.enrolledDate.toLocaleDateString()}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Assignments</div>
+            <div class="detail-value">${student.assignmentsCompleted}/${student.totalAssignments}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Performance</div>
+            <div class="detail-value" style="color: ${performanceColor}">${student.performance}</div>
+          </div>
+        </div>
+        
+        <div class="progress-section">
+          <div class="progress-header">
+            <div class="progress-label">Course Progress</div>
+            <div class="progress-percentage">${student.progress}%</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${student.progress}%"></div>
+          </div>
+        </div>
+        
+        <div class="student-actions">
+          <button class="btn btn-primary" onclick="viewStudentDetails('${student.enrollmentId}')">
+            <i class="fas fa-eye"></i>
+            <span>View Details</span>
+          </button>
+          <button class="btn btn-secondary" onclick="messageStudent('${student.id}', '${student.courseId}')">
+            <i class="fas fa-comment"></i>
+            <span>Message</span>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    return card;
+  }
+
+  // Search students
+  function searchStudents() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    
+    if (searchTerm === "") {
+      filteredStudents = [...allStudents];
+    } else {
+      filteredStudents = allStudents.filter(student => {
+        return (
+          student.firstName.toLowerCase().includes(searchTerm) ||
+          student.lastName.toLowerCase().includes(searchTerm) ||
+          student.email.toLowerCase().includes(searchTerm) ||
+          student.courseName.toLowerCase().includes(searchTerm)
+        );
+      });
+    }
+    
+    renderStudents();
+  }
+
+  // Set up real-time notifications from teacher's notifications subcollection
+  function setupRealtimeNotifications() {
+    if (!currentTeacher) return;
+    
+    try {
+      // Use the teacher's notifications subcollection as defined in your rules
+      const notificationsRef = collection(db, "teachers", currentTeacher.id, "notifications");
+      const notificationsQuery = query(
+        notificationsRef,
+        orderBy("timestamp", "desc"),
+        limit(20)
+      );
+      
+      // Set up real-time listener
+      unsubscribeNotifications = onSnapshot(notificationsQuery, 
+        (snapshot) => {
+          notifications = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            notifications.push({ 
+              id: doc.id, 
+              ...data,
+              timestamp: data.timestamp ? data.timestamp.toDate() : new Date()
+            });
+          });
+          
+          updateNotificationUI();
+        }, 
+        (error) => {
+          console.error("Error listening to teacher notifications:", error);
+          // Try alternative approach with main notifications collection
+          setupAlternativeNotifications();
+        }
+      );
+    } catch (error) {
+      console.error("Error setting up teacher notifications:", error);
+      setupAlternativeNotifications();
+    }
+  }
+
+  // Alternative approach using main notifications collection
+  function setupAlternativeNotifications() {
+    if (!currentTeacher) return;
+    
+    try {
+      const notificationsRef = collection(db, "notifications");
+      const notificationsQuery = query(
+        notificationsRef,
+        where("teacherId", "==", currentTeacher.id),
+        orderBy("timestamp", "desc"),
+        limit(20)
+      );
+      
+      unsubscribeNotifications = onSnapshot(notificationsQuery,
+        (snapshot) => {
+          notifications = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            notifications.push({ 
+              id: doc.id, 
+              ...data,
+              timestamp: data.timestamp ? data.timestamp.toDate() : new Date()
+            });
+          });
+          
+          updateNotificationUI();
+        },
+        (error) => {
+          console.error("Error listening to alternative notifications:", error);
+          // Final fallback to sample notifications
+          setupSampleNotifications();
+        }
+      );
+    } catch (error) {
+      console.error("Error setting up alternative notifications:", error);
+      setupSampleNotifications();
+    }
+  }
+
+  // Final fallback to sample notifications
+  function setupSampleNotifications() {
+    console.log("Setting up sample notifications");
+    notifications = [
+      {
+        id: '1',
+        title: 'New Assignment Submission',
+        message: 'Michael Johnson submitted the Algorithms assignment',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        read: false,
+        type: 'submission'
+      },
+      {
+        id: '2',
+        title: 'Course Enrollment',
+        message: 'Emily Chen enrolled in your Data Structures course',
+        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        read: false,
+        type: 'enrollment'
+      },
+      {
+        id: '3',
+        title: 'Progress Update',
+        message: 'Robert Davis reached 95% completion in Web Development',
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        read: true,
+        type: 'progress'
+      }
+    ];
+    
+    updateNotificationUI();
+  }
+
+  // Update notification UI
+  function updateNotificationUI() {
+    // Update notification count
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationBadge.textContent = unreadCount;
+    
+    // Update notification list
+    notificationList.innerHTML = "";
+    
+    if (notifications.length === 0) {
+      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+      return;
+    }
+    
+    // Show latest notifications
+    notifications.forEach(notification => {
+      const notificationItem = document.createElement('div');
+      notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
+      
+      const timeDisplay = formatDate(notification.timestamp);
+      const icon = getNotificationIcon(notification.type);
+      
+      notificationItem.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+          <div style="color: var(--primary-red); font-size: 16px; margin-top: 2px;">
+            ${icon}
+          </div>
+          <div style="flex: 1;">
+            <div class="notification-title">${notification.title}</div>
+            <div class="notification-message">${notification.message}</div>
+            <div class="notification-time">${timeDisplay}</div>
+          </div>
+          ${!notification.read ? '<div class="notification-badge" style="position: static; width: 8px; height: 8px; background: var(--primary-red); border-radius: 50%; margin-top: 8px;"></div>' : ''}
+        </div>
+      `;
+      
+      notificationItem.addEventListener('click', () => {
+        markNotificationAsRead(notification.id);
+      });
+      
+      notificationList.appendChild(notificationItem);
+    });
+  }
+
+  // Get appropriate icon for notification type
+  function getNotificationIcon(type) {
+    switch(type) {
+      case 'submission':
+        return '<i class="fas fa-file-upload"></i>';
+      case 'enrollment':
+        return '<i class="fas fa-user-plus"></i>';
+      case 'progress':
+        return '<i class="fas fa-chart-line"></i>';
+      case 'message':
+        return '<i class="fas fa-comment"></i>';
+      default:
+        return '<i class="fas fa-bell"></i>';
+    }
+  }
+
+  // Mark notification as read
+  async function markNotificationAsRead(notificationId) {
+    try {
+      // Try teacher's notifications subcollection first
+      const notificationRef = doc(db, "teachers", currentTeacher.id, "notifications", notificationId);
+      await updateDoc(notificationRef, {
+        read: true,
+        readAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error marking notification as read in teacher subcollection:", error);
+      
+      try {
+        // Try main notifications collection
+        const notificationRef = doc(db, "notifications", notificationId);
+        await updateDoc(notificationRef, {
+          read: true,
+          readAt: serverTimestamp()
+        });
+      } catch (secondError) {
+        console.error("Error marking notification as read in main collection:", secondError);
+        // Fallback: update locally only
+        const notification = notifications.find(n => n.id === notificationId);
+        if (notification) {
+          notification.read = true;
+          updateNotificationUI();
+        }
+      }
+    }
+    
+    // Update locally for immediate UI feedback
+    const notification = notifications.find(n => n.id === notificationId);
+    if (notification) {
+      notification.read = true;
+      updateNotificationUI();
+    }
+  }
+
+  // Clear all notifications
+  async function clearAllNotifications() {
+    try {
+      // For teacher's notifications subcollection
+      const notificationsRef = collection(db, "teachers", currentTeacher.id, "notifications");
+      const notificationsQuery = query(
+        notificationsRef,
+        where("read", "==", false)
+      );
+      
+      const snapshot = await getDocs(notificationsQuery);
+      
+      const updatePromises = [];
+      snapshot.forEach((doc) => {
+        updatePromises.push(updateDoc(doc.ref, {
+          read: true,
+          readAt: serverTimestamp()
+        }));
+      });
+      
+      await Promise.all(updatePromises);
+    } catch (error) {
+      console.error("Error clearing notifications from teacher subcollection:", error);
+      
+      try {
+        // Try main notifications collection
+        const notificationsRef = collection(db, "notifications");
+        const notificationsQuery = query(
+          notificationsRef,
+          where("teacherId", "==", currentTeacher.id),
+          where("read", "==", false)
+        );
+        
+        const snapshot = await getDocs(notificationsQuery);
+        
+        const updatePromises = [];
+        snapshot.forEach((doc) => {
+          updatePromises.push(updateDoc(doc.ref, {
+            read: true,
+            readAt: serverTimestamp()
+          }));
+        });
+        
+        await Promise.all(updatePromises);
+      } catch (secondError) {
+        console.error("Error clearing notifications from main collection:", secondError);
+        // Fallback: clear locally
+        notifications.forEach(notification => {
+          notification.read = true;
+        });
+        updateNotificationUI();
+        return;
+      }
+    }
+    
+    // Update local state
+    notifications.forEach(notification => {
+      if (!notification.read) {
+        notification.read = true;
+      }
+    });
+    
+    updateNotificationUI();
+  }
+
+  // View student details - show modal
+  async function viewStudentDetails(enrollmentId) {
+    try {
+      // Find the student enrollment
+      const student = allStudents.find(s => s.enrollmentId === enrollmentId);
+      
+      if (!student) {
+        alert("Student enrollment not found");
+        return;
+      }
+      
+      // Get additional student data if needed
+      const studentDoc = await getDoc(doc(db, "users", student.id));
+      const studentData = studentDoc.exists() ? studentDoc.data() : {};
+      
+      // Get course data
+      const courseDoc = await getDoc(doc(db, "courses", student.courseId));
+      const courseData = courseDoc.exists() ? courseDoc.data() : {};
+      
+      // Get assignment submissions for this student
+      const submissionsRef = collection(db, "submissions");
+      const submissionsQuery = query(
+        submissionsRef, 
+        where("courseId", "==", student.courseId),
+        where("studentId", "==", student.id)
+      );
+      const submissionsSnapshot = await getDocs(submissionsQuery);
+      const submissions = [];
+      submissionsSnapshot.forEach(doc => {
+        submissions.push({ id: doc.id, ...doc.data() });
+      });
+      
+      // Populate modal
+      const initials = getInitials(student.firstName, student.lastName);
+      
+      studentModalBody.innerHTML = `
+        <div class="student-modal-header">
+          <div class="student-modal-avatar">${initials}</div>
+          <div class="student-modal-info">
+            <div class="student-modal-name">${student.firstName} ${student.lastName}</div>
+            <div class="student-modal-email">${student.email}</div>
+            <div class="student-modal-course">${student.courseName}</div>
+          </div>
+        </div>
+        
+        <div class="modal-stats">
+          <div class="modal-stat">
+            <div class="modal-stat-value">${student.progress}%</div>
+            <div class="modal-stat-label">Course Progress</div>
+          </div>
+          <div class="modal-stat">
+            <div class="modal-stat-value">${student.assignmentsCompleted}</div>
+            <div class="modal-stat-label">Assignments Done</div>
+          </div>
+          <div class="modal-stat">
+            <div class="modal-stat-value">${student.totalAssignments}</div>
+            <div class="modal-stat-label">Total Assignments</div>
+          </div>
+          <div class="modal-stat">
+            <div class="modal-stat-value" style="color: ${getPerformanceColor(student.performance)}">${student.performance}</div>
+            <div class="modal-stat-label">Performance</div>
+          </div>
+        </div>
+        
+        <div class="modal-progress-section">
+          <div class="modal-progress-header">
+            <div class="modal-progress-title">Course Progress</div>
+            <div class="modal-progress-value">${student.progress}%</div>
+          </div>
+          <div class="modal-progress-bar">
+            <div class="modal-progress-fill" style="width: ${student.progress}%"></div>
+          </div>
+          <div class="modal-progress-text">${student.assignmentsCompleted} of ${student.totalAssignments} assignments completed</div>
+        </div>
+        
+        <div class="student-details">
+          <div class="detail-item">
+            <div class="detail-label">Enrollment Date</div>
+            <div class="detail-value">${student.enrolledDate.toLocaleDateString()}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Last Activity</div>
+            <div class="detail-value">${student.lastActivity}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Course</div>
+            <div class="detail-value">${student.courseName}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Teacher</div>
+            <div class="detail-value">${student.teacherName}</div>
+          </div>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeStudentModal()">Close</button>
+          <button class="btn btn-primary" onclick="messageStudent('${student.id}', '${student.courseId}')">Send Message</button>
+        </div>
+      `;
+      
+      // Show modal
+      studentModal.classList.add('active');
+      
+    } catch (error) {
+      console.error("Error loading student details:", error);
+      alert("Error loading student details. Please try again.");
+    }
+  }
+
+  // Helper function to get performance color
+  function getPerformanceColor(performance) {
+    if (performance === "Excellent") return "#10b981";
+    if (performance === "Good") return "#3b82f6";
+    if (performance === "Needs Improvement") return "#f59e0b";
+    return "#ef4444";
+  }
+
+  // Helper function to get initials
+  function getInitials(firstName, lastName) {
+    if (!firstName || !lastName) return "SU";
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  }
+
+  // Close student modal function
+  function closeStudentModal() {
+    studentModal.classList.remove('active');
+  }
+
+  // Helper function to format date
+  function formatDate(date) {
+    if (!date) return "Never";
+    
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    
+    // For older dates, show actual date
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  }
+  
+  // Helper function to get performance from progress
+  function getPerformanceFromProgress(progress) {
+    if (progress >= 80) return "Excellent";
+    if (progress >= 60) return "Good";
+    if (progress >= 40) return "Needs Improvement";
+    return "Needs Attention";
+  }
+
+  // Global functions for student actions
+  window.viewStudentDetails = viewStudentDetails;
+  window.closeStudentModal = closeStudentModal;
+  
+  window.messageStudent = (studentId, courseId) => {
+    // Redirect to messages page with student ID and course ID
+    window.location.href = `teachermessages.html?studentId=${studentId}&courseId=${courseId}`;
+  };
+  
+  window.shareCourses = () => {
+    alert("Share your courses with students - This would show sharing options");
+  };
+
+  // Event listeners
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.add('active');
+    mainContent.classList.add('sidebar-open');
+  });
+
+  closeSidebar.addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    mainContent.classList.remove('sidebar-open');
+  });
+
+  // Close sidebar on outside click
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('active')) {
+      if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+        sidebar.classList.remove('active');
+        mainContent.classList.remove('sidebar-open');
+      }
+    }
+  });
+
+  searchButton.addEventListener('click', searchStudents);
+  
+  searchInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') {
+      searchStudents();
+    }
+  });
+  
+  clearSearch.addEventListener('click', () => {
+    searchInput.value = "";
+    filteredStudents = [...allStudents];
+    renderStudents();
+  });
+  
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      // Clean up real-time listeners
+      if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+      }
+      
+      await signOut(auth);
+      window.location.href = "index.html";
+    } catch (error) {
+      console.error("Error signing out:", error);
+      alert("Error signing out. Please try again.");
+    }
+  });
+  
+  notificationIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notificationDropdown.classList.toggle('active');
+  });
+  
+  clearNotifications.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearAllNotifications();
+  });
+  
+  closeStudentModalBtn.addEventListener('click', closeStudentModal);
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    notificationDropdown.classList.remove('active');
+  });
+  
+  // Close modal when clicking outside
+  studentModal.addEventListener('click', (e) => {
+    if (e.target === studentModal) {
+      closeStudentModal();
+    }
+  });
+
+  // Create floating particles
+  function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+    
+    const numberOfParticles = 20;
+
+    for (let i = 0; i < numberOfParticles; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+      particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+      particle.style.animationDelay = Math.random() * 5 + 's';
+      particle.style.backgroundColor = `rgba(255, 71, 87, ${Math.random() * 0.3})`;
+      particlesContainer.appendChild(particle);
+    }
+  }
+
+  // Initialize particles when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    createParticles();
+  });
+</script>
+</body>
+</html>

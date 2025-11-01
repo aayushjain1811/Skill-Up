@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Courses - SkillUp</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #ffffff;
+      --primary-dark: #f8f9fa;
+      --primary-light: #e9ecef;
+      --secondary: #dee2e6;
+      --accent: #08d9d6;
+      --light: #4361ee;
+      --dark: #ffffff;
+      --gray: #adb5bd;
+      --gray-light: #343a40;
+      --success: #00f5ff;
+      --card-bg: linear-gradient(135deg, #ffffff, #f8f9fa);
+      --sidebar-bg: linear-gradient(180deg, #4361ee, #3a0ca3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--primary);
+      overflow-x: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* Loading Animation */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(67, 97, 238, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--success);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(67, 97, 238, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 97, 238, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(67, 97, 238, 0.3);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.4; }
+      50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+    }
+
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(67, 97, 238, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(58, 12, 163, 0.1));
+      animation: sidebarGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes sidebarGlow {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, #00f5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(0, 245, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: #00f5ff;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.7));
+    }
+
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-container {
+      position: relative;
+      z-index: 1002;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff4757;
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      padding: 40px 30px;
+      background: var(--bg-secondary);
+      margin: 30px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .welcome::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.05), rgba(0, 245, 255, 0.05));
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes welcomeGlow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .welcome-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .welcome h1 {
+      color: var(--primary);
+      font-size: 36px;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(0, 245, 255, 0.6)); }
+    }
+
+    .welcome p {
+      color: var(--gray);
+      font-size: 18px;
+      max-width: 600px;
+    }
+
+    /* Search Section */
+    .search-section {
+      padding: 0 30px;
+      margin-bottom: 30px;
+    }
+
+    .search-container {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 15px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 15px;
+      background: var(--bg-secondary);
+      color: var(--primary);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .search-input:focus {
+      outline: none;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.2);
+      border-color: rgba(67, 97, 238, 0.5);
+    }
+
+    .search-input::placeholder {
+      color: var(--gray);
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    /* Results Counter */
+    .results-counter {
+      text-align: center;
+      margin: 20px 0;
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    /* Courses Grid */
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 25px;
+      padding: 0 30px;
+      margin-bottom: 40px;
+    }
+
+    /* Course Card */
+    .course-card {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      color: var(--primary);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .course-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .course-card:hover::before {
+      opacity: 1;
+    }
+
+    .course-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(67, 97, 238, 0.2);
+    }
+
+    .course-category {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--light), var(--success));
+      color: white;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .course-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: var(--primary);
+      line-height: 1.3;
+    }
+
+    .course-description {
+      color: var(--gray);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .course-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .course-duration {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .course-level {
+      background: rgba(67, 97, 238, 0.2);
+      padding: 5px 10px;
+      border-radius: 10px;
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    /* Course Actions */
+    .course-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .continue-learning-btn {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-left: auto;
+    }
+
+    .continue-learning-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .enrolled-badge {
+      background: linear-gradient(45deg, #28a745, #20c997);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-weight: 600;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .course-button {
+      width: 100%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .course-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    /* No Results Message */
+    .no-results {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--gray);
+      display: none;
+      grid-column: 1 / -1;
+    }
+
+    .no-results.show {
+      display: block;
+    }
+
+    .no-results-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .no-results h3 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .no-results p {
+      font-size: 1rem;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 3rem 0;
+      color: var(--gray);
+      grid-column: 1 / -1;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    /* Notification Dropdown */
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      z-index: 1001;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .notification-clear {
+      background: transparent;
+      border: none;
+      color: var(--success);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      padding: 10px 0;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .notification-item.unread {
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .notification-title {
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--gray-light);
+      font-size: 12px;
+    }
+
+    .notification-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--gray);
+    }
+
+    /* Teacher Selection Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+      animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 30px;
+      position: relative;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 24px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .close-modal:hover {
+      color: var(--success);
+      transform: rotate(90deg);
+    }
+
+    .modal-text {
+      color: var(--gray);
+      margin-bottom: 20px;
+    }
+
+    .selected-count {
+      text-align: center;
+      margin: 15px 0;
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .teachers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .teacher-card {
+      background: var(--bg-main);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .teacher-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(67, 97, 238, 0.5);
+    }
+
+    .teacher-card.selected {
+      border-color: var(--success);
+      box-shadow: 0 5px 15px rgba(0, 245, 255, 0.3);
+    }
+
+    .teacher-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      margin: 0 auto 15px;
+    }
+
+    .teacher-name {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .teacher-specialty {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      flex: 1;
+    }
+
+    .modal-btn.cancel {
+      background: var(--bg-main);
+      color: var(--primary);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .modal-btn.confirm {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+    }
+
+    .modal-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .modal-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    /* Logout Confirmation Modal */
+    .logout-modal .modal-content {
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .logout-icon {
+      font-size: 60px;
+      color: #ff4757;
+      margin: 20px 0;
+      animation: pulse 2s infinite;
+    }
+
+    .logout-text {
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .logout-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      color: white;
+    }
+
+    /* Success Enrollment Modal */
+    .success-modal .modal-content {
+      max-width: 450px;
+      padding: 40px 30px;
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 25px;
+      position: relative;
+    }
+
+    .checkmark {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      stroke-width: 3;
+      stroke: #4bb71b;
+      stroke-miterlimit: 10;
+      box-shadow: inset 0px 0px 0px var(--success);
+      animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+    }
+
+    .checkmark-circle {
+      stroke-dasharray: 166;
+      stroke-dashoffset: 166;
+      stroke-width: 3;
+      stroke-miterlimit: 10;
+      stroke: var(--success);
+      fill: none;
+      animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .checkmark-check {
+      transform-origin: 50% 50%;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+      animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
+
+    @keyframes stroke {
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes scale {
+      0%, 100% {
+        transform: none;
+      }
+      50% {
+        transform: scale3d(1.1, 1.1, 1);
+      }
+    }
+
+    @keyframes fill {
+      100% {
+        box-shadow: inset 0px 0px 0px 50px var(--success);
+      }
+    }
+
+    .success-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .success-message {
+      color: var(--gray);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .teacher-assignment {
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .teacher-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .teacher-avatar-small {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .teacher-details {
+      text-align: left;
+    }
+
+    .teacher-name-assigned {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .teacher-specialty-assigned {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .success-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    /* Error and status messages */
+    .message-toast {
+      position: fixed;
+      top: 100px;
+      right: 30px;
+      padding: 15px 25px;
+      border-radius: 10px;
+      z-index: 3000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      animation: slideInRight 0.3s ease;
+      max-width: 400px;
+      word-wrap: break-word;
+    }
+
+    .message-toast.success {
+      background: linear-gradient(45deg, #28a745, #20c997);
+      color: white;
+    }
+
+    .message-toast.error {
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      color: white;
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(100%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .courses-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content.sidebar-open {
+        margin-left: 0;
+      }
+      
+      .sidebar {
+        width: 100%;
+      }
+      
+      .courses-grid {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+      }
+      
+      .topbar {
+        padding: 0 20px;
+      }
+      
+      .welcome {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+      
+      .welcome h1 {
+        font-size: 28px;
+      }
+
+      .search-section {
+        padding: 0 20px;
+      }
+
+      .notification-dropdown {
+        width: 280px;
+        right: 10px;
+      }
+
+      .message-toast {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+
+      .teachers-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .success-actions {
+        flex-direction: column;
+      }
+
+      .success-actions .btn {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .course-card {
+        padding: 20px;
+      }
+
+      .course-title {
+        font-size: 18px;
+      }
+
+      .course-actions {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .continue-learning-btn {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .enrolled-badge {
+        width: 100%;
+      }
+
+      .modal-content {
+        padding: 20px;
+        margin: 20px;
+      }
+
+      .modal-footer {
+        flex-direction: column;
+      }
+
+      .topbar-title {
+        font-size: 24px;
+      }
+
+      .user-info span {
+        display: none;
+      }
+
+      .teachers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Animation -->
+  <div class="loading-container" id="loadingContainer">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading courses...</div>
+  </div>
+
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="courses.html" class="active"><i class="fas fa-book"></i> Courses</a></li>
+        <li><a href="mylearning.html"><i class="fas fa-chart-line"></i> My Learning</a></li>
+        <li><a href="studentmessages.html"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">Courses</div>
+        </div>
+        
+        <div class="user-info">
+          <div class="notification-container">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="notification-clear" id="clearNotifications">Clear All</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be populated here -->
+              </div>
+            </div>
+          </div>
+          <span id="userDisplayName">Loading...</span>
+          <div class="avatar">
+            <span id="userInitials">U</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Section -->
+      <section class="welcome">
+        <div class="welcome-content">
+          <h1>Explore Courses</h1>
+          <p id="welcomeSubtitle">Discover new skills and advance your career with our comprehensive course library</p>
+        </div>
+      </section>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="search-container">
+          <input type="text" id="searchInput" class="search-input" placeholder="Search courses..." autocomplete="off">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+        </div>
+      </div>
+
+      <div class="results-counter" id="resultsCounter">
+        Showing <span id="courseCount">0</span> courses
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading courses...</p>
+      </div>
+
+      <!-- Courses Grid -->
+      <div class="courses-grid" id="coursesGrid">
+        <!-- Courses will load here -->
+      </div>
+
+      <!-- No Results -->
+      <div class="no-results" id="noResults">
+        <div class="no-results-icon">📚</div>
+        <h3>No courses found</h3>
+        <p>Try adjusting your search terms or browse all available courses</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teacher Selection Modal -->
+  <div class="modal" id="teacherModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Select Your Preferred Teachers</h2>
+        <button class="close-modal" id="closeTeacherModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <p class="modal-text">Please select 5 teachers you'd like to learn from. The system will assign the teacher with the most availability.</p>
+      <div class="selected-count">Selected: <span id="selectedCount">0</span>/5</div>
+      <div class="teachers-grid" id="teacherList">
+        <!-- Teachers will be loaded here from Firebase -->
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" id="cancelEnrollment">Cancel</button>
+        <button class="modal-btn confirm" id="confirmTeacherBtn" disabled>Enroll Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Enrollment Modal -->
+  <div class="modal success-modal" id="successModal">
+    <div class="modal-content">
+      <div class="success-icon">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h2 class="success-title">Enrollment Successful!</h2>
+      <p class="success-message" id="successMessage">You have been successfully enrolled in the course!</p>
+      
+      <div class="teacher-assignment">
+        <div class="teacher-info">
+          <div class="teacher-avatar-small" id="successTeacherAvatar">T</div>
+          <div class="teacher-details">
+            <div class="teacher-name-assigned" id="successTeacherName">Teacher Name</div>
+            <div class="teacher-specialty-assigned" id="successTeacherSpecialty">Specialty</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="success-actions">
+        <button class="modal-btn cancel" id="closeSuccessModal">Close</button>
+        <button class="modal-btn confirm" id="viewCourseBtn">View Course</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal logout-modal" id="logoutModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Logout</h2>
+        <button class="close-modal" id="closeLogoutModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="logout-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <p class="logout-text">Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="modal-btn cancel" id="cancelLogout">Cancel</button>
+        <button class="modal-btn confirm btn-danger" id="confirmLogout">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+    // Firebase SDK imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      getDocs, 
+      doc, 
+      getDoc, 
+      updateDoc,
+      arrayUnion,
+      setDoc,
+      query,
+      where,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { 
+      getAuth, 
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+      authDomain: "growup-93f5d.firebaseapp.com",
+      projectId: "growup-93f5d",
+      storageBucket: "growup-93f5d.firebasestorage.app",
+      messagingSenderId: "775742235468",
+      appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+      measurementId: "G-FWBKTSQDS9"
+    };
+
+    // Initialize Firebase with error handling
+    let app, db, auth;
+    try {
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      auth = getAuth(app);
+      console.log("Firebase initialized successfully");
+    } catch (error) {
+      console.error("Firebase initialization error:", error);
+    }
+
+    // DOM elements
+    const loadingContainer = document.getElementById('loadingContainer');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const closeSidebar = document.getElementById('closeSidebar');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const logoutModal = document.getElementById('logoutModal');
+    const closeLogoutModal = document.getElementById('closeLogoutModal');
+    const cancelLogout = document.getElementById('cancelLogout');
+    const confirmLogout = document.getElementById('confirmLogout');
+    const notificationIcon = document.getElementById('notificationIcon');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const clearNotifications = document.getElementById('clearNotifications');
+    const notificationList = document.getElementById('notificationList');
+    const userDisplayName = document.getElementById('userDisplayName');
+    const userInitials = document.getElementById('userInitials');
+    const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+    
+    const searchInput = document.getElementById("searchInput");
+    const coursesGrid = document.getElementById("coursesGrid");
+    const resultsCounter = document.getElementById("resultsCounter");
+    const courseCount = document.getElementById("courseCount");
+    const noResults = document.getElementById("noResults");
+    const loading = document.getElementById("loading");
+    const teacherModal = document.getElementById("teacherModal");
+    const teacherList = document.getElementById("teacherList");
+    const confirmTeacherBtn = document.getElementById("confirmTeacherBtn");
+    const closeTeacherModal = document.getElementById("closeTeacherModal");
+    const cancelEnrollment = document.getElementById("cancelEnrollment");
+    const selectedCount = document.getElementById("selectedCount");
+    
+    // Success modal elements
+    const successModal = document.getElementById('successModal');
+    const successMessage = document.getElementById('successMessage');
+    const successTeacherAvatar = document.getElementById('successTeacherAvatar');
+    const successTeacherName = document.getElementById('successTeacherName');
+    const successTeacherSpecialty = document.getElementById('successTeacherSpecialty');
+    const closeSuccessModal = document.getElementById('closeSuccessModal');
+    const viewCourseBtn = document.getElementById('viewCourseBtn');
+
+    // State
+    let courses = [];
+    let filteredCourses = [];
+    let searchTimeout;
+    let currentUser = null;
+    let currentCourseToEnroll = null;
+    let selectedTeachers = [];
+    let enrolledCourseId = null;
+
+    // Initialize the page
+    function initPage() {
+      console.log("Initializing courses page...");
+      
+      // Set up event listeners
+      setupEventListeners();
+      
+      // Create floating particles
+      createParticles();
+
+      // Check authentication state
+      if (auth) {
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            currentUser = user;
+            await setupUserInfo(user);
+            await fetchCourses();
+            await loadNotifications(user.uid);
+            
+            // Set up real-time listeners
+            setupRealtimeListeners(user.uid);
+            
+            // Hide loading animation
+            setTimeout(() => {
+              if (loadingContainer) loadingContainer.classList.add('hidden');
+            }, 1000);
+          } else {
+            window.location.href = "signin.html";
+          }
+        }, (error) => {
+          console.error("Auth state change error:", error);
+          window.location.href = "signin.html";
+        });
+      } else {
+        console.error("Firebase auth not available");
+        window.location.href = "signin.html";
+      }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Sidebar functionality
+      sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        mainContent.classList.add('sidebar-open');
+      });
+
+      closeSidebar.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        mainContent.classList.remove('sidebar-open');
+      });
+
+      // Close sidebar on outside click
+      document.addEventListener('click', (e) => {
+        if (sidebar.classList.contains('active')) {
+          if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('active');
+            mainContent.classList.remove('sidebar-open');
+          }
+        }
+      });
+
+      // Logout functionality
+      logoutBtn.addEventListener('click', () => {
+        logoutModal.classList.add('active');
+      });
+
+      closeLogoutModal.addEventListener('click', () => {
+        logoutModal.classList.remove('active');
+      });
+
+      cancelLogout.addEventListener('click', () => {
+        logoutModal.classList.remove('active');
+      });
+
+      confirmLogout.addEventListener('click', handleLogout);
+
+      // Notification functionality
+      if (notificationIcon) {
+        notificationIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (notificationDropdown) {
+            notificationDropdown.classList.toggle('active');
+            if (currentUser) {
+              loadNotifications(currentUser.uid);
+            }
+          }
+        });
+      }
+
+      if (clearNotifications) {
+        clearNotifications.addEventListener('click', () => {
+          clearAllNotifications();
+        });
+      }
+
+      // Close notification dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (notificationDropdown && notificationDropdown.classList.contains('active')) {
+          if (!notificationDropdown.contains(e.target) && 
+              !notificationIcon.contains(e.target) &&
+              !e.target.classList.contains('notification-clear')) {
+            notificationDropdown.classList.remove('active');
+          }
+        }
+      });
+
+      // Teacher selection modal
+      if (closeTeacherModal) {
+        closeTeacherModal.addEventListener('click', () => {
+          teacherModal.classList.remove('active');
+          resetTeacherSelection();
+        });
+      }
+
+      if (cancelEnrollment) {
+        cancelEnrollment.addEventListener('click', () => {
+          teacherModal.classList.remove('active');
+          resetTeacherSelection();
+        });
+      }
+
+      if (confirmTeacherBtn) {
+        confirmTeacherBtn.addEventListener('click', handleTeacherConfirmation);
+      }
+
+      // Success modal functionality
+      if (closeSuccessModal) {
+        closeSuccessModal.addEventListener('click', () => {
+          successModal.classList.remove('active');
+        });
+      }
+
+      if (viewCourseBtn) {
+        viewCourseBtn.addEventListener('click', () => {
+          successModal.classList.remove('active');
+          if (enrolledCourseId) {
+            window.location.href = `coursedetails.html?id=${enrolledCourseId}`;
+          }
+        });
+      }
+
+      // Search functionality
+      if (searchInput) {
+        searchInput.addEventListener('input', handleSearch);
+      }
+
+      // Close modals on outside click
+      document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+          e.target.classList.remove('active');
+          if (e.target.id === 'teacherModal') {
+            resetTeacherSelection();
+          }
+        }
+      });
+    }
+
+    // Set up real-time listeners for updates
+    function setupRealtimeListeners(userId) {
+      // Listen for user data changes
+      const userRef = doc(db, "users", userId);
+      onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          fetchCourses();
+          loadNotifications(userId);
+        }
+      });
+    }
+
+    // Setup user information
+    async function setupUserInfo(user) {
+      try {
+        const displayName = user.displayName || user.email.split('@')[0];
+        if (userDisplayName) userDisplayName.textContent = displayName;
+        
+        if (userInitials) {
+          const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+          userInitials.textContent = initials;
+        }
+        
+        // Update welcome subtitle based on user data
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          let subtitle = "Discover new skills and advance your career with our comprehensive course library";
+          
+          if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
+            const enrolledCount = Object.keys(userData.enrollments).length;
+            subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Explore more to continue your learning journey!`;
+          }
+          
+          if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+        }
+      } catch (error) {
+        console.error("Error setting up user info:", error);
+      }
+    }
+
+    // Handle logout
+    function handleLogout() {
+      signOut(auth).then(() => {
+        window.location.href = "index.html";
+      }).catch((error) => {
+        console.error("Error signing out:", error);
+        window.location.href = "index.html";
+      });
+    }
+
+    // Create floating particles for background
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      if (!particlesContainer) return;
+      
+      const numberOfParticles = 15;
+
+      for (let i = 0; i < numberOfParticles; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+        particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        particle.style.backgroundColor = `rgba(67, 97, 238, ${Math.random() * 0.3})`;
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    // Load notifications from Firebase
+    async function loadNotifications(userId) {
+      try {
+        if (!notificationList) return;
+
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+
+        notificationList.innerHTML = "";
+
+        if (userSnap.exists() && userSnap.data().notifications) {
+          const notifications = userSnap.data().notifications;
+          
+          notifications.sort((a, b) => {
+            const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+            const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+            return timeB - timeA;
+          });
+
+          const notificationsToShow = notifications.slice(0, 5);
+
+          if (notificationsToShow.length === 0) {
+            notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+            if (notificationBadge) {
+              notificationBadge.textContent = '0';
+              notificationBadge.style.display = 'none';
+            }
+            return;
+          }
+
+          const unreadCount = notifications.filter(n => !n.read).length;
+          if (notificationBadge) {
+            notificationBadge.textContent = unreadCount;
+            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+          }
+
+          notificationsToShow.forEach(notification => {
+            const notificationItem = document.createElement("div");
+            notificationItem.classList.add("notification-item");
+            if (!notification.read) {
+              notificationItem.classList.add("unread");
+            }
+            
+            let timeDisplay = "Recently";
+            if (notification.timestamp) {
+              const now = new Date();
+              const notificationTime = notification.timestamp.toDate();
+              const diffMs = now - notificationTime;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffMins < 1) timeDisplay = "Just now";
+              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+              else timeDisplay = `${diffDays}d ago`;
+            }
+            
+            notificationItem.innerHTML = `
+              <div class="notification-title">${notification.title}</div>
+              <div class="notification-message">${notification.message}</div>
+              <div class="notification-time">${timeDisplay}</div>
+            `;
+            
+            notificationItem.addEventListener('click', async () => {
+              if (!notification.read) {
+                notification.read = true;
+                await updateDoc(userRef, {
+                  notifications: notifications.map(n => 
+                    n.id === notification.id ? {...n, read: true} : n
+                  )
+                });
+                notificationItem.classList.remove('unread');
+                loadNotifications(userId);
+              }
+            });
+            
+            notificationList.appendChild(notificationItem);
+          });
+        } else {
+          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+          if (notificationBadge) {
+            notificationBadge.textContent = '0';
+            notificationBadge.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+        if (notificationList) {
+          notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+        }
+      }
+    }
+
+    // Clear all notifications
+    async function clearAllNotifications() {
+      try {
+        if (!currentUser) return;
+        
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().notifications) {
+          const notifications = userSnap.data().notifications.map(notification => ({
+            ...notification,
+            read: true
+          }));
+          
+          await updateDoc(userRef, {
+            notifications: notifications
+          });
+          
+          loadNotifications(currentUser.uid);
+        }
+      } catch (error) {
+        console.error("Error clearing notifications:", error);
+      }
+    }
+
+    // Fetch courses from Firestore and check enrollment status
+    async function fetchCourses() {
+      try {
+        if (!db) {
+          throw new Error("Firestore not available");
+        }
+        
+        const snapshot = await getDocs(collection(db, "courses"));
+        courses = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Check which courses user is already enrolled in using the enrollments map
+        if (currentUser) {
+          const userRef = doc(db, "users", currentUser.uid);
+          const userSnap = await getDoc(userRef);
+          
+          if (userSnap.exists() && userSnap.data().enrollments) {
+            const enrollments = userSnap.data().enrollments;
+            const enrolledCourseIds = Object.keys(enrollments);
+            
+            courses = courses.map(course => ({
+              ...course,
+              isEnrolled: enrolledCourseIds.includes(course.id),
+              enrollmentData: enrollments[course.id] || null
+            }));
+          } else {
+            // No enrollments yet
+            courses = courses.map(course => ({
+              ...course,
+              isEnrolled: false,
+              enrollmentData: null
+            }));
+          }
+        }
+
+        filteredCourses = [...courses];
+        if (loading) loading.style.display = "none";
+        renderCourses(filteredCourses);
+        updateResultsCounter(filteredCourses.length);
+      } catch (error) {
+        console.error("Error loading courses:", error);
+        if (loading) loading.style.display = "none";
+        if (coursesGrid) {
+          coursesGrid.innerHTML = "<p class='error-msg'>Error loading courses. Please try again.</p>";
+        }
+      }
+    }
+
+    // Render courses with proper enrollment status
+    function renderCourses(coursesToRender) {
+      if (!coursesGrid) return;
+      
+      if (coursesToRender.length === 0) {
+        coursesGrid.innerHTML = "";
+        if (noResults) noResults.classList.add("show");
+        return;
+      }
+
+      if (noResults) noResults.classList.remove("show");
+
+      const coursesHTML = coursesToRender
+        .map((course, index) => {
+          const progress = course.enrollmentData ? course.enrollmentData.progress || 0 : 0;
+          const isCompleted = course.enrollmentData ? (course.enrollmentData.progress === 100 || course.enrollmentData.hasPassedTest) : false;
+          
+          return `
+          <div class="course-card" style="animation-delay: ${index * 0.1}s">
+            <div class="course-category">${course.category || "General"}</div>
+            <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
+            <p class="course-description">${course.description || "No description available"}</p>
+            <div class="course-meta">
+              <div class="course-duration">
+                <span>⏱️</span>
+                <span>${course.duration || "Self-paced"}</span>
+              </div>
+              <div class="course-level">${course.level || "All Levels"}</div>
+            </div>
+            ${course.isEnrolled ? `
+              <div class="course-progress" style="margin-bottom: 15px;">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${progress}%"></div>
+                </div>
+                <div class="progress-text">${progress}% Complete${isCompleted ? ' ✅' : ''}</div>
+              </div>
+            ` : ''}
+            <div class="course-actions">
+              ${course.isEnrolled ? 
+                `<div class="enrolled-badge">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
+                 <button class="continue-learning-btn" data-course-id="${course.id}">
+                  ${isCompleted ? 'Review Course' : 'Continue Learning'} →
+                 </button>` 
+                : 
+                `<button class="course-button" data-course-id="${course.id}">
+                  Start Learning
+                 </button>`
+              }
+            </div>
+          </div>
+        `})
+        .join("");
+
+      coursesGrid.innerHTML = coursesHTML;
+
+      // Attach event listeners to buttons
+      attachCourseButtonListeners();
+    }
+
+    // Attach event listeners to course buttons
+    function attachCourseButtonListeners() {
+      // Start Learning buttons
+      document.querySelectorAll(".course-button").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation(); // Prevent event bubbling
+          const courseId = e.currentTarget.dataset.courseId;
+          enrollInCourse(courseId);
+        });
+      });
+
+      // Continue Learning buttons
+      document.querySelectorAll(".continue-learning-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation(); // Prevent event bubbling
+          const courseId = e.currentTarget.dataset.courseId;
+          window.location.href = `coursedetails.html?id=${courseId}`;
+        });
+      });
+
+      // Course card click (optional)
+      document.querySelectorAll(".course-card").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          // Only trigger if the click wasn't on a button
+          if (!e.target.closest('.course-button') && !e.target.closest('.continue-learning-btn')) {
+            const courseId = card.querySelector('[data-course-id]')?.dataset.courseId;
+            if (courseId) {
+              const course = courses.find(c => c.id === courseId);
+              if (course && course.isEnrolled) {
+                window.location.href = `coursedetails.html?id=${courseId}`;
+              }
+            }
+          }
+        });
+      });
+    }
+
+    // Enroll user in a course with teacher selection
+    function enrollInCourse(courseId) {
+      console.log("Enrolling in course:", courseId);
+      
+      if (!currentUser) {
+        showMessage("Please log in to enroll in courses", "error");
+        setTimeout(() => {
+          window.location.href = "signin.html";
+        }, 2000);
+        return;
+      }
+
+      currentCourseToEnroll = {
+        id: courseId,
+        name: courses.find(c => c.id === courseId)?.name || courses.find(c => c.id === courseId)?.title || "Course"
+      };
+      
+      showTeacherModal();
+    }
+
+    // Show teacher selection modal
+    function showTeacherModal() {
+      if (!teacherModal) return;
+      
+      teacherModal.classList.add('active');
+      resetTeacherSelection();
+      loadTeachersForSelection();
+    }
+
+    // Reset teacher selection
+    function resetTeacherSelection() {
+      selectedTeachers = [];
+      if (selectedCount) selectedCount.textContent = "0";
+      if (confirmTeacherBtn) confirmTeacherBtn.disabled = true;
+      const teacherCards = document.querySelectorAll(".teacher-card");
+      teacherCards.forEach(card => card.classList.remove("selected"));
+    }
+
+    // Load teachers for selection modal from Firebase
+    async function loadTeachersForSelection() {
+      if (!teacherList) return;
+      
+      teacherList.innerHTML = "";
+
+      try {
+        let teachers = [];
+        
+        if (!db) {
+          throw new Error("Firestore not available");
+        }
+
+        // Fetch teachers from Firebase and ensure consistent data structure
+        const snapshot = await getDocs(collection(db, "teachers"));
+        teachers = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || data.displayName || "Teacher",
+            displayName: data.displayName || data.name || "Teacher",
+            specialty: data.specialty || data.expertise || "General Education"
+          };
+        });
+
+        teachers.forEach(teacher => {
+          const teacherCard = document.createElement("div");
+          teacherCard.className = "teacher-card";
+          teacherCard.dataset.teacherId = teacher.id;
+          
+          // Generate initials for avatar
+          const teacherName = teacher.name || teacher.displayName || "Teacher";
+          const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase();
+          
+          teacherCard.innerHTML = `
+            <div class="teacher-avatar">${initials}</div>
+            <div class="teacher-name">${teacherName}</div>
+            <div class="teacher-specialty">${teacher.specialty || "General Education"}</div>
+          `;
+          
+          teacherCard.addEventListener("click", () => {
+            if (teacherCard.classList.contains("selected")) {
+              // Deselect teacher
+              teacherCard.classList.remove("selected");
+              selectedTeachers = selectedTeachers.filter(t => t.id !== teacher.id);
+            } else if (selectedTeachers.length < 5) {
+              // Select teacher
+              teacherCard.classList.add("selected");
+              selectedTeachers.push(teacher);
+            } else {
+              showMessage("You can only select up to 5 teachers", "error");
+              return;
+            }
+            
+            // Update selected count and button state
+            if (selectedCount) selectedCount.textContent = selectedTeachers.length;
+            if (confirmTeacherBtn) confirmTeacherBtn.disabled = selectedTeachers.length !== 5;
+          });
+          
+          teacherList.appendChild(teacherCard);
+        });
+
+        if (teachers.length === 0) {
+          teacherList.innerHTML = '<p class="no-results">No teachers available at the moment.</p>';
+        }
+      } catch (error) {
+        console.error("Error loading teachers:", error);
+        teacherList.innerHTML = '<p class="no-results">Error loading teachers. Please try again.</p>';
+      }
+    }
+
+    // Get teacher with the least students for balanced distribution
+    async function getTeacherWithLeastStudents(teachers) {
+      try {
+        console.log("Finding teacher with least students from:", teachers.map(t => t.name));
+        
+        // Get all teacher data with their current student counts
+        const teacherDataPromises = teachers.map(async (teacher) => {
+          try {
+            // Count students for this teacher by querying user enrollments
+            const usersQuery = query(collection(db, "users"));
+            const usersSnap = await getDocs(usersQuery);
+            
+            let studentCount = 0;
+            usersSnap.forEach(userDoc => {
+              const userData = userDoc.data();
+              if (userData.enrollments) {
+                Object.values(userData.enrollments).forEach(enrollment => {
+                  if (enrollment.teacherId === teacher.id) {
+                    studentCount++;
+                  }
+                });
+              }
+            });
+            
+            console.log(`Teacher ${teacher.name} has ${studentCount} students`);
+            
+            return {
+              ...teacher,
+              studentCount: studentCount
+            };
+          } catch (error) {
+            console.error(`Error counting students for teacher ${teacher.name}:`, error);
+            return {
+              ...teacher,
+              studentCount: 0
+            };
+          }
+        });
+        
+        const teachersWithCounts = await Promise.all(teacherDataPromises);
+        
+        // Sort by student count (ascending) and return the one with the least students
+        teachersWithCounts.sort((a, b) => a.studentCount - b.studentCount);
+        
+        console.log("Teacher distribution:", teachersWithCounts.map(t => ({
+          name: t.name,
+          studentCount: t.studentCount
+        })));
+        
+        // If there's a tie, randomly select from the least burdened teachers
+        const minCount = teachersWithCounts[0].studentCount;
+        const leastBurdenedTeachers = teachersWithCounts.filter(t => t.studentCount === minCount);
+        
+        // Randomly select from least burdened teachers
+        const randomIndex = Math.floor(Math.random() * leastBurdenedTeachers.length);
+        const selectedTeacher = leastBurdenedTeachers[randomIndex];
+        
+        console.log("Selected teacher:", selectedTeacher.name, "with", selectedTeacher.studentCount, "students");
+        
+        return selectedTeacher;
+      } catch (error) {
+        console.error("Error finding teacher with least students:", error);
+        // Fallback: return random teacher
+        const randomIndex = Math.floor(Math.random() * teachers.length);
+        return teachers[randomIndex];
+      }
+    }
+
+    // Handle teacher confirmation
+    async function handleTeacherConfirmation() {
+      if (selectedTeachers.length !== 5) {
+        showMessage("Please select exactly 5 teachers", "error");
+        return;
+      }
+
+      try {
+        // Show loading state
+        confirmTeacherBtn.disabled = true;
+        confirmTeacherBtn.textContent = "Enrolling...";
+
+        // Get teacher with the least students for balanced distribution
+        const assignedTeacher = await getTeacherWithLeastStudents(selectedTeachers);
+        
+        const success = await completeEnrollment(assignedTeacher);
+        
+        if (success) {
+          // Show success modal
+          showSuccessModal(currentCourseToEnroll.name, assignedTeacher);
+          
+          if (teacherModal) teacherModal.classList.remove('active');
+          
+          // Refresh courses to show enrolled status
+          if (currentUser) {
+            await fetchCourses();
+          }
+          
+          resetTeacherSelection();
+        } else {
+          showMessage("Failed to enroll in course. Please try again.", "error");
+        }
+      } catch (error) {
+        console.error("Error in teacher confirmation:", error);
+        showMessage("An error occurred during enrollment. Please try again.", "error");
+      } finally {
+        // Reset button state
+        confirmTeacherBtn.disabled = false;
+        confirmTeacherBtn.textContent = "Enroll Now";
+      }
+    }
+
+    // Show success modal with teacher info
+    function showSuccessModal(courseName, teacher) {
+      if (!successModal || !successMessage || !successTeacherName || !successTeacherSpecialty || !successTeacherAvatar) {
+        console.error("Success modal elements not found");
+        return;
+      }
+      
+      // Store the enrolled course ID for navigation
+      enrolledCourseId = currentCourseToEnroll.id;
+      
+      // Update success message
+      successMessage.textContent = `You have been successfully enrolled in "${courseName}"!`;
+      
+      // Update teacher info
+      const teacherName = teacher.name || teacher.displayName || "Teacher";
+      successTeacherName.textContent = teacherName;
+      successTeacherSpecialty.textContent = teacher.specialty || "General Education";
+      
+      // Set teacher avatar
+      const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase() || "T";
+      successTeacherAvatar.textContent = initials;
+      
+      // Show the modal
+      successModal.classList.add('active');
+    }
+
+    // Complete enrollment with assigned teacher - UPDATED to match your Firestore structure
+    async function completeEnrollment(teacher) {
+      try {
+        console.log("Completing enrollment with teacher:", teacher);
+        
+        if (!db) {
+          throw new Error("Firestore not available");
+        }
+
+        const userRef = doc(db, "users", currentUser.uid);
+        const courseRef = doc(db, "courses", currentCourseToEnroll.id);
+
+        // Check if user exists, create if not
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          console.log("User document doesn't exist, creating...");
+          await setDoc(userRef, {
+            name: currentUser.displayName || "Student",
+            email: currentUser.email,
+            createdAt: new Date(),
+            enrollments: {},
+            profileComplete: false,
+            role: "student"
+          });
+        }
+
+        // Check if already enrolled
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        if (userData.enrollments && userData.enrollments[currentCourseToEnroll.id]) {
+          console.log("User already enrolled in this course");
+          return true;
+        }
+
+        // Get course data
+        const courseSnap = await getDoc(courseRef);
+        if (!courseSnap.exists()) {
+          throw new Error("Course not found");
+        }
+
+        const courseData = courseSnap.data();
+        const courseName = courseData.name || courseData.title || "Unknown Course";
+
+        console.log("Course data:", courseData);
+
+        // Create enrollment data - MATCHING YOUR EXACT FIRESTORE STRUCTURE
+        const enrollmentData = {
+          progress: 0,
+          completedLessons: [],
+          courseName: courseName,
+          enrolledAt: new Date(),
+          hasPassedTest: false,
+          lastAccessed: new Date(),
+          lectureProgress: 0,
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          testProgress: 0,
+          assignmentProgress: 0
+        };
+
+        console.log("Enrollment data to save:", enrollmentData);
+
+        // Update user document with enrollment
+        await updateDoc(userRef, {
+          [`enrollments.${currentCourseToEnroll.id}`]: enrollmentData
+        });
+
+        console.log("Enrollment saved to user document");
+
+        // Create notification - MATCHING YOUR FIRESTORE STRUCTURE
+        const notification = {
+          id: `enroll-${Date.now()}`,
+          title: "Course Enrolled Successfully!",
+          message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
+          timestamp: new Date(),
+          type: "enrollment",
+          courseId: currentCourseToEnroll.id,
+          teacherId: teacher.id,
+          read: false
+        };
+
+        // Add notification to user's notifications array
+        await updateDoc(userRef, {
+          notifications: arrayUnion(notification)
+        });
+
+        console.log("Notification created");
+
+        console.log(`Course ${currentCourseToEnroll.id} enrolled successfully with teacher ${teacher.id}`);
+        return true;
+
+      } catch (error) {
+        console.error("Error in enrollCourse:", error);
+        console.error("Error details:", {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
+        return false;
+      }
+    }
+
+    // Handle search
+    function handleSearch(e) {
+      const searchTerm = e.target.value.toLowerCase().trim();
+      clearTimeout(searchTimeout);
+
+      searchTimeout = setTimeout(() => {
+        if (searchTerm === "") {
+          filteredCourses = [...courses];
+        } else {
+          filteredCourses = courses.filter(course =>
+            (course.name && course.name.toLowerCase().includes(searchTerm)) ||
+            (course.title && course.title.toLowerCase().includes(searchTerm)) ||
+            (course.category && course.category.toLowerCase().includes(searchTerm)) ||
+            (course.description && course.description.toLowerCase().includes(searchTerm)) ||
+            (course.level && course.level.toLowerCase().includes(searchTerm))
+          );
+        }
+
+        renderCourses(filteredCourses);
+        updateResultsCounter(filteredCourses.length);
+      }, 300);
+    }
+
+    // Update results counter
+    function updateResultsCounter(count) {
+      if (!courseCount || !resultsCounter) return;
+      
+      courseCount.textContent = count;
+      resultsCounter.innerHTML = `Showing <span id="courseCount">${count}</span> course${count !== 1 ? "s" : ""}`;
+    }
+
+    // Show success/error messages
+    function showMessage(message, type = "success") {
+      // Remove any existing messages
+      const existingMessages = document.querySelectorAll('.message-toast');
+      existingMessages.forEach(msg => msg.remove());
+
+      // Create new message
+      const messageElement = document.createElement('div');
+      messageElement.className = `message-toast ${type}`;
+      messageElement.textContent = message;
+      
+      document.body.appendChild(messageElement);
+      
+      // Remove message after 4 seconds
+      setTimeout(() => {
+        if (messageElement.parentNode) {
+          messageElement.remove();
+        }
+      }, 4000);
+    }
+
+    // Initialize page when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("DOM loaded, initializing page...");
+      initPage();
+    });
+  </script>
+</body>
+</html>

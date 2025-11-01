@@ -1,0 +1,23 @@
+{
+  "name": "skillup",
+  "version": "1.0.0",
+  "description": "SkillUp backend for videos, tests and certificates",
+  "main": "backend/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon --watch backend/server.js --watch routes --watch controllers server.js"
+  },
+  "keywords": [],
+  "author": "Aayush Jain",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.5.0",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

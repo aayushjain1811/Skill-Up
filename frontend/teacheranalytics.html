@@ -1,0 +1,3074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillUp - Teacher Analytics</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary-red: #ff4757;
+      --primary-red-dark: #ff3742;
+      --primary-red-light: #ff6b6b;
+      --accent-red: #ff8e8e;
+      --light-red: rgba(255, 71, 87, 0.1);
+      --dark-red: rgba(255, 71, 87, 0.3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --text-primary: #ffffff;
+      --text-secondary: #adb5bd;
+      --sidebar-bg: linear-gradient(180deg, #ff4757, #ff3742);
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      background: var(--bg-main);
+      min-height: 100vh;
+    }
+    
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 71, 87, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 71, 87, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Loading Animation */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-red);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Dashboard Layout */
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+    
+    /* Sidebar Styles */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(255, 71, 87, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #1a1d29, #252937);
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: #ff3742;
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg,#ff4757, transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: white;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+    }
+
+    /* Logout at bottom */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-dark));
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--dark-red);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-container {
+      position: relative;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--primary-red);
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      padding: 40px 30px;
+      background: var(--bg-secondary);
+      margin: 30px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--dark-red);
+    }
+
+    .welcome::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.05), rgba(255, 142, 142, 0.05));
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes welcomeGlow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .welcome-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .welcome h1 {
+      color: var(--text-primary);
+      font-size: 36px;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6)); }
+    }
+
+    .welcome p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      max-width: 600px;
+    }
+
+    /* Content Sections */
+    .content-section {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      padding: 2rem;
+      margin: 0 30px 2rem;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    /* Stats Cards */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.05), rgba(255, 142, 142, 0.05));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover::before {
+      opacity: 1;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      font-size: 1.8rem;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .stat-info {
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-top: 0.3rem;
+    }
+    
+    /* Charts Section */
+    .charts-container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .chart-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .chart-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.05), rgba(255, 142, 142, 0.05));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .chart-card:hover::before {
+      opacity: 1;
+    }
+    
+    .chart-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .chart-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .chart-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .chart-action-btn {
+      background: var(--light-red);
+      color: var(--primary-red);
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .chart-action-btn:hover {
+      background: var(--dark-red);
+    }
+    
+    .chart-wrapper {
+      position: relative;
+      height: 300px;
+    }
+    
+    /* Student Progress Cards */
+    .students-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .student-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .student-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.05), rgba(255, 142, 142, 0.05));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .student-card:hover::before {
+      opacity: 1;
+    }
+    
+    .student-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .student-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .student-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-right: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .student-avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+    
+    .student-avatar span {
+      position: relative;
+      z-index: 2;
+    }
+    
+    .student-info {
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .student-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    
+    .student-email {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .student-body {
+      padding: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .student-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .detail-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+    
+    .detail-value {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    .progress-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    
+    .progress-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    .progress-percentage {
+      font-weight: 600;
+      color: var(--primary-red);
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    
+    .student-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn-analysis {
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1.2rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-analysis::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+    
+    .btn-analysis:hover::before {
+      left: 100%;
+    }
+    
+    .btn-analysis:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+    
+    .btn-secondary {
+      background: var(--light-red);
+      color: var(--primary-red);
+      border: 1px solid var(--dark-red);
+      border-radius: 8px;
+      padding: 0.7rem 1.2rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex: 1;
+    }
+    
+    .btn-secondary:hover {
+      background: var(--dark-red);
+      transform: translateY(-2px);
+    }
+    
+    /* Filter Section */
+    .filter-container {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      margin-bottom: 2rem;
+    }
+    
+    .filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .filter-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .filter-box {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .filter-select {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      border: 1px solid var(--dark-red);
+      border-radius: 8px;
+      background: var(--bg-main);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary-red);
+      box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.1);
+    }
+    
+    /* Search Box */
+    .search-container {
+      display: flex;
+      align-items: center;
+      background: var(--bg-main);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--dark-red);
+      margin-bottom: 40px;
+    }
+    
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      padding: 0.5rem;
+    }
+    
+    .search-input:focus {
+      outline: none;
+    }
+    
+    .search-icon {
+      color: var(--text-secondary);
+      margin-right: 0.5rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      display: block;
+      opacity: 0.5;
+      color: var(--primary-red);
+    }
+    
+    .empty-state h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    /* Notification Dropdown */
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--dark-red);
+      z-index: 1000;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .notification-clear {
+      background: transparent;
+      border: none;
+      color: var(--primary-red);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      padding: 10px 0;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--dark-red);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      background: var(--light-red);
+    }
+
+    .notification-item.unread {
+      background: var(--light-red);
+    }
+
+    .notification-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .notification-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 2rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .evaluation-modal {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid var(--dark-red);
+    }
+    
+    .modal-overlay.active .evaluation-modal {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      padding: 2rem;
+      border-bottom: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .close-modal {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.3s ease;
+    }
+    
+    .close-modal:hover {
+      color: var(--primary-red);
+    }
+    
+    .modal-body {
+      padding: 2rem;
+    }
+    
+    .student-info-modal {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .student-avatar-large {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 1.5rem;
+      font-size: 1.3rem;
+    }
+    
+    .modal-footer {
+      padding: 2rem;
+      border-top: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+    
+    /* Student Detail Charts */
+    .student-detail-charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .student-chart-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .student-chart-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.05), rgba(255, 142, 142, 0.05));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .student-chart-card:hover::before {
+      opacity: 1;
+    }
+    
+    .student-chart-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .student-chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .student-chart-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .student-chart-wrapper {
+      position: relative;
+      height: 250px;
+    }
+    
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      background: rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 5s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-10px) translateX(20px); }
+      75% { transform: translateY(-15px) translateX(-10px); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .students-container {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      }
+      
+      .charts-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .student-detail-charts {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        max-width: 320px;
+      }
+      
+      .main-content {
+        padding: 1rem;
+        padding-top: 6rem;
+      }
+      
+      .topbar {
+        padding: 0 20px;
+      }
+      
+      .welcome {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+      
+      .content-section {
+        margin: 0 20px 2rem;
+      }
+      
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .students-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .filter-box {
+        flex-direction: column;
+      }
+      
+      .notification-dropdown {
+        width: 280px;
+        right: 10px;
+      }
+      
+      .evaluation-modal {
+        max-width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Loading Animation -->
+  <div class="loading-container" id="loadingContainer">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading analytics data...</div>
+  </div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="teacherdashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="teacherstudent.html"><i class="fas fa-users"></i> Students</a></li>
+        <li><a href="teacherassessment.html"><i class="fas fa-clipboard-check"></i> Assessments</a></li>
+        <li><a href="#" class="active"><i class="fas fa-chart-line"></i> Analytics</a></li>
+        <li><a href="teachermessages.html"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="teacherschedule.html"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+        <li><a href="teacherprofile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">Analytics Dashboard</div>
+        </div>
+        
+        <div class="user-info">
+          <!-- Single Notification Container -->
+          <div class="notification-container">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="notification-clear" id="clearNotifications">Clear All</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be populated here -->
+              </div>
+            </div>
+          </div>
+          <div class="avatar">
+            <span id="userInitials">AJ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Section -->
+      <section class="welcome">
+        <div class="welcome-content">
+          <h1 id="welcomeMessage">Analytics Dashboard</h1>
+          <p id="welcomeSubtitle">Track performance and student engagement</p>
+        </div>
+      </section>
+      
+      <!-- Stats Overview -->
+      <div class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">Performance Overview</h2>
+        </div>
+        
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 71, 87, 0.1); color: var(--primary-red);">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="totalStudents">0</div>
+              <div class="stat-label">Total Students</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 71, 87, 0.1); color: var(--primary-red);">
+              <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="totalCourses">0</div>
+              <div class="stat-label">Active Courses</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 71, 87, 0.1); color: var(--primary-red);">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="avgProgress">0%</div>
+              <div class="stat-label">Avg. Completion</div>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 71, 87, 0.1); color: var(--primary-red);">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number" id="completionRate">0%</div>
+              <div class="stat-label">Completion Rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Filter Section -->
+      <div class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">Filter Analytics</h2>
+          <button class="btn-secondary" id="resetFilters">
+            <span>Reset Filters</span>
+          </button>
+        </div>
+        
+        <div class="filter-box">
+          <select class="filter-select" id="courseFilter">
+            <option value="all">All Courses</option>
+            <!-- Course options will be populated dynamically -->
+          </select>
+          <select class="filter-select" id="timeFilter">
+            <option value="all">All Time</option>
+            <option value="week">Last 7 Days</option>
+            <option value="month">Last 30 Days</option>
+            <option value="quarter">Last 3 Months</option>
+          </select>
+          <button class="btn-analysis" id="applyFilters">
+            <span>Apply Filters</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Charts Section -->
+      <div class="content-section">
+        <div class="charts-container">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">Student Progress Overview</div>
+              <div class="chart-actions">
+                <button class="chart-action-btn" id="exportProgress">Export</button>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="progressChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-title">Course Performance</div>
+              <div class="chart-actions">
+                <button class="chart-action-btn" id="exportPerformance">Export</button>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="performanceChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Student Analytics -->
+      <div class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">Student Analytics</h2>
+          <div id="studentCount">0 students</div>
+        </div>
+        
+        <!-- Search Box -->
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" id="studentSearch" placeholder="Search students by name or email...">
+        </div>
+        
+        <div class="students-container" id="studentsList">
+          <!-- Student analytics cards will be dynamically added here -->
+        </div>
+        
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <i class="fas fa-chart-line"></i>
+          <h3>No Analytics Data Available</h3>
+          <p class="empty-description" id="emptyDescription">You don't have any students enrolled in your courses yet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Detail Modal -->
+  <div class="modal-overlay" id="studentDetailModal">
+    <div class="evaluation-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="studentDetailTitle">Student Analytics</h2>
+        <button class="close-modal" id="closeStudentDetailModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="student-info-modal">
+          <div class="student-avatar-large" id="detailStudentAvatar">JD</div>
+          <div>
+            <h3 id="detailStudentName">John Doe</h3>
+            <p id="detailStudentEmail">john.doe@example.com</p>
+            <p>Course: <span id="detailStudentCourse">Calculus I</span></p>
+            <p>Enrolled: <span id="detailEnrolledDate">September 15, 2023</span></p>
+          </div>
+        </div>
+        
+        <div class="student-detail-charts">
+          <div class="student-chart-card">
+            <div class="student-chart-header">
+              <div class="student-chart-title">Weekly Progress</div>
+            </div>
+            <div class="student-chart-wrapper">
+              <canvas id="studentWeeklyChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="student-chart-card">
+            <div class="student-chart-header">
+              <div class="student-chart-title">Assignment Completion</div>
+            </div>
+            <div class="student-chart-wrapper">
+              <canvas id="studentAssignmentChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="student-chart-card">
+            <div class="student-chart-header">
+              <div class="student-chart-title">Performance Trend</div>
+            </div>
+            <div class="student-chart-wrapper">
+              <canvas id="studentPerformanceChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="student-chart-card">
+            <div class="student-chart-header">
+              <div class="student-chart-title">Activity Overview</div>
+            </div>
+            <div class="student-chart-wrapper">
+              <canvas id="studentActivityChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-analysis" id="messageStudentBtn">
+          <i class="fas fa-comment"></i>
+          <span>Message Student</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="evaluation-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Logout</h2>
+        <button class="close-modal" id="closeLogoutModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelLogoutBtn">Cancel</button>
+        <button class="btn-analysis" id="confirmLogoutBtn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { 
+    getAuth, 
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import { 
+    getFirestore, 
+    collection, 
+    query, 
+    where, 
+    getDocs,
+    doc,
+    getDoc,
+    orderBy
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+    authDomain: "growup-93f5d.firebaseapp.com",
+    projectId: "growup-93f5d",
+    storageBucket: "growup-93f5d.firebasestorage.app",
+    messagingSenderId: "775742235468",
+    appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+    measurementId: "G-FWBKTSQDS9"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // DOM Elements
+  const loadingContainer = document.getElementById('loadingContainer');
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const closeSidebar = document.getElementById('closeSidebar');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const notificationIcon = document.getElementById('notificationIcon');
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  const notificationBadge = document.getElementById('notificationBadge');
+  const notificationList = document.getElementById('notificationList');
+  const clearNotifications = document.getElementById('clearNotifications');
+  const userInitials = document.getElementById('userInitials');
+  const welcomeMessage = document.getElementById('welcomeMessage');
+  const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+  const totalStudents = document.getElementById('totalStudents');
+  const totalCourses = document.getElementById('totalCourses');
+  const avgProgress = document.getElementById('avgProgress');
+  const completionRate = document.getElementById('completionRate');
+  const studentsList = document.getElementById('studentsList');
+  const studentCount = document.getElementById('studentCount');
+  const emptyState = document.getElementById('emptyState');
+  const emptyDescription = document.getElementById('emptyDescription');
+  const courseFilter = document.getElementById('courseFilter');
+  const timeFilter = document.getElementById('timeFilter');
+  const applyFilters = document.getElementById('applyFilters');
+  const resetFilters = document.getElementById('resetFilters');
+  const exportProgress = document.getElementById('exportProgress');
+  const exportPerformance = document.getElementById('exportPerformance');
+  const logoutModal = document.getElementById('logoutModal');
+  const closeLogoutModal = document.getElementById('closeLogoutModal');
+  const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+  const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+  const studentDetailModal = document.getElementById('studentDetailModal');
+  const closeStudentDetailModal = document.getElementById('closeStudentDetailModal');
+  const studentDetailTitle = document.getElementById('studentDetailTitle');
+  const detailStudentAvatar = document.getElementById('detailStudentAvatar');
+  const detailStudentName = document.getElementById('detailStudentName');
+  const detailStudentEmail = document.getElementById('detailStudentEmail');
+  const detailStudentCourse = document.getElementById('detailStudentCourse');
+  const detailEnrolledDate = document.getElementById('detailEnrolledDate');
+  const messageStudentBtn = document.getElementById('messageStudentBtn');
+  const studentSearch = document.getElementById('studentSearch');
+
+  // Chart instances
+  let progressChart = null;
+  let performanceChart = null;
+  let studentWeeklyChart = null;
+  let studentAssignmentChart = null;
+  let studentPerformanceChart = null;
+  let studentActivityChart = null;
+
+  // Current teacher data and analytics
+  let currentTeacher = null;
+  let allStudents = [];
+  let filteredStudents = [];
+  let allCourses = [];
+  let studentProgressData = [];
+  let notifications = [];
+  let currentStudentDetail = null;
+
+  // Check authentication state
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("User authenticated:", user.uid);
+      try {
+        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+        
+        if (teacherDoc.exists()) {
+          currentTeacher = { id: user.uid, ...teacherDoc.data() };
+          console.log("Teacher data loaded:", currentTeacher);
+          
+          // Update UI with teacher info
+          userInitials.textContent = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+          welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
+          welcomeSubtitle.textContent = `Track performance and student engagement`;
+          
+          // Set up real-time notifications
+          setupNotifications();
+          
+          // Load analytics data
+          await loadAnalyticsData();
+          
+          // Hide loading animation
+          setTimeout(() => {
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+          }, 1000);
+          
+        } else {
+          console.error("Teacher document not found for user:", user.uid);
+          window.location.href = "teachersignin.html";
+        }
+      } catch (error) {
+        console.error("Error getting teacher document:", error);
+        showError("Authentication error: " + error.message);
+      }
+    } else {
+      console.log("User not authenticated, redirecting to login");
+      window.location.href = "teachersignin.html";
+    }
+  });
+
+  // Helper function to get initials
+  function getInitials(firstName, lastName) {
+    if (!firstName || !lastName) return "TU";
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  }
+
+  // Load analytics data from Firebase - UPDATED FOR MULTIPLE COURSES
+  async function loadAnalyticsData() {
+    try {
+      allStudents = [];
+      allCourses = [];
+      studentProgressData = [];
+      
+      console.log("Loading students for teacher:", currentTeacher.id);
+      
+      // Get ALL users from the users collection
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      console.log(`Found ${usersSnapshot.size} users in database`);
+      
+      // Get ALL courses for course name mapping
+      const coursesSnapshot = await getDocs(collection(db, "courses"));
+      const courseMap = {};
+      const teacherCourses = new Set(); // Track courses assigned to this teacher
+      
+      coursesSnapshot.forEach(doc => {
+        courseMap[doc.id] = doc.data().name;
+      });
+      
+      let enrollmentCount = 0;
+      
+      // Process each user to find students enrolled with this teacher
+      for (const userDoc of usersSnapshot.docs) {
+        const userData = userDoc.data();
+        
+        // Check if user has enrollments (students will have enrollments)
+        if (userData.enrollments) {
+          // Check each enrollment to see if this teacher is assigned
+          for (const courseId in userData.enrollments) {
+            const enrollment = userData.enrollments[courseId];
+            
+            // Check if this enrollment has our teacher assigned
+            if (enrollment.teacherId === currentTeacher.id) {
+              enrollmentCount++;
+              
+              const courseName = courseMap[courseId] || "Unknown Course";
+              
+              // Add this course to teacher's courses set
+              teacherCourses.add(courseId);
+              
+              // Get assignment data for this course and student
+              const assignmentData = await getStudentAssignmentData(userDoc.id, courseId);
+              
+              // Generate weekly progress data
+              const weeklyProgress = await generateWeeklyProgress(userDoc.id, courseId, enrollment);
+              
+              // Create a separate student record for each course enrollment
+              allStudents.push({
+                id: userDoc.id,
+                enrollmentId: `${userDoc.id}_${courseId}`, // Unique ID for this enrollment
+                firstName: userData.firstName || "Student",
+                lastName: userData.lastName || "User",
+                email: userData.email || "No email",
+                courseId: courseId,
+                courseName: courseName,
+                progress: enrollment.progress || 0,
+                lastActivity: enrollment.lastAccessed ? 
+                  formatDate(enrollment.lastAccessed.toDate()) : "Never",
+                enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
+                assignmentsCompleted: assignmentData.completedAssignments,
+                totalAssignments: assignmentData.totalAssignments,
+                performance: getPerformanceFromProgress(enrollment.progress || 0),
+                weeklyProgress: weeklyProgress,
+                assignmentData: assignmentData.assignments || [],
+                teacherName: enrollment.teacherName || `${currentTeacher.firstName} ${currentTeacher.lastName}`
+              });
+              
+              console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}`);
+            }
+          }
+        }
+      }
+      
+      console.log(`Found ${enrollmentCount} student-course enrollments with teacher ${currentTeacher.id}`);
+      
+      // Update course filter options with the courses we found
+      updateCourseFilter(Array.from(teacherCourses).map(courseId => ({
+        id: courseId,
+        name: courseMap[courseId] || "Unknown Course"
+      })));
+      
+      filteredStudents = [...allStudents];
+      
+      // Update stats
+      updateStats();
+      
+      // Render students
+      renderStudents();
+      
+      // Initialize charts with real data
+      initializeCharts();
+      
+    } catch (error) {
+      console.error("Error loading analytics data:", error);
+      showError("Error loading data: " + error.message);
+    }
+  }
+
+  // Get student assignment data from Firebase
+  async function getStudentAssignmentData(studentId, courseId) {
+    try {
+      // Query submissions for this student and course
+      const submissionsQuery = query(
+        collection(db, "submissions"),
+        where("studentId", "==", studentId),
+        where("courseId", "==", courseId)
+      );
+      
+      const submissionsSnapshot = await getDocs(submissionsQuery);
+      const assignments = [];
+      let completedAssignments = 0;
+      
+      // Get all assignments for this course from the assignments subcollection
+      let totalAssignments = 0;
+      try {
+        // Query assignments from the assignments subcollection in the course document
+        const assignmentsRef = collection(db, "courses", courseId, "assignments");
+        const assignmentsSnapshot = await getDocs(assignmentsRef);
+        totalAssignments = assignmentsSnapshot.size;
+        console.log(`Found ${totalAssignments} assignments for course ${courseId}`);
+      } catch (error) {
+        console.warn("Could not fetch assignments from subcollection:", error);
+        // Fallback: try the main assignments collection
+        try {
+          const assignmentsQuery = query(
+            collection(db, "assignments"),
+            where("courseId", "==", courseId)
+          );
+          const assignmentsSnapshot = await getDocs(assignmentsQuery);
+          totalAssignments = assignmentsSnapshot.size;
+          console.log(`Found ${totalAssignments} assignments for course ${courseId} from main collection`);
+        } catch (error2) {
+          console.warn("Could not fetch assignments from main collection:", error2);
+          // Final fallback: estimate based on submissions
+          totalAssignments = Math.max(submissionsSnapshot.size, 1); // Ensure at least 1
+          console.log(`Using fallback count: ${totalAssignments} assignments`);
+        }
+      }
+      
+      // Process submissions to find completed assignments
+      submissionsSnapshot.forEach(doc => {
+        const submission = doc.data();
+        // Check if submission is marked as completed or submitted
+        if (submission.status === 'completed' || submission.submitted === true || submission.grade !== undefined) {
+          completedAssignments++;
+        }
+        
+        assignments.push({
+          id: doc.id,
+          ...submission,
+          assignmentTitle: submission.assignmentTitle || "Unknown Assignment",
+          submittedAt: submission.submittedAt ? submission.submittedAt.toDate() : null,
+          grade: submission.grade || 0,
+          maxScore: submission.maxScore || 100
+        });
+      });
+      
+      // Ensure we don't show completed/total as 1/0
+      if (totalAssignments === 0) {
+        totalAssignments = 1; // Prevent division by zero
+      }
+      
+      return {
+        totalAssignments,
+        completedAssignments: Math.min(completedAssignments, totalAssignments),
+        assignments
+      };
+      
+    } catch (error) {
+      console.error("Error getting assignment data:", error);
+      // Return default values instead of failing completely
+      return {
+        totalAssignments: 1,
+        completedAssignments: 0,
+        assignments: []
+      };
+    }
+  }
+
+  // Generate weekly progress data from actual submission history
+  async function generateWeeklyProgress(studentId, courseId, enrollment) {
+    try {
+      const enrolledDate = enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date();
+      const currentDate = new Date();
+      
+      // Get all submissions for this student in this course, ordered by date
+      const submissionsQuery = query(
+        collection(db, "submissions"),
+        where("studentId", "==", studentId),
+        where("courseId", "==", courseId),
+        orderBy("submittedAt", "asc")
+      );
+      
+      const submissionsSnapshot = await getDocs(submissionsQuery);
+      const submissions = [];
+      
+      submissionsSnapshot.forEach(doc => {
+        const submission = doc.data();
+        submissions.push({
+          submittedAt: submission.submittedAt ? submission.submittedAt.toDate() : null,
+          grade: submission.grade || 0,
+          maxScore: submission.maxScore || 100
+        });
+      });
+      
+      const weeklyData = [];
+      let currentWeek = 1;
+      let totalProgress = 0;
+      
+      // Calculate progress for each week (max 30 days)
+      const maxWeeks = 4; // 30 days max
+      for (let weekStart = new Date(enrolledDate); weekStart <= currentDate && currentWeek <= maxWeeks; weekStart.setDate(weekStart.getDate() + 7)) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        
+        // Find submissions in this week
+        const weekSubmissions = submissions.filter(sub => 
+          sub.submittedAt && sub.submittedAt >= weekStart && sub.submittedAt <= weekEnd
+        );
+        
+        // Calculate progress for this week
+        if (weekSubmissions.length > 0) {
+          const weekAverage = weekSubmissions.reduce((sum, sub) => sum + (sub.grade / sub.maxScore * 100), 0) / weekSubmissions.length;
+          totalProgress = Math.max(totalProgress, weekAverage);
+        }
+        
+        // Get total assignments for progress calculation
+        let totalAssignments = 0;
+        try {
+          // Try to get assignments from course subcollection first
+          const assignmentsRef = collection(db, "courses", courseId, "assignments");
+          const assignmentsSnapshot = await getDocs(assignmentsRef);
+          totalAssignments = assignmentsSnapshot.size;
+        } catch (error) {
+          console.warn("Could not fetch assignments from subcollection:", error);
+          // Fallback to main assignments collection
+          try {
+            const assignmentsQuery = query(
+              collection(db, "assignments"),
+              where("courseId", "==", courseId)
+            );
+            const assignmentsSnapshot = await getDocs(assignmentsQuery);
+            totalAssignments = assignmentsSnapshot.size;
+          } catch (error2) {
+            console.warn("Could not fetch assignments from main collection:", error2);
+            totalAssignments = 10; // Default estimate
+          }
+        }
+        
+        const completedThisWeek = weekSubmissions.length;
+        
+        weeklyData.push({
+          week: currentWeek,
+          progress: Math.round(totalProgress),
+          assignmentsCompleted: completedThisWeek,
+          totalAssignments: totalAssignments
+        });
+        
+        currentWeek++;
+      }
+      
+      return weeklyData;
+      
+    } catch (error) {
+      console.error("Error generating weekly progress:", error);
+      // Fallback to calculated progress based on enrollment
+      return generateFallbackWeeklyProgress(enrollment);
+    }
+  }
+
+  // Fallback weekly progress calculation
+  function generateFallbackWeeklyProgress(enrollment) {
+    const enrolledDate = enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date();
+    const currentDate = new Date();
+    const weeksSinceEnrollment = Math.ceil((currentDate - enrolledDate) / (7 * 24 * 60 * 60 * 1000));
+    
+    const weeklyData = [];
+    let currentProgress = 0;
+    
+    for (let week = 1; week <= Math.min(weeksSinceEnrollment, 4); week++) {
+      const weeklyIncrease = Math.min(100 - currentProgress, Math.random() * 15 + 5);
+      currentProgress += weeklyIncrease;
+      
+      if (currentProgress > (enrollment.progress || 0)) {
+        currentProgress = enrollment.progress || 0;
+      }
+      
+      weeklyData.push({
+        week: week,
+        progress: Math.round(currentProgress),
+        assignmentsCompleted: Math.floor((currentProgress / 100) * 10) // Estimate based on progress
+      });
+    }
+    
+    return weeklyData;
+  }
+
+  // Update course filter dropdown
+  function updateCourseFilter(courses) {
+    courseFilter.innerHTML = '<option value="all">All Courses</option>';
+    
+    courses.forEach(course => {
+      const option = document.createElement('option');
+      option.value = course.id;
+      option.textContent = course.name;
+      courseFilter.appendChild(option);
+    });
+    
+    console.log("Updated course filter with courses:", courses);
+  }
+
+  // Update statistics - UPDATED FOR MULTIPLE COURSES
+  function updateStats() {
+    if (allStudents.length === 0) {
+      totalStudents.textContent = "0";
+      totalCourses.textContent = "0";
+      avgProgress.textContent = "0%";
+      completionRate.textContent = "0%";
+      studentCount.textContent = "0 students";
+      return;
+    }
+    
+    // Total students - count unique students, not enrollments
+    const uniqueStudentIds = [...new Set(allStudents.map(student => student.id))];
+    totalStudents.textContent = uniqueStudentIds.length;
+    studentCount.textContent = `${uniqueStudentIds.length} students`;
+    
+    // Count unique courses
+    const uniqueCourses = new Set(allStudents.map(student => student.courseId));
+    totalCourses.textContent = uniqueCourses.size;
+    
+    // Average progress - average of all enrollments
+    const totalProgress = allStudents.reduce((sum, student) => sum + student.progress, 0);
+    const averageProgress = Math.round(totalProgress / allStudents.length);
+    avgProgress.textContent = `${averageProgress}%`;
+    
+    // Completion rate (students with progress >= 90%) - count unique students
+    const studentsNeedingAttention = new Set();
+    const completedStudents = new Set();
+    
+    allStudents.forEach(student => {
+      if (student.progress >= 90) {
+        completedStudents.add(student.id);
+      }
+    });
+    
+    const completionRateValue = Math.round((completedStudents.size / uniqueStudentIds.length) * 100);
+    completionRate.textContent = `${completionRateValue}%`;
+  }
+
+  // Initialize charts with real data
+  function initializeCharts() {
+    // Destroy existing charts if they exist
+    if (progressChart) {
+      progressChart.destroy();
+    }
+    if (performanceChart) {
+      performanceChart.destroy();
+    }
+    
+    // Calculate real progress data based on student enrollment dates
+    const progressData = calculateProgressData();
+    
+    // Student Progress Chart (Line Chart)
+    const progressCtx = document.getElementById('progressChart').getContext('2d');
+    progressChart = new Chart(progressCtx, {
+      type: 'line',
+      data: {
+        labels: progressData.labels,
+        datasets: [
+          {
+            label: 'Average Progress',
+            data: progressData.values,
+            borderColor: '#ff4757',
+            backgroundColor: 'rgba(255, 71, 87, 0.1)',
+            tension: 0.3,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'
+            }
+          }
+        }
+      }
+    });
+    
+    // Course Performance Chart (Bar Chart)
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    
+    // Get unique courses and their average progress
+    const coursePerformance = {};
+    allStudents.forEach(student => {
+      if (!coursePerformance[student.courseName]) {
+        coursePerformance[student.courseName] = {
+          totalProgress: 0,
+          studentCount: 0
+        };
+      }
+      coursePerformance[student.courseName].totalProgress += student.progress;
+      coursePerformance[student.courseName].studentCount++;
+    });
+    
+    const courseNames = Object.keys(coursePerformance);
+    const avgProgressByCourse = courseNames.map(course => 
+      Math.round(coursePerformance[course].totalProgress / coursePerformance[course].studentCount)
+    );
+    
+    performanceChart = new Chart(performanceCtx, {
+      type: 'bar',
+      data: {
+        labels: courseNames,
+        datasets: [
+          {
+            label: 'Avg. Progress',
+            data: avgProgressByCourse,
+            backgroundColor: 'rgba(255, 71, 87, 0.7)',
+            borderColor: '#ff4757',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Calculate real progress data based on student enrollment dates
+  function calculateProgressData() {
+    if (allStudents.length === 0) {
+      return { labels: [], values: [] };
+    }
+    
+    // Get the current date
+    const now = new Date();
+    
+    // Calculate the last 6 months for the chart
+    const labels = [];
+    const values = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+      labels.push(`${monthName} ${date.getFullYear()}`);
+      
+      // Calculate average progress for this month
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      
+      // Filter students enrolled before or during this month
+      const studentsInMonth = allStudents.filter(student => 
+        student.enrolledDate <= monthEnd
+      );
+      
+      if (studentsInMonth.length > 0) {
+        const totalProgress = studentsInMonth.reduce((sum, student) => {
+          return sum + student.progress;
+        }, 0);
+        
+        values.push(Math.round(totalProgress / studentsInMonth.length));
+      } else {
+        values.push(0);
+      }
+    }
+    
+    return { labels, values };
+  }
+
+  // Render students analytics - UPDATED FOR MULTIPLE COURSES
+  function renderStudents() {
+    if (filteredStudents.length === 0) {
+      studentsList.style.display = "none";
+      emptyState.style.display = "block";
+      
+      if (courseFilter.value !== "all") {
+        emptyDescription.textContent = "No students found for the selected course.";
+      } else if (studentSearch.value) {
+        emptyDescription.textContent = "No students found matching your search.";
+      } else {
+        emptyDescription.textContent = "You don't have any students enrolled in your courses yet.";
+      }
+      
+      return;
+    }
+    
+    studentsList.style.display = "grid";
+    emptyState.style.display = "none";
+    
+    // Clear current list
+    studentsList.innerHTML = "";
+    
+    // Create student cards
+    filteredStudents.forEach(student => {
+      const studentCard = createStudentCard(student);
+      studentsList.appendChild(studentCard);
+    });
+  }
+
+  // Create student card element - UPDATED FOR MULTIPLE COURSES
+  function createStudentCard(student) {
+    const card = document.createElement('div');
+    card.className = 'student-card';
+    
+    const initials = getInitials(student.firstName, student.lastName);
+    
+    // Determine performance color
+    let performanceColor = "#10b981"; // Default green for good
+    if (student.performance === "Needs Improvement") performanceColor = "#f59e0b"; // Yellow
+    if (student.performance === "Needs Attention") performanceColor = "#ef4444"; // Red
+    
+    card.innerHTML = `
+      <div class="student-header">
+        <div class="student-avatar">${initials}</div>
+        <div class="student-info">
+          <div class="student-name">${student.firstName} ${student.lastName}</div>
+          <div class="student-email">${student.email}</div>
+          <div class="student-course" style="font-size: 0.9rem; margin-top: 5px; color: rgba(255,255,255,0.8);">
+            <i class="fas fa-book"></i> ${student.courseName}
+          </div>
+        </div>
+      </div>
+      
+      <div class="student-body">
+        <div class="student-details">
+          <div class="detail-item">
+            <div class="detail-label">Course</div>
+            <div class="detail-value">${student.courseName}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Enrolled</div>
+            <div class="detail-value">${student.enrolledDate.toLocaleDateString()}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Assignments</div>
+            <div class="detail-value">${student.assignmentsCompleted}/${student.totalAssignments}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Performance</div>
+            <div class="detail-value" style="color: ${performanceColor}">${student.performance}</div>
+          </div>
+        </div>
+        
+        <div class="progress-section">
+          <div class="progress-header">
+            <div class="progress-label">Course Progress</div>
+            <div class="progress-percentage">${student.progress}%</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${student.progress}%"></div>
+          </div>
+        </div>
+        
+        <div class="student-actions">
+          <button class="btn-analysis" onclick="openStudentDetail('${student.enrollmentId}')">
+            <i class="fas fa-chart-line"></i>
+            <span>View Analysis</span>
+          </button>
+          <button class="btn-secondary" onclick="messageStudent('${student.id}', '${student.courseId}')">
+            <i class="fas fa-comment"></i>
+            <span>Message</span>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    return card;
+  }
+
+  // Open student detail modal - UPDATED FOR MULTIPLE COURSES
+  async function openStudentDetail(enrollmentId) {
+    const student = allStudents.find(s => s.enrollmentId === enrollmentId);
+    if (!student) return;
+    
+    currentStudentDetail = student;
+    
+    // Update modal content
+    detailStudentAvatar.textContent = getInitials(student.firstName, student.lastName);
+    detailStudentName.textContent = `${student.firstName} ${student.lastName}`;
+    detailStudentEmail.textContent = student.email;
+    detailStudentCourse.textContent = student.courseName;
+    detailEnrolledDate.textContent = student.enrolledDate.toLocaleDateString();
+    studentDetailTitle.textContent = `${student.firstName}'s Analytics - ${student.courseName}`;
+    
+    // Initialize student detail charts
+    await initializeStudentDetailCharts(student);
+    
+    // Show modal
+    studentDetailModal.classList.add('active');
+  }
+
+  // Initialize student detail charts
+  async function initializeStudentDetailCharts(student) {
+    // Destroy existing charts if they exist
+    if (studentWeeklyChart) studentWeeklyChart.destroy();
+    if (studentAssignmentChart) studentAssignmentChart.destroy();
+    if (studentPerformanceChart) studentPerformanceChart.destroy();
+    if (studentActivityChart) studentActivityChart.destroy();
+    
+    // Weekly Progress Chart
+    const weeklyCtx = document.getElementById('studentWeeklyChart').getContext('2d');
+    const weeklyLabels = student.weeklyProgress.map(w => `Week ${w.week}`);
+    const weeklyData = student.weeklyProgress.map(w => w.progress);
+    
+    studentWeeklyChart = new Chart(weeklyCtx, {
+      type: 'line',
+      data: {
+        labels: weeklyLabels,
+        datasets: [
+          {
+            label: 'Progress %',
+            data: weeklyData,
+            borderColor: '#ff4757',
+            backgroundColor: 'rgba(255, 71, 87, 0.1)',
+            tension: 0.3,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'
+            }
+          }
+        }
+      }
+    });
+    
+    // Assignment Completion Chart
+    const assignmentCtx = document.getElementById('studentAssignmentChart').getContext('2d');
+    studentAssignmentChart = new Chart(assignmentCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Completed', 'Remaining'],
+        datasets: [
+          {
+            data: [student.assignmentsCompleted, student.totalAssignments - student.assignmentsCompleted],
+            backgroundColor: ['#ff4757', 'rgba(255, 255, 255, 0.1)'],
+            borderColor: ['#ff4757', 'rgba(255, 255, 255, 0.2)'],
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'
+            }
+          }
+        }
+      }
+    });
+    
+    // Performance Trend Chart
+    const performanceCtx = document.getElementById('studentPerformanceChart').getContext('2d');
+    const performanceLabels = student.weeklyProgress.map(w => `Week ${w.week}`);
+    const performanceData = student.weeklyProgress.map(w => w.assignmentsCompleted);
+    
+    studentPerformanceChart = new Chart(performanceCtx, {
+      type: 'bar',
+      data: {
+        labels: performanceLabels,
+        datasets: [
+          {
+            label: 'Assignments Completed',
+            data: performanceData,
+            backgroundColor: 'rgba(255, 71, 87, 0.7)',
+            borderColor: '#ff4757',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'
+            }
+          }
+        }
+      }
+    });
+    
+    // Activity Overview Chart
+    const activityCtx = document.getElementById('studentActivityChart').getContext('2d');
+    studentActivityChart = new Chart(activityCtx, {
+      type: 'radar',
+      data: {
+        labels: ['Progress', 'Assignments', 'Engagement', 'Consistency', 'Performance'],
+        datasets: [
+          {
+            label: 'Student Performance',
+            data: [
+              student.progress,
+              (student.assignmentsCompleted / student.totalAssignments) * 100,
+              calculateEngagementScore(student),
+              calculateConsistencyScore(student),
+              getPerformanceScore(student.performance)
+            ],
+            backgroundColor: 'rgba(255, 71, 87, 0.2)',
+            borderColor: '#ff4757',
+            borderWidth: 2,
+            pointBackgroundColor: '#ff4757'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              color: 'rgba(255, 255, 255, 0.5)'
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            },
+            angleLines: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'white'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Calculate engagement score based on submission frequency
+  function calculateEngagementScore(student) {
+    if (!student.weeklyProgress || student.weeklyProgress.length === 0) return 50;
+    
+    const recentWeeks = student.weeklyProgress.slice(-4); // Last 4 weeks
+    const activeWeeks = recentWeeks.filter(week => week.assignmentsCompleted > 0).length;
+    return (activeWeeks / 4) * 100;
+  }
+
+  // Calculate consistency score based on progress pattern
+  function calculateConsistencyScore(student) {
+    if (!student.weeklyProgress || student.weeklyProgress.length < 2) return 50;
+    
+    let consistentWeeks = 0;
+    for (let i = 1; i < student.weeklyProgress.length; i++) {
+      const prevProgress = student.weeklyProgress[i-1].progress;
+      const currentProgress = student.weeklyProgress[i].progress;
+      
+      // Consider consistent if progress increases or stays the same
+      if (currentProgress >= prevProgress) {
+        consistentWeeks++;
+      }
+    }
+    
+    return (consistentWeeks / (student.weeklyProgress.length - 1)) * 100;
+  }
+
+  // Helper function to get performance score
+  function getPerformanceScore(performance) {
+    switch(performance) {
+      case 'Excellent': return 95;
+      case 'Good': return 75;
+      case 'Needs Improvement': return 55;
+      case 'Needs Attention': return 35;
+      default: return 50;
+    }
+  }
+
+  // Helper function to format date
+  function formatDate(date) {
+    if (!date) return "Never";
+    
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  }
+  
+  // Helper function to get performance from progress
+  function getPerformanceFromProgress(progress) {
+    if (progress >= 80) return "Excellent";
+    if (progress >= 60) return "Good";
+    if (progress >= 40) return "Needs Improvement";
+    return "Needs Attention";
+  }
+
+  // Apply filters
+  function applyAnalyticsFilters() {
+    const selectedCourse = courseFilter.value;
+    const selectedTime = timeFilter.value;
+    const searchTerm = studentSearch.value.toLowerCase();
+    
+    console.log("Applying filters - Course:", selectedCourse, "Time:", selectedTime, "Search:", searchTerm);
+    
+    // Filter by course
+    if (selectedCourse === 'all') {
+      filteredStudents = [...allStudents];
+    } else {
+      filteredStudents = allStudents.filter(student => student.courseId === selectedCourse);
+    }
+    
+    // Filter by time if needed
+    if (selectedTime !== 'all') {
+      const now = new Date();
+      let cutoffDate;
+      
+      switch(selectedTime) {
+        case 'week':
+          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'quarter':
+          cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          cutoffDate = new Date(0); // Beginning of time
+      }
+      
+      console.log("Cutoff date for time filter:", cutoffDate);
+      
+      filteredStudents = filteredStudents.filter(student => {
+        const enrolledDate = student.enrolledDate;
+        const isWithinTimeRange = enrolledDate >= cutoffDate;
+        console.log(`Student ${student.firstName} enrolled on ${enrolledDate}, within range: ${isWithinTimeRange}`);
+        return isWithinTimeRange;
+      });
+    }
+    
+    // Filter by search term if provided
+    if (searchTerm) {
+      filteredStudents = filteredStudents.filter(student => 
+        student.firstName.toLowerCase().includes(searchTerm) ||
+        student.lastName.toLowerCase().includes(searchTerm) ||
+        student.email.toLowerCase().includes(searchTerm) ||
+        student.courseName.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    console.log(`Filtered to ${filteredStudents.length} students`);
+    
+    // Update charts with filtered data
+    updateChartsWithFilteredData();
+    
+    // Render filtered students
+    renderStudents();
+  }
+
+  // Update charts with filtered data
+  function updateChartsWithFilteredData() {
+    if (performanceChart && filteredStudents.length > 0) {
+      // Get unique courses and their average progress for filtered students
+      const coursePerformance = {};
+      filteredStudents.forEach(student => {
+        if (!coursePerformance[student.courseName]) {
+          coursePerformance[student.courseName] = {
+            totalProgress: 0,
+            studentCount: 0
+          };
+        }
+        coursePerformance[student.courseName].totalProgress += student.progress;
+        coursePerformance[student.courseName].studentCount++;
+      });
+      
+      const courseNames = Object.keys(coursePerformance);
+      const avgProgressByCourse = courseNames.map(course => 
+        Math.round(coursePerformance[course].totalProgress / coursePerformance[course].studentCount)
+      );
+      
+      performanceChart.data.labels = courseNames;
+      performanceChart.data.datasets[0].data = avgProgressByCourse;
+      performanceChart.update();
+    }
+    
+    // Update progress chart with filtered data
+    if (progressChart && filteredStudents.length > 0) {
+      const progressData = calculateProgressDataForFiltered();
+      progressChart.data.labels = progressData.labels;
+      progressChart.data.datasets[0].data = progressData.values;
+      progressChart.update();
+    }
+  }
+
+  // Calculate progress data for filtered students
+  function calculateProgressDataForFiltered() {
+    if (filteredStudents.length === 0) {
+      return { labels: [], values: [] };
+    }
+    
+    // Get the current date
+    const now = new Date();
+    
+    // Calculate the last 6 months for the chart
+    const labels = [];
+    const values = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+      labels.push(`${monthName} ${date.getFullYear()}`);
+      
+      // Calculate average progress for this month
+      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      
+      // Filter students enrolled before or during this month
+      const studentsInMonth = filteredStudents.filter(student => 
+        student.enrolledDate <= monthEnd
+      );
+      
+      if (studentsInMonth.length > 0) {
+        const totalProgress = studentsInMonth.reduce((sum, student) => {
+          return sum + student.progress;
+        }, 0);
+        
+        values.push(Math.round(totalProgress / studentsInMonth.length));
+      } else {
+        values.push(0);
+      }
+    }
+    
+    return { labels, values };
+  }
+
+  // Reset filters
+  function resetAnalyticsFilters() {
+    courseFilter.value = 'all';
+    timeFilter.value = 'all';
+    studentSearch.value = '';
+    filteredStudents = [...allStudents];
+    
+    // Update charts with all data
+    updateChartsWithFilteredData();
+    
+    // Render all students
+    renderStudents();
+  }
+
+  // Global functions for student actions - UPDATED FOR MULTIPLE COURSES
+  window.openStudentDetail = openStudentDetail;
+  window.messageStudent = (studentId, courseId) => {
+    window.location.href = `teachermessages.html?studentId=${studentId}&courseId=${courseId}`;
+  };
+
+  // Set up real-time notifications
+  function setupNotifications() {
+    // Generate demo notifications based on students
+    notifications = [];
+    
+    if (allStudents.length > 0) {
+      allStudents.forEach(student => {
+        const notificationTypes = [
+          {
+            type: 'progress',
+            icon: 'fa-chart-line',
+            title: 'Progress Update',
+            message: `${student.firstName} ${student.lastName} reached ${student.progress}% in ${student.courseName}`,
+            time: new Date(),
+            read: false
+          },
+          {
+            type: 'assignment',
+            icon: 'fa-clipboard-check',
+            title: 'Assignment Completed',
+            message: `${student.firstName} ${student.lastName} completed an assignment in ${student.courseName}`,
+            time: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+            read: false
+          }
+        ];
+        
+        // Add one random notification per student for demo
+        const randomNotification = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+        notifications.push(randomNotification);
+      });
+    }
+    
+    // Sort notifications by time (newest first)
+    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+    
+    // Update notification count and display
+    updateNotificationDisplay();
+  }
+  
+  // Update notification display
+  function updateNotificationDisplay() {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationBadge.textContent = unreadCount;
+    
+    // Update notification dropdown
+    notificationList.innerHTML = '';
+    
+    if (notifications.length === 0) {
+      notificationList.innerHTML = `
+        <div class="notification-empty">
+          <i class="fas fa-bell-slash"></i>
+          <p>No notifications</p>
+          <small>You're all caught up!</small>
+        </div>
+      `;
+    } else {
+      notifications.forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
+        notificationItem.addEventListener('click', () => markNotificationAsRead(notification));
+        
+        notificationItem.innerHTML = `
+          <div class="notification-title">${notification.title}</div>
+          <div class="notification-message">${notification.message}</div>
+          <div class="notification-time">${formatDate(notification.time)}</div>
+        `;
+        
+        notificationList.appendChild(notificationItem);
+      });
+    }
+  }
+  
+  // Mark notification as read
+  function markNotificationAsRead(notification) {
+    notification.read = true;
+    updateNotificationDisplay();
+  }
+
+  // Clear notifications
+  if (clearNotifications) {
+    clearNotifications.addEventListener('click', () => {
+      notifications = [];
+      updateNotificationDisplay();
+    });
+  }
+
+  // Event listeners
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.add('active');
+    mainContent.classList.add('sidebar-open');
+  });
+
+  closeSidebar.addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    mainContent.classList.remove('sidebar-open');
+  });
+
+  // Close sidebar on outside click
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('active')) {
+      if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+        sidebar.classList.remove('active');
+        mainContent.classList.remove('sidebar-open');
+      }
+    }
+  });
+
+  // Notification bell toggle
+  notificationIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notificationDropdown.classList.toggle('active');
+  });
+
+  // Close notification dropdown when clicking outside
+  document.addEventListener('click', () => {
+    if (notificationDropdown.classList.contains('active')) {
+      notificationDropdown.classList.remove('active');
+    }
+  });
+
+  applyFilters.addEventListener('click', applyAnalyticsFilters);
+  resetFilters.addEventListener('click', resetAnalyticsFilters);
+  
+  // Search functionality
+  studentSearch.addEventListener('input', applyAnalyticsFilters);
+  
+  exportProgress.addEventListener('click', () => {
+    alert('Exporting progress data - This would download a CSV file with progress data');
+  });
+  
+  exportPerformance.addEventListener('click', () => {
+    alert('Exporting performance data - This would download a CSV file with performance data');
+  });
+
+  // Close student detail modal
+  closeStudentDetailModal.addEventListener('click', () => {
+    studentDetailModal.classList.remove('active');
+    currentStudentDetail = null;
+  });
+
+  // Message student from detail modal
+  messageStudentBtn.addEventListener('click', () => {
+    if (currentStudentDetail) {
+      window.location.href = `teachermessages.html?studentId=${currentStudentDetail.id}&courseId=${currentStudentDetail.courseId}`;
+    }
+  });
+
+  // Logout functionality
+  logoutBtn.addEventListener('click', () => {
+    logoutModal.classList.add('active');
+  });
+
+  closeLogoutModal.addEventListener('click', () => {
+    logoutModal.classList.remove('active');
+  });
+
+  cancelLogoutBtn.addEventListener('click', () => {
+    logoutModal.classList.remove('active');
+  });
+
+  confirmLogoutBtn.addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+      window.location.href = "index.html";
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  });
+
+  // Show error message
+  function showError(message) {
+    studentsList.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Error</h3>
+        <p>${message}</p>
+        <p><small>Check browser console for details</small></p>
+      </div>
+    `;
+  }
+
+  // Create floating particles
+  function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+    
+    const numberOfParticles = 20;
+
+    for (let i = 0; i < numberOfParticles; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+      particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+      particle.style.animationDelay = Math.random() * 5 + 's';
+      particle.style.backgroundColor = `rgba(255, 71, 87, ${Math.random() * 0.3})`;
+      particlesContainer.appendChild(particle);
+    }
+  }
+
+  // Initialize particles when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    createParticles();
+  });
+</script>
+</body>
+</html>

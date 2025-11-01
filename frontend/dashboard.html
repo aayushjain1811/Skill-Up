@@ -1,0 +1,2777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillUp Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #ffffff;
+      --primary-dark: #f8f9fa;
+      --primary-light: #e9ecef;
+      --secondary: #dee2e6;
+      --accent: #08d9d6;
+      --light: #4361ee;
+      --dark: #ffffff;
+      --gray: #adb5bd;
+      --gray-light: #343a40;
+      --success: #00f5ff;
+      --card-bg: linear-gradient(135deg, #ffffff, #f8f9fa);
+      --sidebar-bg: linear-gradient(180deg, #4361ee, #3a0ca3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--primary);
+      overflow-x: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(67, 97, 238, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 97, 238, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Loading Animation */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(67, 97, 238, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--success);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(67, 97, 238, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(58, 12, 163, 0.1));
+      animation: sidebarGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes sidebarGlow {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, #00f5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(0, 245, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: #00f5ff;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.7));
+    }
+
+    /* Logout at bottom */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-container {
+      position: relative;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff4757;
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      padding: 40px 30px;
+      background: var(--bg-secondary);
+      margin: 30px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .welcome::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.05), rgba(0, 245, 255, 0.05));
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes welcomeGlow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .welcome-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .welcome h1 {
+      color: var(--primary);
+      font-size: 36px;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(0, 245, 255, 0.6)); }
+    }
+
+    .welcome p {
+      color: var(--gray);
+      font-size: 18px;
+      max-width: 600px;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      padding: 0 30px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 25px;
+      border-radius: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      transform: translateX(-100%);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+      transform: translateX(0);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(67, 97, 238, 0.2);
+    }
+
+    .stat-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    /* Sections */
+    .section {
+      margin: 40px 30px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-radius: 2px;
+    }
+
+    /* Course Grid */
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    .course-card {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .course-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .course-card:hover::before {
+      opacity: 1;
+    }
+
+    .course-card:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 25px 50px rgba(67, 97, 238, 0.3);
+    }
+
+    .course-content {
+      padding: 25px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .course-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+
+    .course-description {
+      color: var(--gray);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .course-progress {
+      margin-bottom: 25px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(67, 97, 238, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-radius: 4px;
+      transition: width 1s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      animation: progressShimmer 2s infinite;
+    }
+
+    @keyframes progressShimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .progress-text {
+      margin-top: 10px;
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .course-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-small {
+      padding: 8px 16px !important;
+      font-size: 14px !important;
+      flex: none !important;
+      width: auto !important;
+      min-width: 100px;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+
+    /* Messages Section */
+    .messages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .message-card {
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      padding: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .message-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+    }
+
+    .message-card:hover {
+      transform: translateX(10px);
+      box-shadow: 0 10px 30px rgba(67, 97, 238, 0.2);
+    }
+
+    .message-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .message-info h4 {
+      color: var(--primary);
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .message-time {
+      color: var(--gray);
+      font-size: 12px;
+    }
+
+    .message-content {
+      color: var(--gray);
+      line-height: 1.6;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 30px;
+      position: relative;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      text-align: center;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 24px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .close-modal:hover {
+      color: var(--success);
+      transform: rotate(90deg);
+    }
+
+    /* Teacher Selection Grid */
+    .teachers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .teacher-card {
+      background: var(--bg-main);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .teacher-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(67, 97, 238, 0.5);
+    }
+
+    .teacher-card.selected {
+      border-color: var(--success);
+      box-shadow: 0 5px 15px rgba(0, 245, 255, 0.3);
+    }
+
+    .teacher-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      margin: 0 auto 15px;
+    }
+
+    .teacher-name {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .teacher-specialty {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Success Modal */
+    .success-modal .modal-content {
+      max-width: 450px;
+      padding: 40px 30px;
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 25px;
+      position: relative;
+    }
+
+    .checkmark {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      stroke-width: 3;
+      stroke: #4bb71b;
+      stroke-miterlimit: 10;
+      box-shadow: inset 0px 0px 0px var(--success);
+      animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+    }
+
+    .checkmark-circle {
+      stroke-dasharray: 166;
+      stroke-dashoffset: 166;
+      stroke-width: 3;
+      stroke-miterlimit: 10;
+      stroke: var(--success);
+      fill: none;
+      animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .checkmark-check {
+      transform-origin: 50% 50%;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+      animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+    }
+
+    @keyframes stroke {
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes scale {
+      0%, 100% {
+        transform: none;
+      }
+      50% {
+        transform: scale3d(1.1, 1.1, 1);
+      }
+    }
+
+    @keyframes fill {
+      100% {
+        box-shadow: inset 0px 0px 0px 50px var(--success);
+      }
+    }
+
+    .success-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .success-message {
+      color: var(--gray);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .teacher-assignment {
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .teacher-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .teacher-avatar-small {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .teacher-details {
+      text-align: left;
+    }
+
+    .teacher-name-assigned {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .teacher-specialty-assigned {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .success-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    /* Notification Dropdown */
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      z-index: 1000;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .notification-clear {
+      background: transparent;
+      border: none;
+      color: var(--success);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      padding: 10px 0;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .notification-item.unread {
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .notification-title {
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--gray-light);
+      font-size: 12px;
+    }
+
+    .notification-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--gray);
+    }
+
+    /* Logout Confirmation Modal */
+    .logout-modal .modal-content {
+      max-width: 400px;
+    }
+
+    .logout-icon {
+      font-size: 60px;
+      color: #ff4757;
+      margin: 20px 0;
+      animation: pulse 2s infinite;
+    }
+
+    .logout-text {
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .logout-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .logout-actions .btn {
+      min-width: 120px;
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .course-grid, .messages-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+
+      .teachers-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      
+      .notification-dropdown {
+        width: 300px;
+        right: 10px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content.sidebar-open {
+        margin-left: 0;
+      }
+      
+      .sidebar {
+        width: 100%;
+      }
+      
+      .course-grid, .messages-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .topbar {
+        padding: 0 20px;
+      }
+      
+      .section {
+        margin: 20px;
+      }
+      
+      .welcome {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+      
+      .welcome h1 {
+        font-size: 28px;
+      }
+
+      .notification-dropdown {
+        width: 280px;
+        right: 10px;
+      }
+
+      .teachers-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .logout-actions {
+        flex-direction: column;
+      }
+
+      .logout-actions .btn {
+        width: 100%;
+      }
+
+      .success-actions {
+        flex-direction: column;
+      }
+
+      .success-actions .btn {
+        width: 100%;
+      }
+    }
+
+    /* Error and status messages */
+    .no-courses, .error-msg {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 30px;
+      color: var(--gray);
+      font-size: 18px;
+    }
+    
+    .completed-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--success);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 3;
+    }
+    
+    .progress-container {
+      margin-bottom: 20px;
+    }
+    
+    .lessons-info {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 5px;
+    }
+    
+    .continue-btn {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border: none;
+      color: white;
+      padding: 12px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+      text-align: center;
+      display: block;
+    }
+    
+    .continue-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .enroll-btn {
+      background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+      border: none;
+      color: white;
+      padding: 12px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+      text-align: center;
+      display: block;
+    }
+
+    .enroll-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+    }
+
+    .selected-count {
+      text-align: center;
+      margin: 15px 0;
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Ripple effect */
+    .ripple {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: scale(0);
+      animation: ripple-animation 0.6s linear;
+    }
+    
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      background: rgba(67, 97, 238, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 5s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-10px) translateX(20px); }
+      75% { transform: translateY(-15px) translateX(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Animation -->
+  <div class="loading-container" id="loadingContainer">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your dashboard...</div>
+  </div>
+
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="#dashboard" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="courses.html"><i class="fas fa-book"></i> My Courses</a></li>
+        <li><a href="mylearning.html"><i class="fas fa-chart-line"></i> Progress</a></li>
+        <li><a href="studentmessages.html"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">Student Dashboard</div>
+        </div>
+        
+        <div class="user-info">
+          <!-- Single Notification Container -->
+          <div class="notification-container">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="notification-clear" id="clearNotifications">Clear All</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be populated here -->
+              </div>
+            </div>
+          </div>
+          <span id="userDisplayName">Loading...</span>
+          <div class="avatar">
+            <span id="userInitials">U</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Section -->
+      <section class="welcome">
+        <div class="welcome-content">
+          <h1 id="welcomeMessage">Welcome back!</h1>
+          <p id="welcomeSubtitle">Loading your learning journey...</p>
+        </div>
+      </section>
+
+      <!-- Stats Grid - Updated to 2 columns -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-book-open"></i>
+            </div>
+            <div class="stat-number" id="activeCoursesCount">0</div>
+            <div class="stat-label">Active Courses</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-number" id="completedCoursesCount">0</div>
+            <div class="stat-label">Completed Courses</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended Courses Section -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">Recommended Courses</h2>
+          <a href="courses.html" class="btn btn-primary btn-small">View All</a>
+        </div>
+        <div class="course-grid" id="recommendedCoursesList">
+          <!-- Recommended courses will be loaded here from Firebase -->
+        </div>
+      </section>
+
+      <!-- My Courses Section -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">My Courses</h2>
+          <a href="courses.html" class="btn btn-primary btn-small">View All</a>
+        </div>
+        <div class="course-grid" id="enrolledCoursesList">
+          <!-- Courses will be loaded here from Firebase -->
+        </div>
+      </section>
+
+      <!-- Recent Messages Section -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">Recent Messages</h2>
+          <a href="studentmessages.html" class="btn btn-primary btn-small">View All</a>
+        </div>
+        <div class="messages-grid" id="recentMessagesList">
+          <!-- Messages will be loaded here from Firebase -->
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Teacher Selection Modal -->
+  <div class="modal" id="teacherModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Select Your Preferred Teachers</h2>
+        <button class="close-modal" id="closeTeacherModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <p>Please select 5 teachers you'd like to learn from. The system will assign the teacher with the most availability.</p>
+      <div class="selected-count">Selected: <span id="selectedCount">0</span>/5</div>
+      <div class="teachers-grid" id="teacherList">
+        <!-- Teachers will be loaded here -->
+      </div>
+      <div class="course-actions">
+        <button class="btn btn-secondary" id="cancelEnrollment">Cancel</button>
+        <button class="btn btn-primary" id="confirmEnrollment" disabled>Enroll Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Enrollment Modal -->
+  <div class="modal success-modal" id="successModal">
+    <div class="modal-content">
+      <div class="success-icon">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h2 class="success-title">Enrollment Successful!</h2>
+      <p class="success-message" id="successMessage">You have been successfully enrolled in the course!</p>
+      
+      <div class="teacher-assignment">
+        <div class="teacher-info">
+          <div class="teacher-avatar-small" id="successTeacherAvatar">T</div>
+          <div class="teacher-details">
+            <div class="teacher-name-assigned" id="successTeacherName">Teacher Name</div>
+            <div class="teacher-specialty-assigned" id="successTeacherSpecialty">Specialty</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="success-actions">
+        <button class="btn btn-secondary" id="closeSuccessModal">Close</button>
+        <button class="btn btn-primary" id="viewCourseBtn">View Course</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal logout-modal" id="logoutModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Logout</h2>
+        <button class="close-modal" id="closeLogoutModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="logout-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <p class="logout-text">Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="btn btn-secondary" id="cancelLogout">Cancel</button>
+        <button class="btn btn-danger" id="confirmLogout">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
+
+
+<script type="module">
+    // Firebase Import - Using stable version
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, query, limit, getDocs, doc, getDoc, updateDoc, arrayUnion, setDoc,
+      where, orderBy, arrayRemove, onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+      authDomain: "growup-93f5d.firebaseapp.com",
+      projectId: "growup-93f5d",
+      storageBucket: "growup-93f5d.firebasestorage.app",
+      messagingSenderId: "775742235468",
+      appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+      measurementId: "G-FWBKTSQDS9"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM elements with null checks
+    function getElement(id) {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.warn(`Element with id '${id}' not found`);
+      }
+      return element;
+    }
+
+    // Get all elements with safe null checks
+    const loadingContainer = getElement("loadingContainer");
+    const welcomeMessage = getElement("welcomeMessage");
+    const welcomeSubtitle = getElement("welcomeSubtitle");
+    const enrolledCoursesList = getElement("enrolledCoursesList");
+    const recommendedCoursesList = getElement("recommendedCoursesList");
+    const recentMessagesList = getElement("recentMessagesList");
+    const userDisplayName = getElement("userDisplayName");
+    const userInitials = getElement("userInitials");
+    const activeCoursesCount = getElement("activeCoursesCount");
+    const completedCoursesCount = getElement("completedCoursesCount");
+    const notificationBadge = getElement("notificationBadge");
+
+    // Sidebar elements
+    const sidebar = getElement('sidebar');
+    const mainContent = getElement('mainContent');
+    const sidebarToggle = getElement('sidebarToggle');
+    const closeSidebar = getElement('closeSidebar');
+    const logoutBtn = getElement('logoutBtn');
+
+    // Modal elements
+    const teacherModal = getElement('teacherModal');
+    const teacherList = getElement('teacherList');
+    const confirmEnrollment = getElement('confirmEnrollment');
+    const cancelEnrollment = getElement('cancelEnrollment');
+    const closeTeacherModal = getElement('closeTeacherModal');
+    const selectedCount = getElement('selectedCount');
+
+    // Success modal elements
+    const successModal = getElement('successModal');
+    const successMessage = getElement('successMessage');
+    const successTeacherAvatar = getElement('successTeacherAvatar');
+    const successTeacherName = getElement('successTeacherName');
+    const successTeacherSpecialty = getElement('successTeacherSpecialty');
+    const closeSuccessModal = getElement('closeSuccessModal');
+    const viewCourseBtn = getElement('viewCourseBtn');
+
+    // Logout modal elements
+    const logoutModal = getElement('logoutModal');
+    const closeLogoutModal = getElement('closeLogoutModal');
+    const cancelLogout = getElement('cancelLogout');
+    const confirmLogout = getElement('confirmLogout');
+
+    // Notification elements
+    const notificationIcon = getElement('notificationIcon');
+    const notificationDropdown = getElement('notificationDropdown');
+    const notificationList = getElement('notificationList');
+    const clearNotifications = getElement('clearNotifications');
+
+    // Track current user and course to enroll
+    let currentUser = null;
+    let currentCourseToEnroll = null;
+    let selectedTeachers = [];
+    let enrolledCourseId = null;
+    let enrolledCoursesCache = new Set();
+
+    // Initialize the dashboard
+    function initDashboard() {
+      // Check if required elements exist
+      if (!sidebar || !mainContent) {
+        console.error('Required elements for dashboard not found');
+        return;
+      }
+
+      // Sidebar toggle functionality
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          sidebar.classList.add('active');
+          mainContent.classList.add('sidebar-open');
+        });
+      }
+
+      if (closeSidebar) {
+        closeSidebar.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          mainContent.classList.remove('sidebar-open');
+        });
+      }
+
+      // Close sidebar on outside click
+      document.addEventListener('click', (e) => {
+        if (sidebar && sidebarToggle && sidebar.classList.contains('active')) {
+          if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('active');
+            mainContent.classList.remove('sidebar-open');
+          }
+        }
+      });
+
+      // Logout functionality
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          if (logoutModal) logoutModal.classList.add('active');
+        });
+      }
+
+      // Logout modal functionality
+      if (closeLogoutModal) {
+        closeLogoutModal.addEventListener('click', () => {
+          if (logoutModal) logoutModal.classList.remove('active');
+        });
+      }
+
+      if (cancelLogout) {
+        cancelLogout.addEventListener('click', () => {
+          if (logoutModal) logoutModal.classList.remove('active');
+        });
+      }
+
+      if (confirmLogout) {
+        confirmLogout.addEventListener('click', () => {
+          signOut(auth).then(() => {
+            window.location.href = "index.html";
+          }).catch((error) => {
+            console.error("Error signing out:", error);
+            alert('Logout failed. Please try again.');
+          });
+        });
+      }
+
+      // Modal functionality
+      if (closeTeacherModal) {
+        closeTeacherModal.addEventListener('click', () => {
+          if (teacherModal) teacherModal.classList.remove('active');
+        });
+      }
+
+      if (cancelEnrollment) {
+        cancelEnrollment.addEventListener('click', () => {
+          if (teacherModal) teacherModal.classList.remove('active');
+          resetTeacherSelection();
+        });
+      }
+
+      // Success modal functionality
+      if (closeSuccessModal) {
+        closeSuccessModal.addEventListener('click', () => {
+          if (successModal) successModal.classList.remove('active');
+        });
+      }
+
+      if (viewCourseBtn) {
+        viewCourseBtn.addEventListener('click', () => {
+          if (successModal) successModal.classList.remove('active');
+          if (enrolledCourseId) {
+            window.location.href = `coursedetails.html?id=${enrolledCourseId}`;
+          }
+        });
+      }
+
+      // Confirm enrollment - UPDATED
+      if (confirmEnrollment) {
+        confirmEnrollment.addEventListener('click', async () => {
+          if (selectedTeachers.length < 5) {
+            alert("Please select exactly 5 teachers");
+            return;
+          }
+
+          try {
+            // Show loading state
+            confirmEnrollment.disabled = true;
+            confirmEnrollment.textContent = "Enrolling...";
+
+            // Get teacher with the least students for balanced distribution
+            const assignedTeacher = await getTeacherWithLeastStudents(selectedTeachers);
+            
+            console.log("Assigned teacher:", assignedTeacher);
+            
+            const success = await enrollCourse(currentUser.uid, currentCourseToEnroll.id, assignedTeacher);
+            
+            if (success) {
+              // Store the enrolled course ID for navigation
+              enrolledCourseId = currentCourseToEnroll.id;
+              
+              // Show success modal with teacher info
+              showSuccessModal(currentCourseToEnroll.name, assignedTeacher);
+              
+              if (teacherModal) teacherModal.classList.remove('active');
+              if (currentUser) {
+                // Clear cache to force reload
+                enrolledCoursesCache.clear();
+                await loadEnrolledCourses(currentUser.uid);
+                await loadRecommendedCourses(currentUser.uid);
+                await loadNotifications(currentUser.uid);
+                await updateStatsCards(currentUser.uid);
+              }
+              resetTeacherSelection();
+            } else {
+              alert("Failed to enroll. Please try again.");
+            }
+          } catch (error) {
+            console.error("Enrollment error:", error);
+            alert("An error occurred during enrollment. Please try again.");
+          } finally {
+            // Reset button state
+            confirmEnrollment.disabled = false;
+            confirmEnrollment.textContent = "Enroll Now";
+          }
+        });
+      }
+
+      // Notification functionality
+      if (notificationIcon) {
+        notificationIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (notificationDropdown) {
+            notificationDropdown.classList.toggle('active');
+            loadNotifications(currentUser ? currentUser.uid : null);
+          }
+        });
+      }
+
+      if (clearNotifications) {
+        clearNotifications.addEventListener('click', () => {
+          clearAllNotifications();
+        });
+      }
+
+      // Close notification dropdown when clicking outside 
+      document.addEventListener('click', (e) => {
+        if (notificationDropdown && notificationDropdown.classList.contains('active')) {
+          if (!notificationDropdown.contains(e.target) && !notificationIcon.contains(e.target)) {
+            notificationDropdown.classList.remove('active');
+          }
+        }
+      });
+
+      // Initialize UI animations
+      initUIAnimations();
+
+      // Check auth state
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          currentUser = user;
+          await loadUserData(user);
+          
+          // Set up real-time listeners
+          setupRealtimeListeners(user.uid);
+          
+          // Hide loading animation after data is loaded
+          setTimeout(() => {
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+          }, 1000);
+        } else {
+          window.location.href = "signin.html";
+        }
+      });
+    }
+
+    // Load user data
+    async function loadUserData(user) {
+      const displayName = user.displayName ? user.displayName : "Learner";
+      
+      if (welcomeMessage) welcomeMessage.textContent = `Welcome back, ${displayName}!`;
+      if (userDisplayName) userDisplayName.textContent = displayName;
+      
+      if (userInitials) {
+        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+        userInitials.textContent = initials;
+      }
+      
+      // Load data
+      await updateStatsCards(user.uid);
+      await loadEnrolledCourses(user.uid);
+      await loadRecommendedCourses(user.uid);
+      await loadRecentMessages(user.uid);
+      await loadNotifications(user.uid);
+      
+      // Update welcome subtitle based on data
+      updateWelcomeSubtitle(user.uid);
+    }
+
+    // Set up real-time listeners for updates
+    function setupRealtimeListeners(userId) {
+      // Listen for user data changes
+      const userRef = doc(db, "users", userId);
+      onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          console.log("User data updated, refreshing dashboard...");
+          updateStatsCards(userId);
+          loadEnrolledCourses(userId);
+          loadNotifications(userId);
+        }
+      });
+    }
+
+    // Update welcome subtitle based on user data
+    async function updateWelcomeSubtitle(userId) {
+      try {
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          let subtitle = "Continue your learning journey with SkillUp.";
+          
+          if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
+            const enrolledCount = Object.keys(userData.enrollments).length;
+            subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Keep up the great work!`;
+          }
+          
+          if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+        }
+      } catch (error) {
+        console.error("Error updating welcome subtitle:", error);
+      }
+    }
+
+    // Get teacher with the least students for balanced distribution - IMPROVED
+    async function getTeacherWithLeastStudents(teachers) {
+      try {
+        console.log("Finding teacher with least students from:", teachers.map(t => t.name));
+        
+        // Get all teacher data with their current student counts
+        const teacherDataPromises = teachers.map(async (teacher) => {
+          try {
+            // Count students for this teacher by querying user enrollments
+            const usersQuery = query(collection(db, "users"));
+            const usersSnap = await getDocs(usersQuery);
+            
+            let studentCount = 0;
+            usersSnap.forEach(userDoc => {
+              const userData = userDoc.data();
+              if (userData.enrollments) {
+                Object.values(userData.enrollments).forEach(enrollment => {
+                  if (enrollment.teacherId === teacher.id) {
+                    studentCount++;
+                  }
+                });
+              }
+            });
+            
+            console.log(`Teacher ${teacher.name} has ${studentCount} students`);
+            
+            return {
+              ...teacher,
+              studentCount: studentCount
+            };
+          } catch (error) {
+            console.error(`Error counting students for teacher ${teacher.name}:`, error);
+            return {
+              ...teacher,
+              studentCount: 0
+            };
+          }
+        });
+        
+        const teachersWithCounts = await Promise.all(teacherDataPromises);
+        
+        // Sort by student count (ascending) and return the one with the least students
+        teachersWithCounts.sort((a, b) => a.studentCount - b.studentCount);
+        
+        console.log("Teacher distribution:", teachersWithCounts.map(t => ({
+          name: t.name,
+          studentCount: t.studentCount
+        })));
+        
+        // If there's a tie, randomly select from the least burdened teachers
+        const minCount = teachersWithCounts[0].studentCount;
+        const leastBurdenedTeachers = teachersWithCounts.filter(t => t.studentCount === minCount);
+        
+        // Randomly select from least burdened teachers
+        const randomIndex = Math.floor(Math.random() * leastBurdenedTeachers.length);
+        const selectedTeacher = leastBurdenedTeachers[randomIndex];
+        
+        console.log("Selected teacher:", selectedTeacher.name, "with", selectedTeacher.studentCount, "students");
+        
+        return selectedTeacher;
+      } catch (error) {
+        console.error("Error finding teacher with least students:", error);
+        // Fallback: return random teacher
+        const randomIndex = Math.floor(Math.random() * teachers.length);
+        return teachers[randomIndex];
+      }
+    }
+
+    // Show success modal with teacher info
+    function showSuccessModal(courseName, teacher) {
+      if (!successModal || !successMessage || !successTeacherName || !successTeacherSpecialty || !successTeacherAvatar) {
+        console.error("Success modal elements not found");
+        return;
+      }
+      
+      // Update success message
+      successMessage.textContent = `You have been successfully enrolled in "${courseName}"!`;
+      
+      // Update teacher info
+      successTeacherName.textContent = teacher.name;
+      successTeacherSpecialty.textContent = teacher.specialty;
+      
+      // Set teacher avatar
+      const initials = teacher.name.split(' ').map(n => n[0]).join('').toUpperCase() || "T";
+      successTeacherAvatar.textContent = initials;
+      
+      // Show the modal
+      successModal.classList.add('active');
+    }
+
+    // Initialize UI animations and effects
+    function initUIAnimations() {
+      // Create floating particles
+      function createParticles() {
+        const particlesContainer = document.getElementById('particles');
+        if (!particlesContainer) return;
+        
+        const numberOfParticles = 20;
+
+        for (let i = 0; i < numberOfParticles; i++) {
+          const particle = document.createElement('div');
+          particle.classList.add('particle');
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.top = Math.random() * 100 + '%';
+          particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+          particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+          particle.style.animationDelay = Math.random() * 5 + 's';
+          particle.style.backgroundColor = `rgba(67, 97, 238, ${Math.random() * 0.3})`;
+          particlesContainer.appendChild(particle);
+        }
+      }
+
+      createParticles();
+    }
+
+    // Reset teacher selection
+    function resetTeacherSelection() {
+      selectedTeachers = [];
+      if (selectedCount) selectedCount.textContent = "0";
+      if (confirmEnrollment) confirmEnrollment.disabled = true;
+      const teacherCards = document.querySelectorAll(".teacher-card");
+      teacherCards.forEach(card => card.classList.remove("selected"));
+    }
+
+    // Get active courses count (courses with any progress)
+    async function getActiveCoursesCount(userId) {
+      try {
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) return 0;
+        
+        const userData = userSnap.data();
+        
+        if (!userData.enrollments) return 0;
+        
+        // Count courses with progress > 0 but not completed
+        let activeCount = 0;
+        Object.values(userData.enrollments).forEach(enrollment => {
+          const isCompleted = enrollment.progress === 100 || enrollment.hasPassedTest;
+          if (enrollment.progress > 0 && !isCompleted) {
+            activeCount++;
+          }
+        });
+        
+        return activeCount;
+      } catch (error) {
+        console.error("Error getting active courses count:", error);
+        return 0;
+      }
+    }
+
+    // Get completed courses count
+    async function getCompletedCoursesCount(userId) {
+      try {
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) return 0;
+        
+        const userData = userSnap.data();
+        
+        if (!userData.enrollments) return 0;
+        
+        // Count courses with progress = 100 or hasPassedTest = true
+        let completedCount = 0;
+        Object.values(userData.enrollments).forEach(enrollment => {
+          if (enrollment.progress === 100 || enrollment.hasPassedTest) {
+            completedCount++;
+          }
+        });
+        
+        return completedCount;
+      } catch (error) {
+        console.error("Error getting completed courses count:", error);
+        return 0;
+      }
+    }
+
+    // Update the stats cards with real data
+    async function updateStatsCards(userId) {
+      try {
+        const activeCoursesCountValue = await getActiveCoursesCount(userId);
+        const completedCoursesValue = await getCompletedCoursesCount(userId);
+        
+        // Update the DOM elements
+        if (activeCoursesCount) {
+          activeCoursesCount.textContent = activeCoursesCountValue;
+        }
+        
+        if (completedCoursesCount) {
+          completedCoursesCount.textContent = completedCoursesValue;
+        }
+      } catch (error) {
+        console.error("Error updating stats cards:", error);
+      }
+    }
+
+    // Fetch enrolled courses - UPDATED to match your Firestore structure
+    async function loadEnrolledCourses(userId) {
+      try {
+        if (!enrolledCoursesList) return;
+
+        console.log("Loading enrolled courses for user:", userId);
+
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+
+        enrolledCoursesList.innerHTML = "";
+
+        if (userSnap.exists() && userSnap.data().enrollments) {
+          const enrollments = userSnap.data().enrollments;
+          const enrolledCourseIds = Object.keys(enrollments);
+
+          console.log("Found enrollments:", enrolledCourseIds);
+
+          if (enrolledCourseIds.length === 0) {
+            enrolledCoursesList.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
+            return;
+          }
+
+          // Show only the 3 most recent courses
+          const coursesToShow = enrolledCourseIds.slice(0, 3);
+
+          for (const courseId of coursesToShow) {
+            try {
+              const courseRef = doc(db, "courses", courseId);
+              const courseSnap = await getDoc(courseRef);
+
+              if (courseSnap.exists()) {
+                const course = courseSnap.data();
+                const enrollment = enrollments[courseId];
+                
+                console.log(`Course ${courseId} enrollment data:`, enrollment);
+                
+                // Use the progress from enrollment data (matches your Firestore structure)
+                let progress = enrollment.progress || 0;
+                let completedLessons = enrollment.completedLessons 
+                  ? enrollment.completedLessons.length 
+                  : 0;
+                let hasPassedTest = enrollment.hasPassedTest || false;
+                
+                // Get total lessons count
+                let totalLessons = 0;
+                try {
+                  const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
+                  totalLessons = lecturesSnap.size;
+                } catch (error) {
+                  console.error("Error getting lectures count:", error);
+                  totalLessons = 0;
+                }
+                
+                const displayProgress = hasPassedTest ? 100 : progress;
+                const isCompleted = hasPassedTest || progress === 100;
+                
+                const card = document.createElement("div");
+                card.classList.add("course-card");
+                card.innerHTML = `
+                  ${isCompleted ? '<span class="completed-badge">✓ Completed</span>' : ''}
+                  <div class="course-content">
+                    <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
+                    <p class="course-description">${course.description || 'No description available'}</p>
+                    <div class="course-progress">
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${displayProgress}%"></div>
+                      </div>
+                      <div class="progress-text">${displayProgress}% Complete${hasPassedTest ? ' ✅' : ''}</div>
+                      <div class="lessons-info">${completedLessons} of ${totalLessons} lessons completed</div>
+                    </div>
+                    <div class="course-actions">
+                      <button class="btn btn-primary continue-btn" data-id="${courseId}">
+                        ${isCompleted ? 'Review Course' : 'Continue Learning'}
+                      </button>
+                    </div>
+                  </div>
+                `;
+                enrolledCoursesList.appendChild(card);
+
+                card.querySelector(".continue-btn").addEventListener("click", () => {
+                  window.location.href = `coursedetails.html?id=${courseId}`;
+                });
+              } else {
+                console.warn(`Course document ${courseId} not found`);
+              }
+            } catch (courseError) {
+              console.error(`Error loading course ${courseId}:`, courseError);
+            }
+          }
+        } else {
+          enrolledCoursesList.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
+        }
+      } catch (error) {
+        console.error("Error loading enrolled courses:", error);
+        if (enrolledCoursesList) {
+          enrolledCoursesList.innerHTML = "<p class='error-msg'>Error loading courses. Please try again.</p>";
+        }
+      }
+    }
+
+    // Fetch recommended courses - Updated enrollment check
+    async function loadRecommendedCourses(userId) {
+      try {
+        if (!recommendedCoursesList) return;
+
+        const q = query(collection(db, "courses"), limit(3));
+        const querySnapshot = await getDocs(q);
+
+        recommendedCoursesList.innerHTML = "";
+
+        let enrolledCourseIds = [];
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().enrollments) {
+          enrolledCourseIds = Object.keys(userSnap.data().enrollments);
+        }
+
+        if (querySnapshot.empty) {
+          recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
+          return;
+        }
+
+        querySnapshot.forEach((docSnap) => {
+          const course = docSnap.data();
+          const isEnrolled = enrolledCourseIds.includes(docSnap.id);
+          
+          const card = document.createElement("div");
+          card.classList.add("course-card");
+          card.innerHTML = `
+            <div class="course-content">
+              <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
+              <p class="course-description">${course.description || 'No description available'}</p>
+              <div class="course-actions">
+                <button class="enroll-btn ${isEnrolled ? 'enrolled' : ''}" 
+                        data-id="${docSnap.id}" 
+                        ${isEnrolled ? 'disabled' : ''}>
+                  ${isEnrolled ? 'Enrolled ✓' : 'Enroll Now'}
+                </button>
+                ${isEnrolled ? `<button class="btn btn-primary continue-btn" data-id="${docSnap.id}">Continue</button>` : ''}
+              </div>
+            </div>
+          `;
+          recommendedCoursesList.appendChild(card);
+
+          const enrollBtn = card.querySelector(".enroll-btn");
+          if (!isEnrolled) {
+            enrollBtn.addEventListener("click", async () => {
+              currentCourseToEnroll = {
+                id: docSnap.id,
+                name: course.name || course.title || "Untitled Course"
+              };
+              await loadTeachers();
+              if (teacherModal) teacherModal.classList.add("active");
+            });
+          }
+          
+          const continueBtn = card.querySelector(".continue-btn");
+          if (continueBtn) {
+            continueBtn.addEventListener("click", () => {
+              window.location.href = `coursedetails.html?id=${docSnap.id}`;
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+        if (recommendedCoursesList) {
+          recommendedCoursesList.innerHTML = "<p class='error-msg'>Error loading recommended courses.</p>";
+        }
+      }
+    }
+
+    // Load teachers for enrollment
+    async function loadTeachers() {
+      try {
+        if (!teacherList) return;
+        
+        teacherList.innerHTML = "";
+        resetTeacherSelection();
+        
+        const q = query(collection(db, "teachers"));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+          teacherList.innerHTML = "<p>No teachers available at the moment.</p>";
+          return;
+        }
+        
+        querySnapshot.forEach((docSnap) => {
+          const teacher = docSnap.data();
+          const teacherId = docSnap.id;
+          
+          const teacherName = teacher.name || teacher.displayName || teacher.firstName + ' ' + teacher.lastName || "Teacher";
+          const teacherSpecialty = teacher.specialty || teacher.expertise || teacher.subject || "General Education";
+          const initials = getInitials(teacher.firstName, teacher.lastName) || "T";
+          
+          const teacherCard = document.createElement("div");
+          teacherCard.classList.add("teacher-card");
+          teacherCard.setAttribute("data-id", teacherId);
+          
+          teacherCard.innerHTML = `
+            <div class="teacher-avatar">${initials}</div>
+            <div class="teacher-name">${teacherName}</div>
+            <div class="teacher-specialty">${teacherSpecialty}</div>
+          `;
+          
+          teacherCard.addEventListener("click", () => {
+            if (teacherCard.classList.contains("selected")) {
+              teacherCard.classList.remove("selected");
+              selectedTeachers = selectedTeachers.filter(t => t.id !== teacherId);
+            } else if (selectedTeachers.length < 5) {
+              teacherCard.classList.add("selected");
+              selectedTeachers.push({
+                id: teacherId,
+                name: teacherName,
+                specialty: teacherSpecialty
+              });
+            } else {
+              alert("You can only select up to 5 teachers");
+            }
+            
+            if (selectedCount) selectedCount.textContent = selectedTeachers.length;
+            if (confirmEnrollment) confirmEnrollment.disabled = selectedTeachers.length !== 5;
+          });
+          
+          teacherList.appendChild(teacherCard);
+        });
+      } catch (error) {
+        console.error("Error loading teachers:", error);
+        if (teacherList) {
+          teacherList.innerHTML = "<p class='error-msg'>Error loading teachers. Please try again.</p>";
+        }
+      }
+    }
+
+    // Helper function to get initials
+    function getInitials(firstName, lastName) {
+      if (!firstName && !lastName) return "T";
+      return ((firstName ? firstName.charAt(0) : "") + (lastName ? lastName.charAt(0) : "")).toUpperCase() || "T";
+    }
+
+    // Enroll in course - UPDATED to match your exact Firestore structure
+    async function enrollCourse(userId, courseId, teacher) {
+      try {
+        console.log("Starting enrollment process...");
+        console.log("User:", userId);
+        console.log("Course:", courseId);
+        console.log("Teacher:", teacher);
+
+        const userRef = doc(db, "users", userId);
+        const courseRef = doc(db, "courses", courseId);
+
+        // Check if user exists
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          console.log("User document doesn't exist, creating...");
+          await setDoc(userRef, {
+            name: currentUser.displayName || "Student",
+            email: currentUser.email,
+            createdAt: serverTimestamp(),
+            enrollments: {},
+            profileComplete: false,
+            role: "student"
+          });
+        }
+
+        // Check if already enrolled
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        if (userData.enrollments && userData.enrollments[courseId]) {
+          console.log("User already enrolled in this course");
+          return true;
+        }
+
+        // Get course data
+        const courseSnap = await getDoc(courseRef);
+        if (!courseSnap.exists()) {
+          throw new Error("Course not found");
+        }
+
+        const courseData = courseSnap.data();
+        const courseName = courseData.name || courseData.title || "Unknown Course";
+
+        console.log("Course data:", courseData);
+
+        // Create enrollment data - MATCHING YOUR FIRESTORE STRUCTURE EXACTLY
+        const enrollmentData = {
+          progress: 0,
+          completedLessons: [],
+          courseName: courseName,
+          enrolledAt: new Date(),
+          hasPassedTest: false,
+          lastAccessed: new Date(),
+          lectureProgress: 0,
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          testProgress: 0,
+          assignmentProgress: 0
+        };
+
+        console.log("Enrollment data to save:", enrollmentData);
+
+        // Update user document with enrollment
+        await updateDoc(userRef, {
+          [`enrollments.${courseId}`]: enrollmentData
+        });
+
+        console.log("Enrollment saved to user document");
+
+        // Create notification - MATCHING YOUR FIRESTORE STRUCTURE
+        const notification = {
+          id: `enroll-${Date.now()}`,
+          title: "Course Enrolled Successfully!",
+          message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
+          timestamp: new Date(),
+          type: "enrollment",
+          courseId: courseId,
+          read: false
+        };
+
+        // Add notification to user's notifications array
+        await updateDoc(userRef, {
+          notifications: arrayUnion(notification)
+        });
+
+        console.log("Notification created");
+
+        console.log(`Course ${courseId} enrolled successfully with teacher ${teacher.id}`);
+        return true;
+
+      } catch (error) {
+        console.error("Error in enrollCourse:", error);
+        console.error("Error details:", {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
+        return false;
+      }
+    }
+
+    // Load notifications - UPDATED to match your Firestore structure
+    async function loadNotifications(userId) {
+      try {
+        if (!notificationList) return;
+
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+
+        notificationList.innerHTML = "";
+
+        if (userSnap.exists() && userSnap.data().notifications) {
+          const notifications = userSnap.data().notifications;
+          
+          // Sort by timestamp (newest first)
+          notifications.sort((a, b) => {
+            const timeA = a.timestamp ? (a.timestamp.toDate ? a.timestamp.toDate().getTime() : new Date(a.timestamp).getTime()) : 0;
+            const timeB = b.timestamp ? (b.timestamp.toDate ? b.timestamp.toDate().getTime() : new Date(b.timestamp).getTime()) : 0;
+            return timeB - timeA;
+          });
+
+          const notificationsToShow = notifications.slice(0, 5);
+
+          if (notificationsToShow.length === 0) {
+            notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+            if (notificationBadge) {
+              notificationBadge.textContent = '0';
+              notificationBadge.style.display = 'none';
+            }
+            return;
+          }
+
+          const unreadCount = notifications.filter(n => !n.read).length;
+          if (notificationBadge) {
+            notificationBadge.textContent = unreadCount;
+            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+          }
+
+          notificationsToShow.forEach(notification => {
+            const notificationItem = document.createElement("div");
+            notificationItem.classList.add("notification-item");
+            if (!notification.read) {
+              notificationItem.classList.add("unread");
+            }
+            
+            let timeDisplay = "Recently";
+            if (notification.timestamp) {
+              const now = new Date();
+              const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
+              const diffMs = now - notificationTime;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffMins < 1) timeDisplay = "Just now";
+              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+              else timeDisplay = `${diffDays}d ago`;
+            }
+            
+            notificationItem.innerHTML = `
+              <div class="notification-title">${notification.title}</div>
+              <div class="notification-message">${notification.message}</div>
+              <div class="notification-time">${timeDisplay}</div>
+            `;
+            
+            notificationItem.addEventListener('click', async () => {
+              if (!notification.read) {
+                // Mark as read
+                const updatedNotifications = notifications.map(n => 
+                  n.id === notification.id ? {...n, read: true} : n
+                );
+                
+                await updateDoc(userRef, {
+                  notifications: updatedNotifications
+                });
+                
+                notificationItem.classList.remove('unread');
+                loadNotifications(userId);
+              }
+            });
+            
+            notificationList.appendChild(notificationItem);
+          });
+        } else {
+          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+          if (notificationBadge) {
+            notificationBadge.textContent = '0';
+            notificationBadge.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+        if (notificationList) {
+          notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+        }
+      }
+    }
+
+    // Load recent messages - UPDATED to match your conversations structure
+    async function loadRecentMessages(userId) {
+      try {
+        if (!recentMessagesList) return;
+
+        recentMessagesList.innerHTML = "";
+
+        // Get conversations where student is participant
+        const conversationsQuery = query(
+          collection(db, "conversations"),
+          where("studentId", "==", userId)
+        );
+        
+        const conversationsSnap = await getDocs(conversationsQuery);
+        
+        if (!conversationsSnap.empty) {
+          const conversationsData = [];
+          
+          // Get the latest message for each conversation
+          for (const conversationDoc of conversationsSnap.docs) {
+            const conversation = conversationDoc.data();
+            const conversationId = conversationDoc.id;
+            
+            // Get the last message
+            const messagesQuery = query(
+              collection(db, "conversations", conversationId, "messages"),
+              orderBy("timestamp", "desc"),
+              limit(1)
+            );
+            
+            const messagesSnap = await getDocs(messagesQuery);
+            let lastMessage = "Start a conversation...";
+            let lastMessageTime = conversation.createdAt || new Date();
+            
+            if (!messagesSnap.empty) {
+              const lastMessageDoc = messagesSnap.docs[0];
+              const lastMessageData = lastMessageDoc.data();
+              lastMessage = lastMessageData.text || lastMessage;
+              lastMessageTime = lastMessageData.timestamp || lastMessageTime;
+            }
+            
+            conversationsData.push({
+              id: conversationId,
+              teacherId: conversation.teacherId,
+              teacherName: conversation.teacherName,
+              lastMessage: lastMessage,
+              lastMessageTime: lastMessageTime
+            });
+          }
+          
+          // Sort by last message time
+          conversationsData.sort((a, b) => {
+            const timeA = a.lastMessageTime ? (a.lastMessageTime.toDate ? a.lastMessageTime.toDate().getTime() : new Date(a.lastMessageTime).getTime()) : 0;
+            const timeB = b.lastMessageTime ? (b.lastMessageTime.toDate ? b.lastMessageTime.toDate().getTime() : new Date(b.lastMessageTime).getTime()) : 0;
+            return timeB - timeA;
+          });
+          
+          // Show only the 4 most recent conversations
+          const recentConversations = conversationsData.slice(0, 4);
+          
+          if (recentConversations.length === 0) {
+            recentMessagesList.innerHTML = `
+              <div class="message-card">
+                <div class="message-content">
+                  <p>No recent messages. Start a conversation with your teachers!</p>
+                </div>
+              </div>
+            `;
+            return;
+          }
+          
+          for (const conversation of recentConversations) {
+            const messageCard = document.createElement("div");
+            messageCard.classList.add("message-card");
+            
+            let timeDisplay = "Recently";
+            if (conversation.lastMessageTime) {
+              const now = new Date();
+              const messageTime = conversation.lastMessageTime.toDate ? conversation.lastMessageTime.toDate() : new Date(conversation.lastMessageTime);
+              const diffMs = now - messageTime;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffMins < 1) timeDisplay = "Just now";
+              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+              else timeDisplay = `${diffDays}d ago`;
+            }
+            
+            const teacherInitials = getInitialsFromName(conversation.teacherName);
+            
+            messageCard.innerHTML = `
+              <div class="message-header">
+                <div class="message-avatar">${teacherInitials}</div>
+                <div class="message-info">
+                  <h4>${conversation.teacherName}</h4>
+                  <div class="message-time">${timeDisplay}</div>
+                </div>
+              </div>
+              <div class="message-content">
+                <p>${conversation.lastMessage}</p>
+              </div>
+            `;
+            
+            messageCard.addEventListener('click', () => {
+              window.location.href = `studentmessages.html?teacherId=${conversation.teacherId}`;
+            });
+            
+            recentMessagesList.appendChild(messageCard);
+          }
+        } else {
+          recentMessagesList.innerHTML = `
+            <div class="message-card">
+              <div class="message-content">
+                <p>No recent messages. Start a conversation with your teachers!</p>
+              </div>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error("Error loading messages:", error);
+        if (recentMessagesList) {
+          recentMessagesList.innerHTML = "<p class='error-msg'>Error loading messages. Please try again.</p>";
+        }
+      }
+    }
+
+    // Helper function to get initials from name
+    function getInitialsFromName(name) {
+      if (!name) return "T";
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || "T";
+    }
+
+    // Clear all notifications
+    async function clearAllNotifications() {
+      try {
+        if (!currentUser) return;
+        
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().notifications) {
+          const notifications = userSnap.data().notifications.map(notification => ({
+            ...notification,
+            read: true
+          }));
+          
+          await updateDoc(userRef, {
+            notifications: notifications
+          });
+          
+          loadNotifications(currentUser.uid);
+        }
+      } catch (error) {
+        console.error("Error clearing notifications:", error);
+      }
+    }
+
+    // Initialize the dashboard when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      initDashboard();
+    });
+  </script>
+</body>
+</html>

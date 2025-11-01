@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillUp - Teacher Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary-red: #ff4757;
+      --primary-red-dark: #ff3742;
+      --primary-red-light: #ff6b6b;
+      --accent-red: #ff8e8e;
+      --light-red: rgba(255, 71, 87, 0.1);
+      --dark-red: rgba(255, 71, 87, 0.3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --text-primary: #ffffff;
+      --text-secondary: #adb5bd;
+      --sidebar-bg: linear-gradient(180deg, #ff4757, #ff3742);
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      background: var(--bg-main);
+      min-height: 100vh;
+    }
+    
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(255, 71, 87, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 71, 87, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Loading Animation */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary-red);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Dashboard Layout */
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+    
+    /* Sidebar Styles */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(255, 71, 87, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #1a1d29, #252937);
+
+    }
+
+    @keyframes sidebarGlow {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: #ff3742;
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg,#ff4757, transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: white;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+    }
+
+    /* Logout at bottom */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-dark));
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--dark-red);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-container {
+      position: relative;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--primary-red);
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      padding: 40px 30px;
+      background: var(--bg-secondary);
+      margin: 30px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--dark-red);
+    }
+
+    .welcome::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.05), rgba(255, 142, 142, 0.05));
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes welcomeGlow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .welcome-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .welcome h1 {
+      color: var(--text-primary);
+      font-size: 36px;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6)); }
+    }
+
+    .welcome p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      max-width: 600px;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      padding: 0 30px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 25px;
+      border-radius: 20px;
+      border: 1px solid var(--dark-red);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(255, 71, 87, 0.1), rgba(255, 142, 142, 0.1));
+      transform: translateX(-100%);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+      transform: translateX(0);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(255, 71, 87, 0.2);
+    }
+
+    .stat-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    /* Sections */
+    .section {
+      margin: 40px 30px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(45deg, var(--primary-red), var(--accent-red));
+      border-radius: 2px;
+    }
+
+    /* Content Sections */
+    .content-section {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--dark-red);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 1.2rem;
+      text-align: left;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .data-table th {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      background: rgba(255, 71, 87, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .data-table tr {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .data-table tr:hover {
+      background: var(--light-red);
+      transform: translateY(-2px);
+    }
+    
+    .student-cell {
+      display: flex;
+      align-items: center;
+    }
+    
+    .student-avatar-small {
+      width: 35px;
+      height: 35px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 1rem;
+      font-size: 0.9rem;
+    }
+    
+    .student-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .student-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .student-email {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .progress-bar {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      height: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-red), var(--primary-red-dark));
+      border-radius: 20px;
+      transition: width 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      animation: progressShimmer 2s infinite;
+    }
+    
+    @keyframes progressShimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+    
+    .status-badge {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--primary-red);
+    }
+    
+    .status-completed {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--primary-red);
+    }
+    
+    .status-pending {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--primary-red);
+    }
+    
+    .action-btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+    }
+    
+    .btn-secondary {
+      background: var(--light-red);
+      color: var(--primary-red);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--dark-red);
+    }
+    
+    .view-all {
+      color: var(--primary-red);
+      text-decoration: none;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .view-all:hover {
+      background: var(--light-red);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      display: block;
+      opacity: 0.5;
+      color: var(--primary-red);
+    }
+    
+    .empty-state h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    /* Recent Activity */
+    .activity-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+    
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      font-size: 1.2rem;
+      background: var(--light-red);
+      color: var(--primary-red);
+    }
+    
+    .activity-content {
+      flex: 1;
+    }
+    
+    .activity-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.2rem;
+    }
+    
+    .activity-description {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    .activity-time {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Notification Dropdown */
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--dark-red);
+      z-index: 1000;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .notification-clear {
+      background: transparent;
+      border: none;
+      color: var(--primary-red);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      padding: 10px 0;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--dark-red);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      background: var(--light-red);
+    }
+
+    .notification-item.unread {
+      background: var(--light-red);
+    }
+
+    .notification-title {
+      color: var(--text-primary);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .notification-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid var(--dark-red);
+    }
+    
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(45deg, var(--text-primary), var(--accent-red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.3s ease;
+    }
+    
+    .modal-close:hover {
+      color: var(--primary-red);
+    }
+    
+    .modal-body {
+      padding: 2rem;
+    }
+    
+    .modal-footer {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid var(--dark-red);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+    
+    /* Student Detail Styles */
+    .student-detail-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .student-detail-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1.8rem;
+      margin-right: 1.5rem;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+    }
+    
+    .student-detail-info h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .student-detail-info p {
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+    
+    .student-detail-section {
+      margin-bottom: 2rem;
+    }
+    
+    .student-detail-section h4 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    
+    .student-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .student-stat {
+      background: var(--light-red);
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .student-stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary-red);
+      margin-bottom: 0.3rem;
+    }
+    
+    .student-stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Activity Modal Styles */
+    .activity-timeline {
+      margin-top: 1.5rem;
+    }
+    
+    .activity-date-group {
+      margin-bottom: 2rem;
+    }
+    
+    .activity-date-header {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--dark-red);
+    }
+    
+    .activity-timeline-item {
+      display: flex;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    
+    .activity-timeline-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .activity-timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 20px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--dark-red);
+    }
+    
+    .activity-timeline-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--light-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      z-index: 1;
+      color: var(--primary-red);
+    }
+    
+    .activity-timeline-content {
+      flex: 1;
+      padding-bottom: 1rem;
+    }
+    
+    .activity-timeline-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.3rem;
+    }
+    
+    .activity-timeline-description {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+    
+    .activity-timeline-time {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Mobile Menu Button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 999;
+      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .mobile-menu-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      background: rgba(255, 71, 87, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 5s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-10px) translateX(20px); }
+      75% { transform: translateY(-15px) translateX(-10px); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .sidebar {
+        width: 100%;
+        max-width: 320px;
+      }
+      
+      .main-content {
+        padding: 1rem;
+        padding-top: 6rem;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .topbar {
+        padding: 0 20px;
+      }
+      
+      .section {
+        margin: 20px;
+      }
+      
+      .welcome {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+      
+      .welcome h1 {
+        font-size: 28px;
+      }
+
+      .notification-dropdown {
+        width: 280px;
+        right: 10px;
+      }
+
+      .student-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Loading Animation -->
+  <div class="loading-container" id="loadingContainer">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your dashboard...</div>
+  </div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="teacherstudent.html"><i class="fas fa-users"></i> Students</a></li>
+        <li><a href="teacherassessment.html"><i class="fas fa-clipboard-check"></i> Assessments</a></li>
+        <li><a href="teacheranalytics.html"><i class="fas fa-chart-line"></i> Analytics</a></li>
+        <li><a href="teachermessages.html"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="teacherschedule.html"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+        <li><a href="teacherprofile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">Teacher Dashboard</div>
+        </div>
+        
+        <div class="user-info">
+          <!-- Single Notification Container -->
+          <div class="notification-container">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="notification-clear" id="clearNotifications">Clear All</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be populated here -->
+              </div>
+            </div>
+          </div>
+          <div class="avatar">
+            <span id="userInitials">AJ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Section -->
+      <section class="welcome">
+        <div class="welcome-content">
+          <h1 id="welcomeMessage">Welcome back, Professor!</h1>
+          <p id="welcomeSubtitle">Here's what's happening in your classroom today</p>
+        </div>
+      </section>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number" id="totalStudents">0</div>
+            <div class="stat-label">Active Students</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-number" id="activeCourses">0</div>
+            <div class="stat-label">Active Courses</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-number" id="avgProgress">0%</div>
+            <div class="stat-label">Avg. Progress</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students Overview -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">My Students</h2>
+          <a href="teacherstudent.html" class="view-all">View All Students</a>
+        </div>
+        <div class="content-section">
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Progress</th>
+                  <th>Last Activity</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTableBody">
+                <tr>
+                  <td colspan="5" class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>Loading students...</h3>
+                    <p>Please wait while we fetch your student data</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Activity -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">Recent Activity</h2>
+          <a href="#" class="view-all" id="viewAllActivity">View All Activity</a>
+        </div>
+        <div class="content-section">
+          <div class="activity-list" id="activityList">
+            <div class="activity-item">
+              <div class="activity-icon"><i class="fas fa-clock"></i></div>
+              <div class="activity-content">
+                <div class="activity-title">Loading activities...</div>
+                <div class="activity-description">Please wait while we fetch your recent activity</div>
+              </div>
+              <div class="activity-time">Just now</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Student Detail Modal -->
+  <div class="modal-overlay" id="studentDetailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Student Details</h2>
+        <button class="modal-close" id="closeStudentModal">&times;</button>
+      </div>
+      <div class="modal-body" id="studentDetailContent">
+        <!-- Student details will be populated here -->
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn btn-secondary" id="closeStudentBtn">Close</button>
+        <button class="action-btn btn-primary" id="sendMessageBtn">Send Message</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Details Modal -->
+  <div class="modal-overlay" id="activityDetailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">All Activities</h2>
+        <button class="modal-close" id="closeActivityModal">&times;</button>
+      </div>
+      <div class="modal-body" id="activityDetailContent">
+        <!-- Activity details will be populated here -->
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn btn-secondary" id="closeActivityBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Logout</h2>
+        <button class="modal-close" id="closeLogoutModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to log out of your account?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn btn-secondary" id="cancelLogoutBtn">Cancel</button>
+        <button class="action-btn btn-primary" id="confirmLogoutBtn">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signOut 
+  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  import { 
+    getFirestore, 
+    collection, 
+    query, 
+    where, 
+    getDocs,
+    doc,
+    getDoc,
+    orderBy,
+    limit,
+    onSnapshot,
+    updateDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+    authDomain: "growup-93f5d.firebaseapp.com",
+    projectId: "growup-93f5d",
+    storageBucket: "growup-93f5d.firebasestorage.app",
+    messagingSenderId: "775742235468",
+    appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+    measurementId: "G-FWBKTSQDS9"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // DOM elements
+  const loadingContainer = document.getElementById('loadingContainer');
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const closeSidebar = document.getElementById('closeSidebar');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const notificationIcon = document.getElementById('notificationIcon');
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  const notificationBadge = document.getElementById('notificationBadge');
+  const notificationList = document.getElementById('notificationList');
+  const clearNotifications = document.getElementById('clearNotifications');
+  const userInitials = document.getElementById('userInitials');
+  const welcomeMessage = document.getElementById('welcomeMessage');
+  const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+  const totalStudents = document.getElementById('totalStudents');
+  const activeCourses = document.getElementById('activeCourses');
+  const avgProgress = document.getElementById('avgProgress');
+  const studentsTableBody = document.getElementById('studentsTableBody');
+  const activityList = document.getElementById('activityList');
+  const logoutModal = document.getElementById('logoutModal');
+  const closeLogoutModal = document.getElementById('closeLogoutModal');
+  const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+  const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+  const studentDetailModal = document.getElementById('studentDetailModal');
+  const closeStudentModal = document.getElementById('closeStudentModal');
+  const closeStudentBtn = document.getElementById('closeStudentBtn');
+  const sendMessageBtn = document.getElementById('sendMessageBtn');
+  const studentDetailContent = document.getElementById('studentDetailContent');
+  const activityDetailModal = document.getElementById('activityDetailModal');
+  const closeActivityModal = document.getElementById('closeActivityModal');
+  const closeActivityBtn = document.getElementById('closeActivityBtn');
+  const activityDetailContent = document.getElementById('activityDetailContent');
+  const viewAllActivity = document.getElementById('viewAllActivity');
+
+  // Current teacher data
+  let currentTeacher = null;
+  let enrolledStudents = [];
+  let notifications = [];
+  let allActivities = [];
+
+  // Check authentication state
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // User is signed in
+      try {
+        // Get teacher data from Firestore
+        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+        
+        if (teacherDoc.exists()) {
+          currentTeacher = { id: user.uid, ...teacherDoc.data() };
+          
+          // Update UI with teacher info
+          const initials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+          userInitials.textContent = initials;
+          welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
+          welcomeSubtitle.textContent = `Here's what's happening in your ${currentTeacher.expertise} classroom today`;
+          
+          // Load teacher's students
+          await loadTeacherStudents();
+          
+          // Set up real-time notifications
+          setupNotifications();
+          
+          // Hide loading animation
+          setTimeout(() => {
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+          }, 1000);
+          
+        } else {
+          console.error("Teacher document not found");
+          window.location.href = "teachersignin.html";
+        }
+      } catch (error) {
+        console.error("Error getting teacher document:", error);
+      }
+    } else {
+      // User is signed out, redirect to login
+      window.location.href = "teachersignin.html";
+    }
+  });
+
+  // Load teacher's students
+  async function loadTeacherStudents() {
+    try {
+      enrolledStudents = [];
+      
+      console.log("Loading students for teacher:", currentTeacher.id);
+      
+      // Get ALL users from the users collection
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      console.log(`Found ${usersSnapshot.size} users in database`);
+      
+      // Get ALL courses for course name mapping
+      const coursesSnapshot = await getDocs(collection(db, "courses"));
+      const courseMap = {};
+      coursesSnapshot.forEach(doc => {
+        courseMap[doc.id] = doc.data().name;
+      });
+      
+      let activeStudentIds = new Set(); // Track unique active student IDs
+      const uniqueCourses = new Set();
+      let totalProgressSum = 0;
+      let activeStudentCount = 0;
+      
+      usersSnapshot.forEach((userDoc) => {
+        const userData = userDoc.data();
+        
+        // Check if user has enrollments (students will have enrollments)
+        if (userData.enrollments) {
+          // Check each enrollment to see if this teacher is assigned
+          for (const courseId in userData.enrollments) {
+            const enrollment = userData.enrollments[courseId];
+            
+            // Check if this enrollment has our teacher assigned
+            if (enrollment.teacherId === currentTeacher.id) {
+              const courseName = courseMap[courseId] || "Unknown Course";
+              const progress = enrollment.progress || 0;
+              
+              // Only count as active student if progress < 90%
+              if (progress < 90) {
+                activeStudentIds.add(userDoc.id); // Add unique student ID
+                activeStudentCount++;
+                totalProgressSum += progress;
+              }
+              
+              uniqueCourses.add(courseId);
+              
+              enrolledStudents.push({
+                id: userDoc.id,
+                firstName: userData.firstName || "Student",
+                lastName: userData.lastName || "User",
+                email: userData.email || "No email",
+                courseId: courseId,
+                courseName: courseName,
+                progress: progress,
+                lastActivity: enrollment.lastAccessed ? 
+                  formatDate(enrollment.lastAccessed.toDate()) : "Never",
+                status: getStatusFromProgress(progress),
+                enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
+                completedLessons: enrollment.completedLessons || []
+              });
+              
+              console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}, Progress: ${progress}%`);
+            }
+          }
+        }
+      });
+      
+      console.log(`Found ${activeStudentIds.size} active students enrolled with teacher ${currentTeacher.id}`);
+      
+      // Update stats - count unique active students, not enrollments
+      totalStudents.textContent = activeStudentIds.size;
+      activeCourses.textContent = uniqueCourses.size;
+      
+      // Calculate average progress for active students only
+      const averageProgress = activeStudentCount > 0 ? Math.round(totalProgressSum / activeStudentCount) : 0;
+      avgProgress.textContent = `${averageProgress}%`;
+      
+      // Display only active students (progress < 90%) - show only 4 for dashboard
+      const activeStudents = enrolledStudents
+        .filter(student => student.progress < 90)
+        .slice(0, 4);
+      
+      displayStudents(activeStudents);
+      
+      // Load recent activity
+      await loadRecentActivity();
+      
+      // Animate stats
+      animateStats();
+      
+    } catch (error) {
+      console.error("Error loading teacher students:", error);
+      studentsTableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Error loading students</h3>
+            <p>Error: ${error.message}</p>
+          </td>
+        </tr>
+      `;
+    }
+  }
+  
+  // Load recent activity
+  async function loadRecentActivity() {
+    try {
+      activityList.innerHTML = '';
+      allActivities = [];
+      
+      if (enrolledStudents.length === 0) {
+        activityList.innerHTML = `
+          <div class="activity-item">
+            <div class="activity-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="activity-content">
+              <div class="activity-title">No recent activity</div>
+              <div class="activity-description">Student activity will appear here when students enroll</div>
+            </div>
+            <div class="activity-time">Just now</div>
+          </div>
+        `;
+        return;
+      }
+      
+      // Generate activities for all students
+      enrolledStudents.forEach(student => {
+        // Create enrollment activity
+        const enrollmentActivity = {
+          type: 'enrollment',
+          icon: 'fa-user-plus',
+          title: 'New Enrollment',
+          description: `${student.firstName} ${student.lastName} enrolled in ${student.courseName}`,
+          time: student.enrolledDate,
+          studentId: student.id,
+          studentName: `${student.firstName} ${student.lastName}`,
+          courseName: student.courseName
+        };
+        
+        // Create progress activities
+        const progressActivity = {
+          type: 'progress',
+          icon: 'fa-chart-line',
+          title: 'Progress Update',
+          description: `${student.firstName} reached ${student.progress}% in ${student.courseName}`,
+          time: new Date(student.enrolledDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000),
+          studentId: student.id,
+          studentName: `${student.firstName} ${student.lastName}`,
+          courseName: student.courseName,
+          progress: student.progress
+        };
+        
+        // Create assessment activities
+        const assessmentActivity = {
+          type: 'assessment',
+          icon: 'fa-clipboard-check',
+          title: 'Assessment Submitted',
+          description: `${student.firstName} submitted an assessment for ${student.courseName}`,
+          time: new Date(student.enrolledDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000),
+          studentId: student.id,
+          studentName: `${student.firstName} ${student.lastName}`,
+          courseName: student.courseName
+        };
+        
+        // Add all activities to the list
+        allActivities.push(enrollmentActivity, progressActivity, assessmentActivity);
+      });
+      
+      // Sort activities by time (newest first)
+      allActivities.sort((a, b) => new Date(b.time) - new Date(a.time));
+      
+      // Display only the 4 most recent activities
+      const recentActivities = allActivities.slice(0, 4);
+      
+      recentActivities.forEach(activity => {
+        const activityItem = document.createElement('div');
+        activityItem.className = 'activity-item';
+        
+        activityItem.innerHTML = `
+          <div class="activity-icon"><i class="fas ${activity.icon}"></i></div>
+          <div class="activity-content">
+            <div class="activity-title">${activity.title}</div>
+            <div class="activity-description">${activity.description}</div>
+          </div>
+          <div class="activity-time">${formatDate(activity.time)}</div>
+        `;
+        
+        activityList.appendChild(activityItem);
+      });
+      
+    } catch (error) {
+      console.error("Error loading recent activity:", error);
+      activityList.innerHTML = `
+        <div class="activity-item">
+          <div class="activity-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="activity-content">
+            <div class="activity-title">Error loading activity</div>
+            <div class="activity-description">Please try refreshing the page</div>
+          </div>
+          <div class="activity-time">Just now</div>
+        </div>
+      `;
+    }
+  }
+  
+  // Set up real-time notifications
+  function setupNotifications() {
+    // Load notifications from localStorage if available
+    const savedNotifications = localStorage.getItem('teacherNotifications');
+    if (savedNotifications) {
+      notifications = JSON.parse(savedNotifications);
+    } else {
+      // Generate demo notifications based on enrolled students
+      notifications = [];
+      
+      if (enrolledStudents.length > 0) {
+        enrolledStudents.forEach(student => {
+          const notificationTypes = [
+            {
+              type: 'enrollment',
+              icon: 'fa-user-plus',
+              title: 'New Enrollment',
+              message: `${student.firstName} ${student.lastName} enrolled in your ${student.courseName} course`,
+              time: student.enrolledDate,
+              read: false,
+              id: `enrollment-${student.id}-${student.courseId}`
+            },
+            {
+              type: 'progress',
+              icon: 'fa-chart-line',
+              title: 'Progress Update',
+              message: `${student.firstName} reached ${student.progress}% in ${student.courseName}`,
+              time: new Date(student.enrolledDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000),
+              read: false,
+              id: `progress-${student.id}-${student.courseId}`
+            },
+            {
+              type: 'assessment',
+              icon: 'fa-clipboard-check',
+              title: 'Assessment Submitted',
+              message: `${student.firstName} submitted an assessment for ${student.courseName}`,
+              time: new Date(student.enrolledDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000),
+              read: false,
+              id: `assessment-${student.id}-${student.courseId}`
+            }
+          ];
+          
+          // Add one random notification per student for demo
+          const randomNotification = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+          notifications.push(randomNotification);
+        });
+      }
+      
+      // Sort notifications by time (newest first)
+      notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+      
+      // Save to localStorage
+      localStorage.setItem('teacherNotifications', JSON.stringify(notifications));
+    }
+    
+    // Update notification count and display
+    updateNotificationDisplay();
+  }
+  
+  // Update notification display
+  function updateNotificationDisplay() {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationBadge.textContent = unreadCount;
+    
+    // Update notification dropdown
+    notificationList.innerHTML = '';
+    
+    if (notifications.length === 0) {
+      notificationList.innerHTML = `
+        <div class="notification-empty">
+          <i class="fas fa-bell-slash"></i>
+          <p>No notifications</p>
+          <small>You're all caught up!</small>
+        </div>
+      `;
+    } else {
+      notifications.forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
+        notificationItem.addEventListener('click', () => markNotificationAsRead(notification));
+        
+        notificationItem.innerHTML = `
+          <div class="notification-title">${notification.title}</div>
+          <div class="notification-message">${notification.message}</div>
+          <div class="notification-time">${formatDate(notification.time)}</div>
+        `;
+        
+        notificationList.appendChild(notificationItem);
+      });
+    }
+  }
+  
+  // Mark notification as read
+  function markNotificationAsRead(notification) {
+    notification.read = true;
+    // Update localStorage
+    localStorage.setItem('teacherNotifications', JSON.stringify(notifications));
+    updateNotificationDisplay();
+  }
+  
+  // Display students in the table
+  function displayStudents(students) {
+    console.log("Displaying students:", students);
+    
+    if (students.length === 0) {
+      studentsTableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>No active students</h3>
+            <p>Currently no students are actively enrolled in your courses</p>
+            <p><small>Your teacher ID: ${currentTeacher.id}</small></p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    studentsTableBody.innerHTML = '';
+    
+    students.forEach(student => {
+      const row = document.createElement('tr');
+      row.addEventListener('click', () => viewStudentDetails(student.id, student.courseId));
+      
+      row.innerHTML = `
+        <td>
+          <div class="student-cell">
+            <div class="student-avatar-small">${getInitials(student.firstName, student.lastName)}</div>
+            <div class="student-info">
+              <div class="student-name">${student.firstName} ${student.lastName}</div>
+              <div class="student-email">${student.email}</div>
+            </div>
+          </div>
+        </td>
+        <td>${student.courseName}</td>
+        <td>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${student.progress}%"></div>
+          </div>
+          <small>${student.progress}%</small>
+        </td>
+        <td>${student.lastActivity}</td>
+        <td><span class="status-badge status-${student.status}">${student.status}</span></td>
+      `;
+      
+      studentsTableBody.appendChild(row);
+    });
+  }
+  
+  // View student details in modal
+  window.viewStudentDetails = async (studentId, courseId) => {
+    try {
+      // Find the student
+      const student = enrolledStudents.find(s => s.id === studentId && s.courseId === courseId);
+      
+      if (!student) {
+        alert('Student not found');
+        return;
+      }
+      
+      // Populate modal with student details
+      studentDetailContent.innerHTML = `
+        <div class="student-detail-header">
+          <div class="student-detail-avatar">${getInitials(student.firstName, student.lastName)}</div>
+          <div class="student-detail-info">
+            <h3>${student.firstName} ${student.lastName}</h3>
+            <p>${student.email}</p>
+            <p>Enrolled in: ${student.courseName}</p>
+            <p>Status: <span class="status-badge status-${student.status}">${student.status}</span></p>
+          </div>
+        </div>
+        
+        <div class="student-detail-section">
+          <h4>Progress Overview</h4>
+          <div class="student-stats">
+            <div class="student-stat">
+              <div class="student-stat-value">${student.progress}%</div>
+              <div class="student-stat-label">Course Progress</div>
+            </div>
+            <div class="student-stat">
+              <div class="student-stat-value">${student.completedLessons.length}</div>
+              <div class="student-stat-label">Lessons Completed</div>
+            </div>
+            <div class="student-stat">
+              <div class="student-stat-value">${formatDate(student.enrolledDate)}</div>
+              <div class="student-stat-label">Enrolled Date</div>
+            </div>
+          </div>
+          
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${student.progress}%"></div>
+          </div>
+        </div>
+        
+        <div class="student-detail-section">
+          <h4>Recent Activity</h4>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon"><i class="fas fa-book"></i></div>
+              <div class="activity-content">
+                <div class="activity-title">Course Enrollment</div>
+                <div class="activity-description">Enrolled in ${student.courseName}</div>
+              </div>
+              <div class="activity-time">${formatDate(student.enrolledDate)}</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon"><i class="fas fa-check-circle"></i></div>
+              <div class="activity-content">
+                <div class="activity-title">Progress Update</div>
+                <div class="activity-description">Reached ${student.progress}% completion</div>
+              </div>
+              <div class="activity-time">${student.lastActivity}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Show the modal
+      studentDetailModal.classList.add('active');
+      
+    } catch (error) {
+      console.error("Error loading student details:", error);
+      alert('Error loading student details');
+    }
+  };
+  
+  // Show all activities in modal
+  function showAllActivities() {
+    activityDetailContent.innerHTML = '';
+    
+    if (allActivities.length === 0) {
+      activityDetailContent.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-clock"></i>
+          <h3>No activities found</h3>
+          <p>There are no activities to display at this time</p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Group activities by date
+    const groupedActivities = {};
+    allActivities.forEach(activity => {
+      const dateKey = activity.time.toDateString();
+      if (!groupedActivities[dateKey]) {
+        groupedActivities[dateKey] = [];
+      }
+      groupedActivities[dateKey].push(activity);
+    });
+    
+    // Create timeline for each date
+    for (const date in groupedActivities) {
+      const dateGroup = document.createElement('div');
+      dateGroup.className = 'activity-date-group';
+      
+      dateGroup.innerHTML = `
+        <div class="activity-date-header">${date}</div>
+        <div class="activity-timeline">
+      `;
+      
+      const timeline = dateGroup.querySelector('.activity-timeline');
+      
+      groupedActivities[date].forEach(activity => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'activity-timeline-item';
+        
+        timelineItem.innerHTML = `
+          <div class="activity-timeline-icon">
+            <i class="fas ${activity.icon}"></i>
+          </div>
+          <div class="activity-timeline-content">
+            <div class="activity-timeline-title">${activity.title}</div>
+            <div class="activity-timeline-description">${activity.description}</div>
+            <div class="activity-timeline-time">${formatTime(activity.time)}</div>
+          </div>
+        `;
+        
+        timeline.appendChild(timelineItem);
+      });
+      
+      activityDetailContent.appendChild(dateGroup);
+    }
+    
+    // Show the modal
+    activityDetailModal.classList.add('active');
+  }
+  
+  // Helper function to get initials
+  function getInitials(firstName, lastName) {
+    if (!firstName || !lastName) return "SU";
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  }
+  
+  // Helper function to format date
+  function formatDate(date) {
+    if (!date) return "Never";
+    
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  }
+  
+  // Helper function to format time
+  function formatTime(date) {
+    if (!date) return "";
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  // Helper function to get status from progress
+  function getStatusFromProgress(progress) {
+    if (progress >= 90) return 'completed';
+    if (progress >= 50) return 'active';
+    return 'pending';
+  }
+
+  // Sidebar toggle functionality
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      mainContent.classList.add('sidebar-open');
+    });
+  }
+
+  if (closeSidebar) {
+    closeSidebar.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      mainContent.classList.remove('sidebar-open');
+    });
+  }
+
+  // Close sidebar on outside click
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('active')) {
+      if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+        sidebar.classList.remove('active');
+        mainContent.classList.remove('sidebar-open');
+      }
+    }
+  });
+
+  // Notification bell toggle
+  if (notificationIcon) {
+    notificationIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (notificationDropdown) {
+        notificationDropdown.classList.toggle('active');
+      }
+    });
+  }
+
+  // Close notification dropdown when clicking outside
+  document.addEventListener('click', () => {
+    if (notificationDropdown && notificationDropdown.classList.contains('active')) {
+      notificationDropdown.classList.remove('active');
+    }
+  });
+
+  // Clear notifications
+  if (clearNotifications) {
+    clearNotifications.addEventListener('click', () => {
+      notifications = [];
+      localStorage.removeItem('teacherNotifications');
+      updateNotificationDisplay();
+    });
+  }
+
+  // Logout functionality
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      logoutModal.classList.add('active');
+    });
+  }
+
+  if (closeLogoutModal) {
+    closeLogoutModal.addEventListener('click', () => {
+      logoutModal.classList.remove('active');
+    });
+  }
+
+  if (cancelLogoutBtn) {
+    cancelLogoutBtn.addEventListener('click', () => {
+      logoutModal.classList.remove('active');
+    });
+  }
+
+  if (confirmLogoutBtn) {
+    confirmLogoutBtn.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        window.location.href = "index.html";
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+    });
+  }
+
+  // Close student detail modal
+  if (closeStudentModal) {
+    closeStudentModal.addEventListener('click', () => {
+      studentDetailModal.classList.remove('active');
+    });
+  }
+
+  if (closeStudentBtn) {
+    closeStudentBtn.addEventListener('click', () => {
+      studentDetailModal.classList.remove('active');
+    });
+  }
+
+  // Close activity detail modal
+  if (closeActivityModal) {
+    closeActivityModal.addEventListener('click', () => {
+      activityDetailModal.classList.remove('active');
+    });
+  }
+
+  if (closeActivityBtn) {
+    closeActivityBtn.addEventListener('click', () => {
+      activityDetailModal.classList.remove('active');
+    });
+  }
+
+  // View all activity button
+  if (viewAllActivity) {
+    viewAllActivity.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAllActivities();
+    });
+  }
+
+  // Send message button
+  if (sendMessageBtn) {
+    sendMessageBtn.addEventListener('click', () => {
+      alert('Redirecting to messages...');
+      studentDetailModal.classList.remove('active');
+      window.location.href = "teachermessages.html";
+    });
+  }
+
+  // Animate stats on load
+  function animateStats() {
+    const statValues = document.querySelectorAll('.stat-number');
+    statValues.forEach((stat, index) => {
+      const text = stat.textContent;
+      let finalValue = 0;
+      
+      if (index === 2) {
+        // For percentage, extract the number
+        finalValue = parseInt(text) || 0;
+      } else {
+        finalValue = parseInt(text) || 0;
+      }
+      
+      if (finalValue > 0) {
+        let current = 0;
+        const increment = finalValue / 30;
+        
+        const counter = setInterval(() => {
+          current += increment;
+          if (current >= finalValue) {
+            stat.textContent = index === 2 ? `${finalValue}%` : finalValue;
+            clearInterval(counter);
+          } else {
+            stat.textContent = index === 2 ? `${Math.floor(current)}%` : Math.floor(current);
+          }
+        }, 50);
+      }
+    });
+  }
+
+  // Create floating particles
+  function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    if (!particlesContainer) return;
+    
+    const numberOfParticles = 20;
+
+    for (let i = 0; i < numberOfParticles; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+      particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+      particle.style.animationDelay = Math.random() * 5 + 's';
+      particle.style.backgroundColor = `rgba(255, 71, 87, ${Math.random() * 0.3})`;
+      particlesContainer.appendChild(particle);
+    }
+  }
+
+  // Initialize particles when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    createParticles();
+  });
+</script>
+</body>
+</html>

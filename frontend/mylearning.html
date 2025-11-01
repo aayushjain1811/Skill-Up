@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Learning - SkillUp</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #ffffff;
+      --primary-dark: #f8f9fa;
+      --primary-light: #e9ecef;
+      --secondary: #dee2e6;
+      --accent: #08d9d6;
+      --light: #4361ee;
+      --dark: #ffffff;
+      --gray: #adb5bd;
+      --gray-light: #343a40;
+      --success: #00f5ff;
+      --card-bg: linear-gradient(135deg, #ffffff, #f8f9fa);
+      --sidebar-bg: linear-gradient(180deg, #4361ee, #3a0ca3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--primary);
+      overflow-x: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* Loading Animation */
+    .loading-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(67, 97, 238, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--success);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(67, 97, 238, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 97, 238, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Dashboard Container */
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(67, 97, 238, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(58, 12, 163, 0.1));
+      animation: sidebarGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes sidebarGlow {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, #00f5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(0, 245, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: #00f5ff;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.7));
+    }
+
+    /* Logout at bottom */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Logout Modal */
+    .logout-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .logout-modal.active {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      position: relative;
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .close-modal {
+      background: transparent;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-modal:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--primary);
+    }
+
+    .logout-icon {
+      font-size: 60px;
+      color: #ff4757;
+      margin: 20px 0;
+      animation: pulse 2s infinite;
+    }
+
+    .logout-text {
+      color: var(--gray);
+      margin-bottom: 30px;
+      font-size: 18px;
+    }
+
+    .logout-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+
+    /* Notification Dropdown */
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      z-index: 1000;
+    }
+
+    .notification-dropdown.active {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      color: var(--primary);
+      margin: 0;
+    }
+
+    .notification-clear {
+      background: transparent;
+      border: none;
+      color: var(--success);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      padding: 10px 0;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .notification-item:hover {
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .notification-item.unread {
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .notification-title {
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--gray-light);
+      font-size: 12px;
+    }
+
+    .notification-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--gray);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff4757;
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      padding: 40px 30px;
+      background: var(--bg-secondary);
+      margin: 30px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .welcome::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.05), rgba(0, 245, 255, 0.05));
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes welcomeGlow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .welcome-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .welcome h1 {
+      color: var(--primary);
+      font-size: 36px;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(0, 245, 255, 0.6)); }
+    }
+
+    .welcome p {
+      color: var(--gray);
+      font-size: 18px;
+      max-width: 600px;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      padding: 0 30px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 25px;
+      border-radius: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      transform: translateX(-100%);
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+      transform: translateX(0);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(67, 97, 238, 0.2);
+    }
+
+    .stat-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 15px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      color: var(--gray);
+      font-size: 16px;
+    }
+
+    /* Sections */
+    .section {
+      margin: 40px 30px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-radius: 2px;
+    }
+
+    /* Course Grid */
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+    }
+
+    .course-card {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .course-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .course-card:hover::before {
+      opacity: 1;
+    }
+
+    .course-card:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 25px 50px rgba(67, 97, 238, 0.3);
+    }
+
+    .course-content {
+      padding: 25px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .course-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+
+    .course-description {
+      color: var(--gray);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .course-progress {
+      margin-bottom: 25px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(67, 97, 238, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-radius: 4px;
+      transition: width 1s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      animation: progressShimmer 2s infinite;
+    }
+
+    @keyframes progressShimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .progress-text {
+      margin-top: 10px;
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .course-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+    }
+
+    .btn-small {
+      padding: 8px 16px !important;
+      font-size: 14px !important;
+      flex: none !important;
+      width: auto !important;
+      min-width: 100px;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+
+    /* Search Bar */
+    .search-container {
+      max-width: 600px;
+      margin: 20px auto 30px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 15px 20px 15px 50px;
+      border: none;
+      border-radius: 15px;
+      font-size: 16px;
+      background: var(--bg-secondary);
+      color: var(--primary);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .search-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+      font-size: 18px;
+    }
+
+    /* Filters */
+    .filter-section {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--bg-secondary);
+      border: 2px solid rgba(67, 97, 238, 0.3);
+      color: var(--primary);
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .filter-btn:hover {
+      background: rgba(67, 97, 238, 0.1);
+      border-color: rgba(67, 97, 238, 0.5);
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-color: transparent;
+      color: white;
+    }
+
+    /* Chart Section */
+    .chart-section {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 30px;
+      margin: 40px 30px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.05), rgba(0, 245, 255, 0.05));
+      animation: welcomeGlow 4s ease-in-out infinite alternate;
+    }
+
+    .chart-container {
+      position: relative;
+      z-index: 2;
+      height: 400px;
+    }
+
+    /* Teacher View */
+    .teacher-view {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 30px;
+      margin: 40px 30px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .student-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .student-card {
+      background: var(--bg-main);
+      border-radius: 15px;
+      padding: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .student-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(67, 97, 238, 0.2);
+    }
+
+    .student-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .student-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .student-info h4 {
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .student-info p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .student-progress {
+      margin-top: 15px;
+    }
+
+    /* Completed Badge */
+    .completed-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--success);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 3;
+    }
+
+    /* Lessons Info */
+    .lessons-info {
+      font-size: 12px;
+      color: var(--gray);
+      margin-top: 5px;
+    }
+
+    .continue-btn {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    /* Test Status */
+    .test-status {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: var(--success);
+      font-weight: 500;
+    }
+
+    /* No Courses Message */
+    .no-courses {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+      font-size: 1.2rem;
+      grid-column: 1 / -1;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .course-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-content.sidebar-open {
+        margin-left: 0;
+      }
+      
+      .sidebar {
+        width: 100%;
+      }
+      
+      .course-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .topbar {
+        padding: 0 20px;
+      }
+      
+      .section {
+        margin: 20px;
+      }
+      
+      .welcome {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+      
+      .welcome h1 {
+        font-size: 28px;
+      }
+
+      .filter-section {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .filter-btn {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .chart-container {
+        height: 300px;
+      }
+    }
+
+    /* Ripple effect */
+    .ripple {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: scale(0);
+      animation: ripple-animation 0.6s linear;
+    }
+    
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Animation -->
+  <div class="loading-container" id="loadingContainer">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your learning progress...</div>
+  </div>
+
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="courses.html"><i class="fas fa-book"></i> Courses</a></li>
+        <li><a href="mylearning.html" class="active"><i class="fas fa-chart-line"></i> Progress</a></li>
+        <li><a href="studentmessages.html"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">My Learning</div>
+        </div>
+        
+        <div class="user-info">
+          <div class="notification-container" style="position: relative;">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="notificationBadge">0</span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="notification-clear" id="clearNotifications">Clear All</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be populated here -->
+              </div>
+            </div>
+          </div>
+          <span id="userDisplayName">Loading...</span>
+          <div class="avatar">
+            <span id="userInitials">U</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Welcome Section -->
+      <section class="welcome">
+        <div class="welcome-content">
+          <h1 id="welcomeMessage">Your Learning Journey</h1>
+          <p id="welcomeSubtitle">Track your progress, visualize your achievements, and continue your path to mastery.</p>
+        </div>
+      </section>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-book-open"></i>
+            </div>
+            <div class="stat-number" id="totalCourses">0</div>
+            <div class="stat-label">Total Courses</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number" id="completedCourses">0</div>
+            <div class="stat-label">Completed</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-number" id="avgProgress">0%</div>
+            <div class="stat-label">Average Progress</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Chart Section -->
+      <section class="chart-section">
+        <div class="section-header">
+          <h2 class="section-title">Learning Progress Overview</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="progressChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Search and Filters -->
+      <div class="search-container">
+        <div class="search-icon">🔍</div>
+        <input type="text" class="search-input" placeholder="Search your courses by title, category, or keyword..." id="searchInput">
+      </div>
+
+      <div class="filter-section">
+        <button class="filter-btn active" data-filter="all">All Courses</button>
+        <button class="filter-btn" data-filter="in-progress">In Progress</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <button class="filter-btn" data-filter="not-started">Not Started</button>
+      </div>
+
+      <!-- Enrolled Courses Section -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">Your Courses</h2>
+        </div>
+        <div class="course-grid" id="coursesGrid">
+          <!-- Courses will be loaded here from Firebase -->
+        </div>
+      </section>
+
+      <!-- Teacher View Section (Only visible to teachers) -->
+      <section class="teacher-view" id="teacherView" style="display: none;">
+        <div class="section-header">
+          <h2 class="section-title">Your Students' Progress</h2>
+        </div>
+        <div class="student-list" id="studentList">
+          <!-- Students will be loaded here for teachers -->
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="logout-modal" id="logoutModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Logout</h2>
+        <button class="close-modal" id="closeLogoutModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="logout-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <p class="logout-text">Are you sure you want to logout?</p>
+      <div class="logout-actions">
+        <button class="btn btn-secondary" id="cancelLogout">Cancel</button>
+        <button class="btn btn-danger" id="confirmLogout">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+    // Firebase Import
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc, 
+      collection,
+      getDocs,
+      query,
+      where,
+      updateDoc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+      authDomain: "growup-93f5d.firebaseapp.com",
+      projectId: "growup-93f5d",
+      storageBucket: "growup-93f5d.firebasestorage.app",
+      messagingSenderId: "775742235468",
+      appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+      measurementId: "G-FWBKTSQDS9"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM elements with null checks
+    function getElement(id) {
+      const element = document.getElementById(id);
+      if (!element) {
+        console.warn(`Element with id '${id}' not found`);
+      }
+      return element;
+    }
+
+    // Get all elements with safe null checks
+    const loadingContainer = getElement("loadingContainer");
+    const welcomeMessage = getElement("welcomeMessage");
+    const welcomeSubtitle = getElement("welcomeSubtitle");
+    const coursesGrid = getElement("coursesGrid");
+    const totalCoursesEl = getElement("totalCourses");
+    const completedCoursesEl = getElement("completedCourses");
+    const avgProgressEl = getElement("avgProgress");
+    const searchInput = getElement("searchInput");
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const teacherView = getElement("teacherView");
+    const studentList = getElement("studentList");
+    const progressChart = getElement("progressChart");
+
+    // Sidebar elements
+    const sidebar = getElement('sidebar');
+    const mainContent = getElement('mainContent');
+    const sidebarToggle = getElement('sidebarToggle');
+    const closeSidebar = getElement('closeSidebar');
+    const logoutBtn = getElement('logoutBtn');
+
+    // Logout modal elements
+    const logoutModal = getElement('logoutModal');
+    const closeLogoutModal = getElement('closeLogoutModal');
+    const cancelLogout = getElement('cancelLogout');
+    const confirmLogout = getElement('confirmLogout');
+
+    // Notification elements
+    const notificationIcon = getElement('notificationIcon');
+    const notificationDropdown = getElement('notificationDropdown');
+    const notificationList = getElement('notificationList');
+    const clearNotifications = getElement('clearNotifications');
+    const notificationBadge = getElement('notificationBadge');
+
+    // User info elements
+    const userDisplayName = getElement("userDisplayName");
+    const userInitials = getElement("userInitials");
+
+    // Track current user and courses
+    let currentUser = null;
+    let courses = [];
+    let isTeacher = false;
+    let chart = null;
+
+    // Initialize the page
+    function initPage() {
+      // Sidebar toggle functionality
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          sidebar.classList.add('active');
+          mainContent.classList.add('sidebar-open');
+        });
+      }
+
+      if (closeSidebar) {
+        closeSidebar.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          mainContent.classList.remove('sidebar-open');
+        });
+      }
+
+      // Close sidebar on outside click
+      document.addEventListener('click', (e) => {
+        if (sidebar && sidebarToggle && sidebar.classList.contains('active')) {
+          if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('active');
+            mainContent.classList.remove('sidebar-open');
+          }
+        }
+      });
+
+      // Enhanced logout functionality (with styled modal)
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          if (logoutModal) logoutModal.classList.add('active');
+        });
+      }
+
+      // Logout modal functionality
+      if (closeLogoutModal) {
+        closeLogoutModal.addEventListener('click', () => {
+          if (logoutModal) logoutModal.classList.remove('active');
+        });
+      }
+
+      if (cancelLogout) {
+        cancelLogout.addEventListener('click', () => {
+          if (logoutModal) logoutModal.classList.remove('active');
+        });
+      }
+
+      if (confirmLogout) {
+        confirmLogout.addEventListener('click', () => {
+          signOut(auth).then(() => {
+            window.location.href = "index.html";
+          }).catch((error) => {
+            console.error("Error signing out:", error);
+            alert('Logout failed. Please try again.');
+          });
+        });
+      }
+
+      // Notification functionality
+      if (notificationIcon) {
+        notificationIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notificationDropdown.classList.toggle('active');
+          if (currentUser) {
+            loadNotifications(currentUser.uid);
+          }
+        });
+      }
+
+      if (clearNotifications) {
+        clearNotifications.addEventListener('click', () => {
+          clearAllNotifications();
+        });
+      }
+
+      // Close notification dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (notificationDropdown && notificationDropdown.classList.contains('active')) {
+          if (!notificationDropdown.contains(e.target) && !notificationIcon.contains(e.target)) {
+            notificationDropdown.classList.remove('active');
+          }
+        }
+      });
+
+      // Filter buttons
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          filterCourses(btn.getAttribute('data-filter'));
+        });
+      });
+
+      // Search functionality
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => searchCourses(e.target.value));
+      }
+
+      // Initialize UI animations and effects
+      initUIAnimations();
+
+      // Check auth state
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          currentUser = user;
+          await setupUserInfo(user);
+          
+          // Check if user is a teacher
+          await checkIfTeacher(user.uid);
+          
+          // Set up real-time listeners
+          setupRealtimeListeners(user.uid);
+          
+          // Load data based on user role
+          if (isTeacher) {
+            await loadStudentsForTeacher();
+            if (teacherView) teacherView.style.display = 'block';
+          } else {
+            await loadEnrolledCourses(user.uid);
+            updateStats();
+            createProgressChart();
+          }
+
+          // Hide loading animation
+          setTimeout(() => {
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+          }, 1000);
+        } else {
+          window.location.href = "signin.html"; // Redirect if not signed in
+        }
+      });
+    }
+
+    // Set up real-time listeners for updates
+    function setupRealtimeListeners(userId) {
+      // Listen for user data changes
+      const userRef = doc(db, "users", userId);
+      onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          if (!isTeacher) {
+            loadEnrolledCourses(userId);
+            updateStats();
+            createProgressChart();
+          }
+          loadNotifications(userId);
+        }
+      });
+    }
+
+    // Update stats based on enrolled courses
+    function updateStats() {
+      if (isTeacher) return; // Don't update stats for teachers
+      
+      // Remove duplicates before calculating stats
+      const uniqueCourses = [...new Map(courses.map(course => [course.id, course])).values()];
+      
+      const totalCourses = uniqueCourses.length;
+      const completedCourses = uniqueCourses.filter(course => {
+        const progress = course.progress || 0;
+        return course.hasPassedTest || progress >= 100;
+      }).length;
+      
+      // Calculate average progress
+      let totalProgress = 0;
+      uniqueCourses.forEach(course => {
+        totalProgress += course.progress || 0;
+      });
+      const avgProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0;
+      
+      // Update DOM elements
+      if (totalCoursesEl) totalCoursesEl.textContent = totalCourses;
+      if (completedCoursesEl) completedCoursesEl.textContent = completedCourses;
+      if (avgProgressEl) avgProgressEl.textContent = `${avgProgress}%`;
+    }
+
+    // Setup user information
+    async function setupUserInfo(user) {
+      try {
+        const displayName = user.displayName || user.email.split('@')[0];
+        if (userDisplayName) userDisplayName.textContent = displayName;
+        
+        if (userInitials) {
+          const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+          userInitials.textContent = initials;
+        }
+        
+        // Update welcome message if element exists
+        if (welcomeMessage) welcomeMessage.textContent = `Your Learning Journey, ${displayName}!`;
+        
+        // Update welcome subtitle based on user data
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          let subtitle = "Track your progress, visualize your achievements, and continue your path to mastery.";
+          
+          if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
+            const enrolledCount = Object.keys(userData.enrollments).length;
+            subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Track your progress and continue your learning journey!`;
+          }
+          
+          if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+        }
+      } catch (error) {
+        console.error("Error setting up user info:", error);
+      }
+    }
+
+    // Load notifications from Firebase
+    async function loadNotifications(userId) {
+      try {
+        if (!notificationList) return;
+
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+
+        notificationList.innerHTML = "";
+
+        if (userSnap.exists() && userSnap.data().notifications) {
+          const notifications = userSnap.data().notifications;
+          
+          // Sort by timestamp (newest first)
+          notifications.sort((a, b) => {
+            const timeA = a.timestamp ? (a.timestamp.toDate ? a.timestamp.toDate().getTime() : new Date(a.timestamp).getTime()) : 0;
+            const timeB = b.timestamp ? (b.timestamp.toDate ? b.timestamp.toDate().getTime() : new Date(b.timestamp).getTime()) : 0;
+            return timeB - timeA;
+          });
+
+          const notificationsToShow = notifications.slice(0, 5);
+
+          if (notificationsToShow.length === 0) {
+            notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+            if (notificationBadge) {
+              notificationBadge.textContent = '0';
+              notificationBadge.style.display = 'none';
+            }
+            return;
+          }
+
+          const unreadCount = notifications.filter(n => !n.read).length;
+          if (notificationBadge) {
+            notificationBadge.textContent = unreadCount;
+            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+          }
+
+          notificationsToShow.forEach(notification => {
+            const notificationItem = document.createElement("div");
+            notificationItem.classList.add("notification-item");
+            if (!notification.read) {
+              notificationItem.classList.add("unread");
+            }
+            
+            let timeDisplay = "Recently";
+            if (notification.timestamp) {
+              const now = new Date();
+              const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
+              const diffMs = now - notificationTime;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffMins < 1) timeDisplay = "Just now";
+              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+              else timeDisplay = `${diffDays}d ago`;
+            }
+            
+            notificationItem.innerHTML = `
+              <div class="notification-title">${notification.title}</div>
+              <div class="notification-message">${notification.message}</div>
+              <div class="notification-time">${timeDisplay}</div>
+            `;
+            
+            notificationItem.addEventListener('click', async () => {
+              if (!notification.read) {
+                // Mark as read
+                const updatedNotifications = notifications.map(n => 
+                  n.id === notification.id ? {...n, read: true} : n
+                );
+                
+                await updateDoc(userRef, {
+                  notifications: updatedNotifications
+                });
+                
+                notificationItem.classList.remove('unread');
+                loadNotifications(userId);
+              }
+            });
+            
+            notificationList.appendChild(notificationItem);
+          });
+        } else {
+          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+          if (notificationBadge) {
+            notificationBadge.textContent = '0';
+            notificationBadge.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+        if (notificationList) {
+          notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+        }
+      }
+    }
+
+    // Clear all notifications
+    async function clearAllNotifications() {
+      try {
+        if (!currentUser) return;
+        
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().notifications) {
+          const notifications = userSnap.data().notifications.map(notification => ({
+            ...notification,
+            read: true
+          }));
+          
+          await updateDoc(userRef, {
+            notifications: notifications
+          });
+          
+          loadNotifications(currentUser.uid);
+        }
+      } catch (error) {
+        console.error("Error clearing notifications:", error);
+      }
+    }
+
+    // Initialize UI animations and effects
+    function initUIAnimations() {
+      // Create floating particles
+      function createParticles() {
+        const particlesContainer = document.getElementById('particles');
+        if (!particlesContainer) return;
+        
+        const numberOfParticles = 20;
+
+        for (let i = 0; i < numberOfParticles; i++) {
+          const particle = document.createElement('div');
+          particle.classList.add('particle');
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.top = Math.random() * 100 + '%';
+          particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+          particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+          particle.style.animationDelay = Math.random() * 5 + 's';
+          particle.style.backgroundColor = `rgba(67, 97, 238, ${Math.random() * 0.3})`;
+          particlesContainer.appendChild(particle);
+        }
+      }
+
+      // Initialize particles
+      createParticles();
+
+      // Add loading animation to course progress bars
+      const progressFills = document.querySelectorAll('.progress-fill');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const width = entry.target.style.width;
+            entry.target.style.width = '0%';
+            setTimeout(() => {
+              entry.target.style.width = width;
+            }, 200);
+          }
+        });
+      });
+
+      progressFills.forEach(fill => {
+        observer.observe(fill);
+      });
+
+      // Add hover effects to cards
+      const cards = document.querySelectorAll('.course-card, .stat-card, .student-card');
+      cards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+          card.style.transform = card.classList.contains('course-card') ? 'translateY(-15px)' : 
+                                card.classList.contains('stat-card') ? 'translateY(-10px)' : 'translateY(-5px)';
+          card.style.transition = 'transform 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'translateY(0) translateX(0)';
+        });
+      });
+
+      // Animate stats on scroll
+      const statNumbers = document.querySelectorAll('.stat-number');
+      const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const target = parseInt(entry.target.textContent) || 0;
+            let current = 0;
+            const increment = target / 30;
+            const timer = setInterval(() => {
+              current += increment;
+              if (current >= target) {
+                entry.target.textContent = target;
+                clearInterval(timer);
+              } else {
+                entry.target.textContent = Math.floor(current);
+              }
+            }, 50);
+          }
+        });
+      });
+
+      statNumbers.forEach(stat => {
+        statsObserver.observe(stat);
+      });
+
+      // Add ripple effect to buttons
+      const buttons = document.querySelectorAll('.btn, .sidebar-toggle, .notification-icon, .filter-btn, .continue-btn');
+      buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          const rect = this.getBoundingClientRect();
+          const ripple = document.createElement('span');
+          const size = Math.max(rect.width, rect.height);
+          const x = e.clientX - rect.left - size / 2;
+          const y = e.clientY - rect.top - size / 2;
+          
+          ripple.style.width = ripple.style.height = size + 'px';
+          ripple.style.left = x + 'px';
+          ripple.style.top = y + 'px';
+          ripple.classList.add('ripple');
+          
+          this.style.position = 'relative';
+          this.style.overflow = 'hidden';
+          this.appendChild(ripple);
+          
+          setTimeout(() => {
+            ripple.remove();
+          }, 600);
+        });
+      });
+    }
+
+    // Check if user is a teacher
+    async function checkIfTeacher(userId) {
+      try {
+        const teacherDoc = await getDoc(doc(db, "teachers", userId));
+        isTeacher = teacherDoc.exists();
+        return isTeacher;
+      } catch (error) {
+        console.error("Error checking teacher status:", error);
+        return false;
+      }
+    }
+
+    // Load enrolled courses for student
+    async function loadEnrolledCourses(userId) {
+      try {
+        if (!coursesGrid) return;
+
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+
+        courses = [];
+
+        if (userSnap.exists() && userSnap.data().enrollments) {
+          const enrollments = userSnap.data().enrollments;
+          const enrolledCourseIds = Object.keys(enrollments);
+
+          // Show message if no enrolled courses
+          if (enrolledCourseIds.length === 0) {
+            coursesGrid.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
+            return;
+          }
+
+          // Remove duplicates by using Set
+          const uniqueEnrolledIds = [...new Set(enrolledCourseIds)];
+          
+          for (const courseId of uniqueEnrolledIds) {
+            const courseRef = doc(db, "courses", courseId);
+            const courseSnap = await getDoc(courseRef);
+
+            if (courseSnap.exists()) {
+              const courseData = courseSnap.data();
+              const enrollment = enrollments[courseId];
+              
+              // Get progress data from enrollment
+              let progress = enrollment.progress || 0;
+              let completedLessons = enrollment.completedLessons 
+                ? enrollment.completedLessons.length 
+                : 0;
+              let hasPassedTest = enrollment.hasPassedTest || false;
+              
+              // Get total lessons count for this course
+              let totalLessons = 0;
+              try {
+                const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
+                totalLessons = lecturesSnap.size;
+              } catch (error) {
+                console.error("Error getting lectures count:", error);
+                totalLessons = 0;
+              }
+              
+              // If all lessons are completed but progress isn't 100%, set it to 100%
+              if (totalLessons > 0 && completedLessons >= totalLessons && progress < 100) {
+                progress = 100;
+              }
+              
+              courses.push({
+                id: courseId,
+                name: courseData.name || courseData.title || "Untitled Course",
+                description: courseData.description || 'No description available',
+                progress: progress,
+                completedLessons: completedLessons,
+                totalLessons: totalLessons,
+                hasPassedTest: hasPassedTest
+              });
+            }
+          }
+
+          renderCourses();
+        } else {
+          coursesGrid.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
+        }
+      } catch (error) {
+        console.error("Error loading enrolled courses:", error);
+        if (coursesGrid) {
+          coursesGrid.innerHTML = "<p class='no-courses'>Error loading courses. Please try again.</p>";
+        }
+      }
+    }
+
+    // Create course card HTML - FIXED progress bar and removed instructor name
+    function createCourseCard(course) {
+      const progressWidth = course.progress || 0;
+      const isCompleted = course.hasPassedTest || progressWidth >= 100;
+      const isNotStarted = progressWidth === 0;
+      const isInProgress = progressWidth > 0 && progressWidth < 100 && !isCompleted;
+      
+      // Determine status for filtering
+      let status = 'in-progress';
+      if (isCompleted) status = 'completed';
+      if (isNotStarted) status = 'not-started';
+
+      // Determine completion reason for the badge
+      let completionBadgeText = '✓ Completed';
+      if (course.hasPassedTest) {
+        completionBadgeText = '✓ Test Passed';
+      } else if (progressWidth >= 100) {
+        completionBadgeText = '✓ 100% Complete';
+      }
+
+      return `
+        <div class="course-card" data-status="${status}">
+          ${isCompleted ? `<span class="completed-badge">${completionBadgeText}</span>` : ''}
+
+          <div class="course-content">
+            <h3 class="course-title">${course.name}</h3>
+            <p class="course-description">${course.description || 'No description available'}</p>
+            
+            <div class="course-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${progressWidth}%"></div>
+              </div>
+              <div class="progress-text">${progressWidth}% Complete${isCompleted ? ' ✅' : ''}</div>
+              <div class="lessons-info">${course.completedLessons || 0} of ${course.totalLessons || 0} lessons completed</div>
+              ${course.hasPassedTest ? '<p class="test-status">✅ Test Passed</p>' : 
+                isCompleted ? '<p class="test-status">✅ All Lessons Completed</p>' : ''}
+            </div>
+            
+            <div class="course-actions">
+              <button class="continue-btn" onclick="continueCourse('${course.id}')">
+                ${isCompleted ? 'Review Course' : 'Continue Learning'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render courses - FIXED progress bar animation
+    function renderCourses(coursesToRender = courses) {
+      if (!coursesToRender.length) {
+        coursesGrid.innerHTML = "<p class='no-courses'>No courses found.</p>";
+        return;
+      }
+
+      // Remove duplicates before rendering
+      const uniqueCourses = [...new Map(coursesToRender.map(course => [course.id, course])).values()];
+      
+      coursesGrid.innerHTML = uniqueCourses.map(createCourseCard).join('');
+
+      // Animate progress bars - FIXED animation
+      setTimeout(() => {
+        document.querySelectorAll('.progress-fill').forEach(bar => {
+          const computedWidth = bar.style.width;
+          if (computedWidth && computedWidth !== '0%') {
+            bar.style.width = '0%';
+            // Use requestAnimationFrame for smoother animation
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                bar.style.width = computedWidth;
+                bar.style.transition = 'width 1s ease-in-out';
+              }, 100);
+            });
+          }
+        });
+      }, 300);
+    }
+
+    // Filter courses
+    function filterCourses(filter) {
+      let filteredCourses = [];
+
+      switch (filter) {
+        case 'all':
+          filteredCourses = courses;
+          break;
+        case 'completed':
+          filteredCourses = courses.filter(c => {
+            const progress = c.progress || 0;
+            return c.hasPassedTest || progress >= 100;
+          });
+          break;
+        case 'in-progress':
+          filteredCourses = courses.filter(c => {
+            const progress = c.progress || 0;
+            return progress > 0 && progress < 100 && !c.hasPassedTest;
+          });
+          break;
+        case 'not-started':
+          filteredCourses = courses.filter(c => (c.progress || 0) === 0 && !c.hasPassedTest);
+          break;
+        default:
+          filteredCourses = courses;
+      }
+
+      renderCourses(filteredCourses);
+    }
+
+    // Search courses
+    function searchCourses(query) {
+      if (!query) return renderCourses(courses);
+
+      const filtered = courses.filter(course =>
+        course.name.toLowerCase().includes(query.toLowerCase()) ||
+        (course.description || "").toLowerCase().includes(query.toLowerCase())
+      );
+
+      renderCourses(filtered);
+    }
+
+    // Create progress chart
+    function createProgressChart() {
+      if (!progressChart) return;
+      
+      // Destroy existing chart if it exists
+      if (chart) {
+        chart.destroy();
+      }
+      
+      const ctx = progressChart.getContext('2d');
+      
+      // Remove duplicates before creating chart
+      const uniqueCourses = [...new Map(courses.map(course => [course.id, course])).values()];
+      
+      // Prepare data for chart
+      const courseNames = uniqueCourses.map(c => c.name);
+      const progressData = uniqueCourses.map(c => c.progress || 0);
+      const completedData = uniqueCourses.map(c => (c.hasPassedTest || (c.progress || 0) >= 100) ? 100 : 0);
+      
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: courseNames,
+          datasets: [
+            {
+              label: 'Current Progress',
+              data: progressData,
+              backgroundColor: 'rgba(67, 97, 238, 0.7)',
+              borderColor: 'rgba(67, 97, 238, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Completed (100%)',
+              data: completedData,
+              backgroundColor: 'rgba(0, 245, 255, 0.7)',
+              borderColor: 'rgba(0, 245, 255, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                color: '#adb5bd'
+              },
+              grid: {
+                color: 'rgba(67, 97, 238, 0.1)'
+              }
+            },
+            x: {
+              ticks: {
+                color: '#adb5bd',
+                maxTicksLimit: 5
+              },
+              grid: {
+                color: 'rgba(67, 97, 238, 0.1)'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#ffffff'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Load students for teacher view
+    async function loadStudentsForTeacher() {
+      try {
+        if (!studentList) return;
+        
+        // Get all students enrolled in courses taught by this teacher
+        const students = [];
+        
+        // Get all users and check their enrollments
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        
+        for (const userDoc of usersSnapshot.docs) {
+          const userData = userDoc.data();
+          
+          if (userData.enrollments) {
+            // Check each enrollment to see if this teacher is assigned
+            Object.entries(userData.enrollments).forEach(([courseId, enrollment]) => {
+              if (enrollment.teacherId === currentUser.uid) {
+                // This student is enrolled in a course taught by this teacher
+                students.push({
+                  id: userDoc.id,
+                  name: userData.name || "Student",
+                  email: userData.email || "No email",
+                  course: enrollment.courseName || "Course",
+                  progress: enrollment.progress || 0,
+                  completedLessons: enrollment.completedLessons ? enrollment.completedLessons.length : 0,
+                  hasPassedTest: enrollment.hasPassedTest || false
+                });
+              }
+            });
+          }
+        }
+        
+        // Render students
+        if (students.length === 0) {
+          studentList.innerHTML = "<p class='no-courses'>No students enrolled in your courses yet.</p>";
+          return;
+        }
+        
+        studentList.innerHTML = students.map(student => `
+          <div class="student-card">
+            <div class="student-header">
+              <div class="student-avatar">${student.name.charAt(0)}</div>
+              <div class="student-info">
+                <h4>${student.name}</h4>
+                <p>${student.email}</p>
+                <p><strong>Course:</strong> ${student.course}</p>
+              </div>
+            </div>
+            <div class="student-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${student.progress}%"></div>
+              </div>
+              <div class="progress-text">
+                ${student.progress}% Complete • 
+                ${student.completedLessons} lessons completed
+                ${student.hasPassedTest ? ' • ✅ Test Passed' : ''}
+              </div>
+            </div>
+          </div>
+        `).join('');
+        
+      } catch (error) {
+        console.error("Error loading students:", error);
+        if (studentList) {
+          studentList.innerHTML = "<p class='no-courses'>Error loading student data.</p>";
+        }
+      }
+    }
+
+    // Continue course function (global for onclick)
+    window.continueCourse = function (courseId) {
+      window.location.href = `coursedetails.html?id=${courseId}`;
+    };
+
+    // Initialize the page when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>

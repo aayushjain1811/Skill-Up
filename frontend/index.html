@@ -1,0 +1,2383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillUp - Educational Platform</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <style>
+    :root {
+      --primary: #ffffff;
+      --primary-dark: #1a1d29;
+      --primary-light: #e9ecef;
+      --secondary: #252937;
+      --accent: #08d9d6;
+      --light: #4361ee;
+      --dark: #ffffff;
+      --gray: #adb5bd;
+      --gray-light: #343a40;
+      --success: #00f5ff;
+      --card-bg: linear-gradient(135deg, #1a1d29, #252937);
+      --sidebar-bg: linear-gradient(180deg, #4361ee, #3a0ca3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--primary);
+      overflow-x: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* Loading Animation */
+    #loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .loading-logo {
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 2rem;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(67, 97, 238, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--success);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 1rem;
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(67, 97, 238, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 97, 238, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      background: rgba(67, 97, 238, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: float 5s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-10px) translateX(20px); }
+      75% { transform: translateY(-15px) translateX(-10px); }
+    }
+
+    /* 3D Mascot Container */
+    #mascot-container {
+      position: fixed;
+      top: 75%;
+      right: 5%;
+      width: 400px;
+      height: 500px;
+      z-index: 2;
+      pointer-events: none;
+      transform: translateY(-50%);
+      transition: all 0.5s ease;
+    }
+
+    #mascot-container.scrolled {
+      width: 200px;
+      height: 250px;
+      top: auto;
+      bottom: 20px;
+      right: 20px;
+      transform: none;
+    }
+
+    #mascot-container canvas {
+      border-radius: 20px;
+      transition: all 0.5s ease;
+      pointer-events: auto;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mascot-message {
+      position: absolute;
+      bottom: 100%;
+      right: 50px;
+      background: linear-gradient(135deg, rgba(67, 97, 238, 0.95), rgba(0, 245, 255, 0.95));
+      color: var(--primary);
+      padding: 15px 20px;
+      border-radius: 20px 20px 5px 20px;
+      max-width: 280px;
+      font-size: 0.95rem;
+      box-shadow: 0 10px 30px rgba(67, 97, 238, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+
+    #mascot-container.scrolled .mascot-message {
+      right: 30px;
+      max-width: 200px;
+      font-size: 0.8rem;
+      padding: 10px 15px;
+    }
+
+    .mascot-message.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .mascot-message::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 30px;
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 0px solid transparent;
+      border-top: 15px solid rgba(0, 245, 255, 0.95);
+    }
+
+    #mascot-container.scrolled .mascot-message::after {
+      right: 20px;
+      border-left-width: 10px;
+      border-right-width: 0px;
+      border-top-width: 10px;
+    }
+
+    /* SkillBot states for modal interaction */
+    .mascot-blurred {
+      filter: blur(4px);
+      opacity: 0.5;
+      transition: 0.3s;
+    }
+    
+    .mascot-hidden {
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    /* Navbar Styles */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 5%;
+      background: rgba(26, 29, 41, 0.8);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 2px 30px rgba(0, 0, 0, 0.3);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+    }
+    
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.8)); }
+    }
+    
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .nav-links a {
+      margin: 0 1rem;
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: 500;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      transition: width 0.3s ease;
+    }
+    
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .sign-in-btn, .hero-sign-in {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--light);
+      padding: 0.8rem 1.8rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .sign-up-btn, .cta-button {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      border: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .sign-in-btn::before, .hero-sign-in::before,
+    .sign-up-btn::before, .cta-button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .sign-in-btn:hover::before, .hero-sign-in:hover::before,
+    .sign-up-btn:hover::before, .cta-button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .sign-in-btn:hover, .hero-sign-in:hover {
+      background: rgba(67, 97, 238, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+    
+    .sign-up-btn:hover, .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+    
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    
+    .hamburger span {
+      width: 25px;
+      height: 3px;
+      background-color: var(--primary);
+      margin: 2px 0;
+      border-radius: 2px;
+    }
+    
+    /* Hero Section */
+    .hero {
+      position: relative;
+      padding: 12rem 5% 8rem;
+      display: flex;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
+      overflow: hidden;
+    }
+    
+    .hero-content {
+      max-width: 700px;
+      z-index: 2;
+    }
+    
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(0, 245, 255, 0.6)); }
+    }
+    
+    .hero-subtitle {
+      font-size: 1.3rem;
+      margin-bottom: 2.5rem;
+      color: var(--gray);
+      line-height: 1.6;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    
+    .hero-sign-in {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--light);
+      padding: 1rem 2.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cta-button {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      border: none;
+      padding: 1rem 2.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-sign-in:hover, .cta-button:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(67, 97, 238, 0.4);
+    }
+    
+    .stats {
+      display: flex;
+      gap: 3rem;
+    }
+    
+    .stat-card {
+      text-align: center;
+      background: var(--bg-secondary);
+      padding: 2rem 1.5rem;
+      border-radius: 15px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      transform: translateX(-100%);
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover::before {
+      transform: translateX(0);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(67, 97, 238, 0.2);
+    }
+    
+    .stat-card h2 {
+      font-size: 2.8rem;
+      color: var(--success);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    
+    .stat-card p {
+      color: var(--gray);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    
+    .hero-background {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(67, 97, 238, 0.1);
+      transition: transform 0.1s ease-out;
+    }
+    
+    .circle-1 {
+      width: 300px;
+      height: 300px;
+      top: -100px;
+      right: -100px;
+      animation: pulse 8s infinite ease-in-out;
+    }
+    
+    .circle-2 {
+      width: 200px;
+      height: 200px;
+      bottom: 50px;
+      right: 30%;
+      animation: pulse 6s infinite ease-in-out 1s;
+    }
+    
+    .circle-3 {
+      width: 150px;
+      height: 150px;
+      bottom: 150px;
+      left: 10%;
+      animation: pulse 7s infinite ease-in-out 2s;
+    }
+    
+    .circle-4 {
+      width: 100px;
+      height: 100px;
+      top: 200px;
+      left: 30%;
+      animation: pulse 5s infinite ease-in-out 3s;
+    }
+    
+    .circle-5 {
+      width: 250px;
+      height: 250px;
+      top: 50%;
+      left: -50px;
+      animation: pulse 9s infinite ease-in-out 4s;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+    }
+    
+    /* About Section */
+    .about {
+      padding: 8rem 5%;
+      background: var(--bg-secondary);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .about h2 {
+      text-align: center;
+      font-size: 2.8rem;
+      margin-bottom: 3rem;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .about h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-radius: 2px;
+    }
+    
+    .about-content {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    
+    .about-content p {
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: var(--gray);
+      text-align: center;
+    }
+    
+    .about-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2.5rem;
+      margin-top: 4rem;
+    }
+    
+    .feature-card {
+      padding: 2.5rem;
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 25px 50px rgba(67, 97, 238, 0.3);
+    }
+    
+    .feature-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.2rem;
+      color: var(--success);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .feature-card p {
+      color: var(--gray);
+      position: relative;
+      z-index: 2;
+      text-align: left;
+    }
+    
+    /* Contact Section */
+    .contact {
+      padding: 8rem 5%;
+      background: var(--bg-main);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .contact h2 {
+      text-align: center;
+      font-size: 2.8rem;
+      margin-bottom: 3rem;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .contact h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-radius: 2px;
+    }
+    
+    .contact-content {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    
+    .contact-content > p {
+      text-align: center;
+      margin-bottom: 4rem;
+      font-size: 1.1rem;
+      color: var(--gray);
+      line-height: 1.7;
+    }
+    
+    .contact-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2.5rem;
+    }
+    
+    .contact-card {
+      padding: 2.5rem;
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .contact-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+    }
+    
+    .contact-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(67, 97, 238, 0.2);
+    }
+    
+    .contact-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--success);
+    }
+    
+    .contact-card p {
+      color: var(--gray);
+      line-height: 1.7;
+    }
+    
+    /* Role Selection Modal */
+    .role-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .role-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .role-content {
+      background: var(--bg-secondary);
+      padding: 3.5rem;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transform: translateY(-50px);
+      transition: transform 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .role-modal.active .role-content {
+      transform: translateY(0);
+    }
+    
+    .role-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      z-index: -1;
+    }
+    
+    .role-content h2 {
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .role-content p {
+      margin-bottom: 2.5rem;
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+    
+    .role-options {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+    }
+    
+    .role-option {
+      flex: 1;
+      padding: 2rem 1.5rem;
+      border: 2px solid rgba(67, 97, 238, 0.3);
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: var(--bg-main);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .role-option::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .role-option:hover::before, .role-option.selected::before {
+      opacity: 1;
+    }
+    
+    .role-option:hover, .role-option.selected {
+      border-color: var(--success);
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(67, 97, 238, 0.2);
+    }
+    
+    .role-option i {
+      font-size: 3rem;
+      margin-bottom: 1.2rem;
+      display: block;
+      color: var(--success);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .role-option h3 {
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
+      color: var(--primary);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .role-option p {
+      font-size: 0.95rem;
+      margin-bottom: 0;
+      color: var(--gray);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .role-submit {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .role-submit::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .role-submit:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .role-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+    
+    .role-submit:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .role-submit:disabled:hover::before {
+      width: 0;
+      height: 0;
+    }
+    
+    /* Courses Section */
+    .courses {
+      padding: 8rem 5%;
+      background: var(--bg-main);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .courses h2 {
+      text-align: center;
+      font-size: 2.8rem;
+      margin-bottom: 3rem;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+    }
+
+    .courses h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-radius: 2px;
+    }
+    
+    .courses-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 2.5rem;
+      margin-top: 3rem;
+    }
+    
+    .course-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    .course-card.animate {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .course-card:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 25px 50px rgba(67, 97, 238, 0.3);
+    }
+    
+    .course-image {
+      height: 200px;
+      width: 100%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .course-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    .course-card:hover .course-image img {
+      transform: scale(1.1);
+    }
+    
+    .course-category {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .course-content {
+      padding: 1.5rem;
+    }
+    
+    .course-title {
+      font-size: 1.3rem;
+      margin-bottom: 0.8rem;
+      color: var(--primary);
+      line-height: 1.4;
+    }
+    
+    .course-level {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      z-index: 2;
+    }
+    
+    .course-description {
+      color: var(--gray);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .course-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .course-rating {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .stars {
+      color: #ffd700;
+      font-size: 0.9rem;
+    }
+    
+    .rating-value {
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+    
+    .course-price {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--success);
+    }
+    
+    .course-price.free {
+      color: var(--success);
+    }
+    
+    .course-actions {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .enroll-btn {
+      flex: 1;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .enroll-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .enroll-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .enroll-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+    }
+    
+    .view-details-btn {
+      background: transparent;
+      color: var(--gray);
+      border: 1px solid var(--gray);
+      padding: 0.8rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .view-details-btn:hover {
+      background: rgba(67, 97, 238, 0.1);
+      color: var(--primary);
+      border-color: var(--light);
+    }
+    
+    .courses-loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+      font-size: 1.2rem;
+    }
+    
+    .courses-empty {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+      font-size: 1.2rem;
+    }
+    
+    .courses-empty i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+      color: var(--light);
+    }
+
+    /* Course Details Modal */
+    .course-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .course-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .course-modal-content {
+      background: var(--bg-secondary);
+      padding: 3rem;
+      border-radius: 20px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      transform: translateY(-50px);
+      transition: transform 0.5s ease;
+      position: relative;
+    }
+    
+    .course-modal.active .course-modal-content {
+      transform: translateY(0);
+    }
+    
+    .course-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    
+    .course-modal-close:hover {
+      color: var(--primary);
+    }
+    
+    .course-modal-image {
+      width: 100%;
+      height: 200px;
+      border-radius: 15px;
+      margin-bottom: 1.5rem;
+      object-fit: cover;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+    
+    .course-modal-header {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .course-modal-title {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+    
+    .course-modal-badges {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .course-modal-badge {
+      background: rgba(67, 97, 238, 0.2);
+      color: var(--primary);
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+    
+    .course-modal-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding: 1rem 0;
+      border-top: 1px solid rgba(67, 97, 238, 0.3);
+      border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+    }
+    
+    .course-modal-stat {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .course-modal-stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 0.3rem;
+    }
+    
+    .course-modal-stat-label {
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+    
+    .course-modal-description {
+      color: var(--gray);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Animation for course cards */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+      .hero-title {
+        font-size: 3rem;
+      }
+      
+      .stats {
+        gap: 2rem;
+      }
+      
+      .about-features, .contact-info {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      
+      #mascot-container {
+        width: 350px;
+        height: 450px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+      
+      .nav-buttons {
+        display: none;
+      }
+      
+      .hamburger {
+        display: flex;
+      }
+      
+      .hero {
+        padding: 10rem 5% 5rem;
+        text-align: center;
+      }
+      
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .hero-buttons {
+        flex-direction: column;
+      }
+      
+      .stats {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      
+      .role-options {
+        flex-direction: column;
+      }
+      
+      .about, .contact {
+        padding: 5rem 5%;
+      }
+      
+      .courses-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .course-actions {
+        flex-direction: column;
+      }
+      
+      .course-modal-content {
+        padding: 2rem;
+      }
+      
+      #mascot-container {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="loading-logo">SkillUp</div>
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading your learning experience...</div>
+  </div>
+
+  <div class="particles" id="particles"></div>
+  
+  <!-- 3D Mascot Container -->
+  <div id="mascot-container">
+    <div class="mascot-message" id="mascotMessage">Welcome to SkillUp! Ready to learn something new today?</div>
+  </div>
+
+  <!-- Role Selection Modal -->
+  <div class="role-modal" id="roleModal">
+    <div class="role-content">
+      <h2 id="modalTitle">Select Your Role</h2>
+      <p id="modalDescription">Please choose how you would like to use SkillUp</p>
+      
+      <div class="role-options">
+        <div class="role-option" data-role="student">
+          <i>🎓</i>
+          <h3>Student</h3>
+          <p>Access courses, track progress, and learn</p>
+        </div>
+        
+        <div class="role-option" data-role="professor">
+          <i>👨‍🏫</i>
+          <h3>Professor</h3>
+          <p>Create courses, manage content, and teach</p>
+        </div>
+      </div>
+      
+      <button class="role-submit" id="roleSubmit" disabled>Continue</button>
+    </div>
+  </div>
+
+  <!-- Course Details Modal -->
+  <div class="course-modal" id="courseModal">
+    <div class="course-modal-content">
+      <button class="course-modal-close" id="courseModalClose">&times;</button>
+      <div class="course-modal-header">
+        <img class="course-modal-image" id="modalCourseImage" src="" alt="Course Image">
+        <h2 class="course-modal-title" id="modalCourseTitle"></h2>
+        <div class="course-modal-badges">
+          <div class="course-modal-badge" id="modalCourseCategory"></div>
+          <div class="course-modal-badge" id="modalCourseLevel"></div>
+          <div class="course-modal-badge" id="modalCoursePrice"></div>
+        </div>
+      </div>
+      
+      <div class="course-modal-stats">
+        <div class="course-modal-stat">
+          <div class="course-modal-stat-value" id="modalCourseRatingValue"></div>
+          <div class="course-modal-stat-label">Rating</div>
+        </div>
+        <div class="course-modal-stat">
+          <div class="course-modal-stat-value" id="modalCourseEnrolled"></div>
+          <div class="course-modal-stat-label">Enrolled</div>
+        </div>
+        <div class="course-modal-stat">
+          <div class="course-modal-stat-value" id="modalCourseDuration"></div>
+          <div class="course-modal-stat-label">Duration</div>
+        </div>
+      </div>
+      
+      <div class="course-modal-description" id="modalCourseDescription"></div>
+      
+      <button class="enroll-btn" id="modalEnrollBtn" style="width: 100%; margin-top: 2rem;">Enroll Now</button>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="logo">SkillUp</div>
+    <nav class="nav-links">
+      <a href="#home">Home</a>
+      <a href="#courses">Courses</a>      
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-buttons">
+      <button class="sign-in-btn" id="signInBtn">Sign In</button>
+      <button class="sign-up-btn" id="signUpBtn">Sign Up</button>
+    </div>
+    <div class="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">Upgrade Your Skills Today</h1>
+      <p class="hero-subtitle">Learn from top instructors at your own pace with our cutting-edge educational platform designed for the future of learning.</p>
+      <div class="hero-buttons">
+        <button class="cta-button" id="getStartedBtn">Get Started</button>
+        <button class="hero-sign-in" id="heroSignIn">Sign In</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <h2 id="coursesCount">0</h2>
+          <p>Courses</p>
+        </div>
+        <div class="stat-card">
+          <h2 id="studentsCount">0</h2>
+          <p>Students</p>
+        </div>
+        <div class="stat-card">
+          <h2 id="instructorsCount">0</h2>
+          <p>Instructors</p>
+        </div>
+      </div>
+    </div>
+    <div class="hero-background">
+      <div class="circle circle-1"></div>
+      <div class="circle circle-2"></div>
+      <div class="circle circle-3"></div>
+      <div class="circle circle-4"></div>
+      <div class="circle circle-5"></div>
+    </div>
+  </section>
+  
+  <!-- Courses Section -->
+  <section id="courses" class="courses">
+    <h2>Featured Courses</h2>
+    <div class="courses-container">
+      <div id="coursesGrid" class="courses-grid">
+        <!-- Courses will be dynamically loaded here -->
+        <div class="courses-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading courses...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <section id="about" class="about">
+    <h2>About SkillUp</h2>
+    <div class="about-content">
+      <p>
+        SkillUp is a premier educational platform designed to help you advance your career and personal development. 
+        We believe that learning should be accessible, engaging, and tailored to your individual needs.
+      </p>
+      <p>
+        Our mission is to bridge the gap between traditional education and the rapidly evolving demands of the modern workplace. 
+        With carefully curated courses and experienced instructors, we provide you with the tools and knowledge you need to succeed.
+      </p>
+      
+      <div class="about-features">
+        <div class="feature-card">
+          <h3>Expert Instructors</h3>
+          <p>Learn from industry professionals with years of real-world experience who are passionate about sharing their knowledge.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Flexible Learning</h3>
+          <p>Study at your own pace with 24/7 access to course materials, allowing you to balance learning with your busy lifestyle.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Practical Skills</h3>
+          <p>Focus on hands-on, practical skills that you can immediately apply in your career or personal projects.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <h2>Get In Touch</h2>
+    <div class="contact-content">
+      <p>
+        Have questions about our courses or need help getting started? We'd love to hear from you! 
+        Reach out to our friendly team and we'll get back to you as soon as possible.
+      </p>
+
+      <div class="contact-info">
+        <div class="contact-card">
+          <h3>Email Us</h3>
+          <p>aayushjain1811@gmail.com</p>
+        </div>
+        <div class="contact-card">
+          <h3>Call Us</h3>
+          <p>+91 7027774700</p>
+        </div>
+        <div class="contact-card">
+          <h3>Office Hours</h3>
+          <p>Monday - Friday<br>9:00 AM - 6:00 PM</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script>
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      // Show loading screen for 3 seconds
+      setTimeout(() => {
+        const loadingScreen = document.getElementById('loading-screen');
+        loadingScreen.style.opacity = '0';
+        loadingScreen.style.visibility = 'hidden';
+        
+        // Initialize everything after loading
+        initializeApp();
+      }, 3000);
+    });
+
+    function initializeApp() {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+        authDomain: "growup-93f5d.firebaseapp.com",
+        projectId: "growup-93f5d",
+        storageBucket: "growup-93f5d.firebasestorage.app",
+        messagingSenderId: "775742235468",
+        appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+        measurementId: "G-FWBKTSQDS9"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      
+      const courseImages = {
+        "Web Development": "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=350&h=200&fit=crop",
+        "Programming": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=350&h=200&fit=crop",
+        "Design": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=350&h=200&fit=crop",
+        "Business": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=350&h=200&fit=crop",
+        "Marketing": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=350&h=200&fit=crop",
+        "Data Science": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=350&h=200&fit=crop",
+        "default": "https://images.unsplash.com/photo-1497636577773-f1231844b336?w=350&h=200&fit=crop"
+      };
+
+      // Create floating particles
+      function createParticles() {
+        const particlesContainer = document.getElementById('particles');
+        if (!particlesContainer) return;
+
+        const numberOfParticles = 15;
+
+        for (let i = 0; i < numberOfParticles; i++) {
+          const particle = document.createElement('div');
+          particle.classList.add('particle');
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.top = Math.random() * 100 + '%';
+          particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+          particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+          particle.style.animationDelay = Math.random() * 5 + 's';
+          particle.style.backgroundColor = `rgba(67, 97, 238, ${Math.random() * 0.3})`;
+          particlesContainer.appendChild(particle);
+        }
+      }
+
+      createParticles();
+
+      // Enhanced SkillBot 3D Mascot with Message Plan
+      class Mascot3D {
+        constructor() {
+          this.container = document.getElementById('mascot-container');
+          this.messageElement = document.getElementById('mascotMessage');
+          this.scene = null;
+          this.camera = null;
+          this.renderer = null;
+          this.robot = null;
+          this.clock = new THREE.Clock();
+          this.mouseX = 0;
+          this.mouseY = 0;
+          this.messageTimeout = null;
+          this.idleTimer = null;
+          this.isModalOpen = false;
+          this.messageQueue = [];
+          this.isProcessingMessage = false;
+          
+          this.init();
+          this.setupMessagePlan();
+          this.setupScrollBehavior();
+          this.setupClickInteraction();
+        }
+        
+        init() {
+          this.scene = new THREE.Scene();
+          this.camera = new THREE.PerspectiveCamera(50, 400/500, 0.1, 1000);
+          this.camera.position.z = 5;
+          
+          this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+          this.renderer.setSize(400, 500);
+          this.renderer.setClearColor(0x000000, 0);
+          this.container.appendChild(this.renderer.domElement);
+          
+          const ambient = new THREE.AmbientLight(0x404040, 1.5);
+          const point1 = new THREE.PointLight(0x4361ee, 2, 100);
+          point1.position.set(3, 3, 3);
+          const point2 = new THREE.PointLight(0x00f5ff, 1.5, 100);
+          point2.position.set(-3, -2, 2);
+          
+          this.scene.add(ambient, point1, point2);
+          
+          this.createEnhancedRobot();
+          this.setupEventListeners();
+          this.animate();
+        }
+        
+        setupMessagePlan() {
+          // 🟢 1. On Page Load (Greeting)
+          setTimeout(() => {
+            this.showMessage("👋 Welcome to SkillUp! Ready to learn something new today?");
+          }, 500);
+          
+          // 🟠 2. After Idle (Encouragement)
+          this.startIdleTimer();
+          
+          // 🔵 3. On Hover Over "Get Started"
+          const getStartedBtn = document.getElementById('getStartedBtn');
+          if (getStartedBtn) {
+            getStartedBtn.addEventListener('mouseenter', () => {
+              this.showMessage("🚀 Click here to choose your role — Student or Professor.");
+            });
+          }
+        }
+        
+        setupScrollBehavior() {
+          window.addEventListener('scroll', () => {
+            const scrollPosition = window.scrollY;
+            const heroSection = document.getElementById('home');
+            const heroHeight = heroSection.offsetHeight;
+            
+            if (scrollPosition > heroHeight * 0.3) {
+              this.container.classList.add('scrolled');
+              // Update renderer size when scrolled
+              this.renderer.setSize(200, 250);
+            } else {
+              this.container.classList.remove('scrolled');
+              // Reset renderer size when not scrolled
+              this.renderer.setSize(400, 500);
+            }
+          });
+        }
+        
+        setupClickInteraction() {
+          // Make the mascot canvas clickable
+          const canvas = this.container.querySelector('canvas');
+          if (canvas) {
+            canvas.addEventListener('click', () => {
+              this.showMessage("👋 Hi! I'm SkillBot, your learning assistant! I'm here to guide you through SkillUp and help you make the most of your learning journey.");
+            });
+          }
+        }
+        
+        startIdleTimer() {
+          this.resetIdleTimer();
+          
+          // Reset timer on user interaction
+          ['mousemove', 'click', 'keypress', 'scroll'].forEach(event => {
+            document.addEventListener(event, () => {
+              this.resetIdleTimer();
+            });
+          });
+        }
+        
+        resetIdleTimer() {
+          if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+          }
+          
+          this.idleTimer = setTimeout(() => {
+            // Only show idle message if user is on hero section and no modal is open
+            const heroSection = document.getElementById('home');
+            const rect = heroSection.getBoundingClientRect();
+            const isInHeroSection = (
+              rect.top <= window.innerHeight / 2 && 
+              rect.bottom >= window.innerHeight / 2
+            );
+            
+            if (isInHeroSection && !this.isModalOpen) {
+              this.showMessage("💡 Start your journey by clicking Get Started — I'll guide you through!");
+            }
+          }, 7000); // 6-8 seconds
+        }
+        
+        createEnhancedRobot() {
+          this.robot = new THREE.Group();
+          
+          // Body with gradient-like effect
+          const bodyGeometry = new THREE.SphereGeometry(0.8, 32, 32);
+          const bodyMaterial = new THREE.MeshPhongMaterial({
+            color: 0x4361ee,
+            emissive: 0x1a2555,
+            shininess: 90,
+            specular: 0x00f5ff
+          });
+          this.body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+          this.robot.add(this.body);
+          
+          // Head
+          const headGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+          const headMaterial = new THREE.MeshPhongMaterial({
+            color: 0x3a0ca3,
+            emissive: 0x1a0551,
+            shininess: 100,
+            specular: 0x00f5ff
+          });
+          this.head = new THREE.Mesh(headGeometry, headMaterial);
+          this.head.position.y = 1.1;
+          this.robot.add(this.head);
+          
+          // Antenna
+          const antennaGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 16);
+          const antennaMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00f5ff,
+            emissive: 0x00f5ff,
+            emissiveIntensity: 0.5
+          });
+          const antenna = new THREE.Mesh(antennaGeometry, antennaMaterial);
+          antenna.position.y = 0.4;
+          this.head.add(antenna);
+          
+          // Antenna glow
+          const glowGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+          const glowMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00f5ff,
+            emissive: 0x00f5ff,
+            emissiveIntensity: 1,
+            transparent: true,
+            opacity: 0.8
+          });
+          this.antennaGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+          this.antennaGlow.position.y = 0.25;
+          antenna.add(this.antennaGlow);
+          
+          // Eyes
+          const eyeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+          const eyeMaterial = new THREE.MeshPhongMaterial({
+            color: 0xffffff,
+            emissive: 0xffffff,
+            emissiveIntensity: 0.3
+          });
+          
+          this.leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+          this.leftEye.position.set(-0.18, 0.05, 0.42);
+          this.head.add(this.leftEye);
+          
+          this.rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+          this.rightEye.position.set(0.18, 0.05, 0.42);
+          this.head.add(this.rightEye);
+          
+          // Pupils
+          const pupilGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+          const pupilMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00f5ff,
+            emissive: 0x00f5ff,
+            emissiveIntensity: 0.8
+          });
+          
+          this.leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+          this.leftPupil.position.z = 0.08;
+          this.leftEye.add(this.leftPupil);
+          
+          this.rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+          this.rightPupil.position.z = 0.08;
+          this.rightEye.add(this.rightPupil);
+          
+          // Chest panel
+          const panelGeometry = new THREE.BoxGeometry(0.6, 0.4, 0.05);
+          const panelMaterial = new THREE.MeshPhongMaterial({
+            color: 0x00f5ff,
+            emissive: 0x00f5ff,
+            emissiveIntensity: 0.4,
+            transparent: true,
+            opacity: 0.8
+          });
+          this.chestPanel = new THREE.Mesh(panelGeometry, panelMaterial);
+          this.chestPanel.position.set(0, 0.2, 0.75);
+          this.robot.add(this.chestPanel);
+          
+          // Arms
+          const armGeometry = new THREE.CylinderGeometry(0.12, 0.12, 0.8, 16);
+          const armMaterial = new THREE.MeshPhongMaterial({
+            color: 0x3a0ca3,
+            emissive: 0x1a0551,
+            shininess: 80
+          });
+          
+          this.leftArm = new THREE.Mesh(armGeometry, armMaterial);
+          this.leftArm.position.set(-0.95, 0.3, 0);
+          this.leftArm.rotation.z = Math.PI / 6;
+          this.robot.add(this.leftArm);
+          
+          this.rightArm = new THREE.Mesh(armGeometry, armMaterial);
+          this.rightArm.position.set(0.95, 0.3, 0);
+          this.rightArm.rotation.z = -Math.PI / 6;
+          this.robot.add(this.rightArm);
+          
+          // Hands
+          const handGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+          const handMaterial = new THREE.MeshPhongMaterial({
+            color: 0x4361ee,
+            emissive: 0x1a2555,
+            shininess: 90
+          });
+          
+          const leftHand = new THREE.Mesh(handGeometry, handMaterial);
+          leftHand.position.y = -0.45;
+          this.leftArm.add(leftHand);
+          
+          const rightHand = new THREE.Mesh(handGeometry, handMaterial);
+          rightHand.position.y = -0.45;
+          this.rightArm.add(rightHand);
+          
+          this.scene.add(this.robot);
+        }
+        
+        setupEventListeners() {
+          document.addEventListener('mousemove', (e) => {
+            this.mouseX = (e.clientX / window.innerWidth - 0.5) * 0.5;
+            this.mouseY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+          });
+          
+          const buttons = document.querySelectorAll('button');
+          buttons.forEach(button => {
+            button.addEventListener('mouseenter', () => {
+              // Don't show message during modal interactions
+              if (!this.isModalOpen) {
+                this.showMessage("💡 Great choice! Click to explore more.");
+              }
+            });
+          });
+          
+          const navLinks = document.querySelectorAll('.nav-links a');
+          navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+              const target = e.target.getAttribute('href');
+              if (target === '#courses') {
+                this.showMessage("📚 Discover amazing courses!");
+              } else if (target === '#about') {
+                this.showMessage("ℹ️ Learn more about SkillUp!");
+              } else if (target === '#contact') {
+                this.showMessage("📞 Get in touch with us!");
+              }
+            });
+          });
+
+          // Hover interaction for wave animation
+          this.container.addEventListener('mouseenter', () => {
+            this.wave();
+            if (!this.isModalOpen) {
+              this.showMessage("👋 Hello there! Ready to learn?");
+            }
+          });
+        }
+
+        wave() {
+          // Wave animation using GSAP
+          if (this.rightArm) {
+            gsap.to(this.rightArm.rotation, {
+              z: -Math.PI / 2,
+              duration: 0.3,
+              ease: "power2.out",
+              yoyo: true,
+              repeat: 1
+            });
+          }
+        }
+
+        showMessage(text) {
+          // Don't show messages when modal is open
+          if (this.isModalOpen) return;
+          
+          if (this.messageTimeout) {
+            clearTimeout(this.messageTimeout);
+          }
+
+          this.messageElement.textContent = text;
+          this.messageElement.classList.add('active');
+
+          this.messageTimeout = setTimeout(() => {
+            this.messageElement.classList.remove('active');
+          }, 4000);
+        }
+        
+        blurMascot() {
+          this.container.classList.add('mascot-blurred');
+          this.isModalOpen = true;
+        }
+        
+        unblurMascot() {
+          this.container.classList.remove('mascot-blurred');
+          this.isModalOpen = false;
+          this.resetIdleTimer();
+        }
+
+        animate() {
+          requestAnimationFrame(() => this.animate());
+
+          // Smooth floating animation
+          const time = this.clock.getElapsedTime();
+          this.robot.position.y = Math.sin(time * 0.8) * 0.1;
+          this.robot.rotation.y = Math.sin(time * 0.5) * 0.1;
+
+          // Head follows mouse
+          if (this.head) {
+            this.head.rotation.y = this.mouseX * 0.5;
+            this.head.rotation.x = this.mouseY * 0.3;
+          }
+
+          // Eyes follow mouse
+          if (this.leftPupil && this.rightPupil) {
+            this.leftPupil.position.x = this.mouseX * 0.05;
+            this.leftPupil.position.y = this.mouseY * 0.05;
+            this.rightPupil.position.x = this.mouseX * 0.05;
+            this.rightPupil.position.y = this.mouseY * 0.05;
+          }
+
+          // Pulsing antenna glow
+          if (this.antennaGlow) {
+            this.antennaGlow.scale.setScalar(1 + Math.sin(time * 3) * 0.2);
+          }
+
+          // Breathing chest panel
+          if (this.chestPanel) {
+            this.chestPanel.material.emissiveIntensity = 0.4 + Math.sin(time * 2) * 0.2;
+          }
+
+          this.renderer.render(this.scene, this.camera);
+        }
+      }
+
+      // Initialize 3D Mascot
+      const mascot = new Mascot3D();
+
+      // Role Selection Functionality
+      const roleModal = document.getElementById('roleModal');
+      const roleOptions = document.querySelectorAll('.role-option');
+      const roleSubmit = document.getElementById('roleSubmit');
+      const signInBtn = document.getElementById('signInBtn');
+      const signUpBtn = document.getElementById('signUpBtn');
+      const heroSignIn = document.getElementById('heroSignIn');
+      const getStartedBtn = document.getElementById('getStartedBtn');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalDescription = document.getElementById('modalDescription');
+
+      // Course Modal Elements
+      const courseModal = document.getElementById('courseModal');
+      const courseModalClose = document.getElementById('courseModalClose');
+      const modalCourseTitle = document.getElementById('modalCourseTitle');
+      const modalCourseImage = document.getElementById('modalCourseImage');
+      const modalCourseCategory = document.getElementById('modalCourseCategory');
+      const modalCourseLevel = document.getElementById('modalCourseLevel');
+      const modalCoursePrice = document.getElementById('modalCoursePrice');
+      const modalCourseRatingValue = document.getElementById('modalCourseRatingValue');
+      const modalCourseEnrolled = document.getElementById('modalCourseEnrolled');
+      const modalCourseDuration = document.getElementById('modalCourseDuration');
+      const modalCourseDescription = document.getElementById('modalCourseDescription');
+      const modalEnrollBtn = document.getElementById('modalEnrollBtn');
+
+      // Statistics elements
+      const coursesCountElement = document.getElementById('coursesCount');
+      const studentsCountElement = document.getElementById('studentsCount');
+      const instructorsCountElement = document.getElementById('instructorsCount');
+
+      let selectedRole = null;
+      let actionType = null;
+      let currentCourseId = null;
+
+      // Real-time statistics listeners
+      function setupRealTimeStats() {
+        // Courses count
+        db.collection("courses").onSnapshot((snapshot) => {
+          coursesCountElement.textContent = snapshot.size;
+        }, (error) => {
+          console.error("Error listening to courses count:", error);
+          // Fallback
+          db.collection("courses").get().then((snapshot) => {
+            coursesCountElement.textContent = snapshot.size;
+          });
+        });
+
+        // Students count
+        db.collection("users").where("role", "==", "student").onSnapshot((snapshot) => {
+          studentsCountElement.textContent = snapshot.size;
+        }, (error) => {
+          console.error("Error listening to students count:", error);
+          db.collection("users").where("role", "==", "student").get().then((snapshot) => {
+            studentsCountElement.textContent = snapshot.size;
+          });
+        });
+
+        // Instructors count
+        db.collection("teachers").onSnapshot((snapshot) => {
+          instructorsCountElement.textContent = snapshot.size;
+        }, (error) => {
+          console.error("Error listening to instructors count:", error);
+          db.collection("teachers").get().then((snapshot) => {
+            instructorsCountElement.textContent = snapshot.size;
+          });
+        });
+      }
+
+      // Function to show role selection modal
+      function showRoleModal(type) {
+        actionType = type;
+
+        if (type === 'signup') {
+          modalTitle.textContent = 'Get Started As';
+          modalDescription.textContent = 'Choose your role to create an account';
+        } else if (type === 'signin') {
+          modalTitle.textContent = 'Sign In As';
+          modalDescription.textContent = 'Choose your role to sign in to your account';
+        }
+
+        roleModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // 🟣 4. On Clicking "Get Started" - Blur the mascot
+        mascot.blurMascot();
+      }
+
+      // Function to hide role selection modal
+      function hideRoleModal() {
+        roleModal.classList.remove('active');
+        document.body.style.overflow = '';
+        selectedRole = null;
+        roleOptions.forEach(option => option.classList.remove('selected'));
+        roleSubmit.disabled = true;
+        
+        // Unblur the mascot when modal closes
+        mascot.unblurMascot();
+      }
+
+      // Function to handle role selection
+      function selectRole(role) {
+        selectedRole = role;
+        roleOptions.forEach(option => {
+          if (option.dataset.role === role) {
+            option.classList.add('selected');
+          } else {
+            option.classList.remove('selected');
+          }
+        });
+        roleSubmit.disabled = false;
+      }
+
+      // Function to handle role submission
+      function submitRole() {
+        if (selectedRole && actionType) {
+          localStorage.setItem('userRole', selectedRole);
+
+          // Direct redirect without showing message during modal
+          if (actionType === 'signup') {
+            if (selectedRole === 'student') {
+              window.location.href = 'signup.html';
+            } else if (selectedRole === 'professor') {
+              window.location.href = 'teachersignup.html';
+            }
+          } else if (actionType === 'signin') {
+            if (selectedRole === 'student') {
+              window.location.href = 'signin.html';
+            } else if (selectedRole === 'professor') {
+              window.location.href = 'teachersignin.html';
+            }
+          }
+
+          hideRoleModal();
+        }
+      }
+
+      // Function to get course image
+      function getCourseImage(course) {
+        const category = course.category || "default";
+        return courseImages[category] || courseImages.default;
+      }
+
+      // Function to show course details modal
+      function showCourseModal(course) {
+        modalCourseTitle.textContent = course.name || course.title || "Untitled Course";
+        modalCourseImage.src = getCourseImage(course);
+        modalCourseImage.alt = course.name || course.title || "Course Image";
+
+        modalCourseCategory.textContent = course.category || "General";
+        modalCourseLevel.textContent = course.level || "Beginner";
+
+        const price = course.price || 0;
+        modalCoursePrice.textContent = price === 0 ? "Free" : `$${price}`;
+
+        const rating = course.rating || 4.5;
+        modalCourseRatingValue.textContent = rating.toFixed(1);
+
+        const enrolledCount = course.enrolledCount || 0;
+        modalCourseEnrolled.textContent = enrolledCount;
+
+        const duration = course.duration || "Self-paced";
+        modalCourseDuration.textContent = duration;
+
+        modalCourseDescription.textContent = course.description || "No description available.";
+
+        currentCourseId = course.id;
+        modalEnrollBtn.setAttribute('data-course-id', course.id);
+
+        courseModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      // Function to hide course details modal
+      function hideCourseModal() {
+        courseModal.classList.remove('active');
+        document.body.style.overflow = '';
+        currentCourseId = null;
+      }
+
+      // Function to fetch and display courses
+      function fetchCourses() {
+        const coursesGrid = document.getElementById('coursesGrid');
+
+        coursesGrid.innerHTML = `
+          <div class="courses-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading courses...</p>
+          </div>
+        `;
+
+        db.collection("courses")
+          .limit(6)
+          .get()
+          .then((querySnapshot) => {
+            if (querySnapshot.empty) {
+              coursesGrid.innerHTML = `
+                <div class="courses-empty">
+                  <i class="fas fa-book-open"></i>
+                  <p>No courses available at the moment. Check back soon!</p>
+                </div>
+              `;
+              return;
+            }
+
+            coursesGrid.innerHTML = '';
+
+            querySnapshot.forEach((doc, index) => {
+              const course = doc.data();
+              const courseId = doc.id;
+              course.id = courseId;
+
+              const courseCard = document.createElement('div');
+              courseCard.className = 'course-card';
+              courseCard.style.animationDelay = `${index * 0.1}s`;
+
+              const courseName = course.name || course.title || "Untitled Course";
+              const courseDescription = course.description || "No description available.";
+              const courseCategory = course.category || "General";
+              const courseLevel = course.level || "Beginner";
+              const enrolledCount = course.enrolledCount || 0;
+              const price = course.price || 0;
+              const formattedPrice = price === 0 ? "Free" : `$${price}`;
+
+              const courseImage = getCourseImage(course);
+
+              const rating = course.rating || 4.5;
+              const stars = "★".repeat(Math.floor(rating)) + "☆".repeat(5 - Math.floor(rating));
+
+              courseCard.innerHTML = `
+                <div class="course-image">
+                  <div class="course-level">${courseLevel}</div>
+                  <div class="course-category">${courseCategory}</div>
+                  <img src="${courseImage}" alt="${courseName}" onerror="this.src='${courseImages.default}'">
+                </div>
+                <div class="course-content">
+                  <h3 class="course-title">${courseName}</h3>
+                  <p class="course-description">${courseDescription}</p>
+                  <div class="course-meta">
+                    <div class="course-rating">
+                      <div class="stars">${stars}</div>
+                      <div class="rating-value">${rating.toFixed(1)}</div>
+                    </div>
+                    <div class="course-price ${price === 0 ? 'free' : ''}">${formattedPrice}</div>
+                  </div>
+                  <div class="course-actions">
+                    <button class="enroll-btn" data-course-id="${courseId}">Enroll Now</button>
+                    <button class="view-details-btn" data-course='${JSON.stringify(course).replace(/'/g, "&#39;")}'>View Details</button>
+                  </div>
+                </div>
+              `;
+
+              coursesGrid.appendChild(courseCard);
+
+              setTimeout(() => {
+                courseCard.classList.add('animate');
+              }, 100 + (index * 100));
+
+              // Add event listeners
+              const enrollBtn = courseCard.querySelector('.enroll-btn');
+              enrollBtn.addEventListener('click', function() {
+                const courseId = this.getAttribute('data-course-id');
+                enrollInCourse(courseId);
+              });
+
+              const viewDetailsBtn = courseCard.querySelector('.view-details-btn');
+              viewDetailsBtn.addEventListener('click', function() {
+                const courseData = JSON.parse(this.getAttribute('data-course'));
+                showCourseModal(courseData);
+              });
+            });
+          })
+          .catch((error) => {
+            console.error("Error fetching courses: ", error);
+            coursesGrid.innerHTML = `
+              <div class="courses-empty">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to load courses. Please try again later.</p>
+              </div>
+            `;
+          });
+      }
+
+      // Function to handle course enrollment
+      function enrollInCourse(courseId) {
+        const user = firebase.auth().currentUser;
+
+        if (!user) {
+          showRoleModal('signup');
+          return;
+        }
+
+        // Add enrollment logic here
+        alert(`Enrolling in course: ${courseId}`);
+      }
+
+      // Event listeners for role selection
+      roleOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          selectRole(this.dataset.role);
+        });
+      });
+
+      roleSubmit.addEventListener('click', submitRole);
+
+      // Event listeners for sign in/up buttons
+      signInBtn.addEventListener('click', () => showRoleModal('signin'));
+      signUpBtn.addEventListener('click', () => showRoleModal('signup'));
+      heroSignIn.addEventListener('click', () => showRoleModal('signin'));
+      getStartedBtn.addEventListener('click', () => showRoleModal('signup'));
+
+      // Close modal when clicking outside
+      roleModal.addEventListener('click', (e) => {
+        if (e.target === roleModal) {
+          hideRoleModal();
+        }
+      });
+
+      // Course modal event listeners
+      courseModalClose.addEventListener('click', hideCourseModal);
+      courseModal.addEventListener('click', (e) => {
+        if (e.target === courseModal) {
+          hideCourseModal();
+        }
+      });
+
+      modalEnrollBtn.addEventListener('click', () => {
+        if (currentCourseId) {
+          enrollInCourse(currentCourseId);
+          hideCourseModal();
+        }
+      });
+
+      // Setup real-time statistics
+      setupRealTimeStats();
+
+      // Fetch courses
+      fetchCourses();
+
+      // Smooth scrolling
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const targetId = this.getAttribute('href');
+          if (targetId === '#') return;
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) {
+            window.scrollTo({
+              top: targetElement.offsetTop - 100,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+
+      // Parallax effect for background elements
+      document.addEventListener('mousemove', (e) => {
+        const circles = document.querySelectorAll('.circle');
+        circles.forEach((circle, index) => {
+          const speed = 0.02 * (index + 1);
+          const x = (window.innerWidth - e.pageX * speed) / 100;
+          const y = (window.innerHeight - e.pageY * speed) / 100;
+          circle.style.transform = `translateX(${x}px) translateY(${y}px)`;
+        });
+      });
+    }
+  </script>
+</body>
+</html>

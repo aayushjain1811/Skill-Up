@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Sign In - SkillUp</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #ffffff;
+      --primary-dark: #f8f9fa;
+      --accent: #ff3366;
+      --light: #e63946;
+      --success: #ff6b6b;
+      --bg-main: #1a1a1a;
+      --bg-secondary: #2a2a2a;
+      --error: #ff4757;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Red Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(230, 57, 70, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(230, 57, 70, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(230, 57, 70, 0.3);
+      border-radius: 50%;
+      animation: float 5s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      25% { transform: translateY(-20px) translateX(10px); }
+      50% { transform: translateY(-10px) translateX(20px); }
+      75% { transform: translateY(-15px) translateX(-10px); }
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 5%;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(230, 57, 70, 0.2);
+      position: relative;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .logo:hover {
+      filter: drop-shadow(0 0 20px rgba(255, 51, 102, 0.8));
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 5%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sign In Container */
+    .signin-container {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 450px;
+      padding: 2.5rem;
+      margin: 2rem 0;
+      backdrop-filter: blur(20px);
+      position: relative;
+      border: 1px solid rgba(230, 57, 70, 0.3);
+      overflow: hidden;
+    }
+
+    .signin-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(230, 57, 70, 0.05), rgba(255, 107, 107, 0.05));
+      animation: containerGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes containerGlow {
+      0% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .signin-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .signin-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: iconFloat 3s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .signin-header h1 {
+      font-size: 2.2rem;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(255, 51, 102, 0.3)); }
+      100% { filter: drop-shadow(0 0 15px rgba(255, 51, 102, 0.6)); }
+    }
+
+    .signin-header p {
+      color: #adb5bd;
+      font-size: 1rem;
+    }
+
+    /* Form Styles */
+    form {
+      position: relative;
+      z-index: 2;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: 2px solid rgba(230, 57, 70, 0.3);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: var(--bg-main);
+      color: var(--primary);
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 51, 102, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .password-toggle {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 68%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #adb5bd;
+      font-size: 0.9rem;
+      transition: color 0.3s ease;
+    }
+
+    .toggle-password:hover {
+      color: var(--accent);
+    }
+
+    .remember-forgot {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .forgot-password {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .forgot-password::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .forgot-password:hover::after {
+      width: 100%;
+    }
+
+    .signin-button {
+      width: 100%;
+      background: linear-gradient(45deg, var(--light), var(--accent));
+      color: white;
+      border: none;
+      padding: 1rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .signin-button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .signin-button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .signin-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4);
+    }
+
+    .signin-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .signup-link {
+      text-align: center;
+      color: #adb5bd;
+    }
+
+    .signup-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .signup-link a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .signup-link a:hover::after {
+      width: 100%;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Error Message */
+    .error-message {
+      background: rgba(255, 71, 87, 0.1);
+      color: var(--error);
+      padding: 0.8rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+      animation: errorPulse 0.5s ease;
+      border-left: 4px solid var(--error);
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes errorPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--bg-secondary);
+      color: white;
+      padding: 2rem 5%;
+      text-align: center;
+      border-top: 1px solid rgba(230, 57, 70, 0.2);
+      position: relative;
+      z-index: 100;
+    }
+
+    .copyright {
+      font-size: 0.9rem;
+      color: #adb5bd;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .signin-container {
+        padding: 2rem;
+        margin: 1rem;
+      }
+
+      .signin-header h1 {
+        font-size: 1.8rem;
+      }
+
+      .navbar {
+        padding: 1rem 5%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Particles Container -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <a href="../index.html" class="logo">SkillUp</a>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="signin-container">
+      <div class="error-message" id="errorMessage"></div>
+      
+      <div class="signin-header">
+        <div class="signin-icon">👨‍🏫</div>
+        <h1>Professor Sign In</h1>
+        <p>Access your instructor dashboard to manage courses and students</p>
+      </div>
+      
+      <form id="teacherSigninForm">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+        </div>
+        
+        <div class="form-group password-toggle">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+          <button type="button" class="toggle-password" id="togglePassword">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        
+        <div class="remember-forgot">
+          <a href="#" class="forgot-password">Forgot Password?</a>
+        </div>
+        
+        <button type="submit" class="signin-button" id="signinButton">
+          <span id="buttonText">Sign In</span>
+        </button>
+        
+        <div class="signup-link">
+          Don't have an account? <a href="teachersignup.html">Sign up as Professor</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="copyright">© 2023 SkillUp. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+  authDomain: "growup-93f5d.firebaseapp.com",
+  projectId: "growup-93f5d",
+  storageBucket: "growup-93f5d.firebasestorage.app",
+  messagingSenderId: "775742235468",
+  appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+  measurementId: "G-FWBKTSQDS9"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const signinForm = document.getElementById('teacherSigninForm');
+const signinButton = document.getElementById('signinButton');
+const buttonText = document.getElementById('buttonText');
+const errorMessage = document.getElementById('errorMessage');
+const togglePassword = document.getElementById('togglePassword');
+const passwordInput = document.getElementById('password');
+const forgotPasswordLink = document.querySelector('.forgot-password');
+
+// Create particles for background
+function createParticles() {
+  const particlesContainer = document.getElementById('particles');
+  const numberOfParticles = 20;
+
+  for (let i = 0; i < numberOfParticles; i++) {
+    const particle = document.createElement('div');
+    particle.classList.add('particle');
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+    particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+    particle.style.animationDelay = Math.random() * 5 + 's';
+    particle.style.backgroundColor = `rgba(230, 57, 70, ${Math.random() * 0.3})`;
+    particlesContainer.appendChild(particle);
+  }
+}
+
+// Toggle password visibility
+togglePassword.addEventListener('click', () => {
+  const icon = togglePassword.querySelector('i');
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    passwordInput.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+});
+
+// Forgot password functionality
+forgotPasswordLink.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  if (!email) { 
+    showError('Please enter your email address to reset your password'); 
+    return; 
+  }
+  
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showSuccess('Password reset email sent! Check your inbox.');
+  } catch (error) {
+    console.error(error);
+    let errorMsg = "Error sending password reset email";
+    
+    switch (error.code) {
+      case "auth/invalid-email":
+        errorMsg = "Invalid email address format.";
+        break;
+      case "auth/user-not-found":
+        errorMsg = "No account found with this email.";
+        break;
+      default:
+        errorMsg = error.message;
+    }
+    
+    showError(errorMsg);
+  }
+});
+
+// Sign in form submission
+signinForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  signinButton.disabled = true;
+  buttonText.innerHTML = '<span class="spinner"></span> Signing In...';
+  errorMessage.style.display = 'none';
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!email || !password) { 
+    showError('Please fill in all fields'); 
+    resetButtonState(); 
+    return; 
+  }
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Check if user exists in teachers collection
+    const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+    
+    if (teacherDoc.exists()) {
+      // User is a teacher - redirect to dashboard
+      window.location.href = 'teacherdashboard.html';
+    } else {
+      // User is not in teachers collection - check if they're in users (student)
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      if (userDoc.exists()) {
+        await signOut(auth);
+        showError('This account is registered as a student. Please use the student portal.');
+      } else {
+        await signOut(auth);
+        showError('Account not found in our system. Please contact administrator.');
+      }
+      resetButtonState();
+    }
+
+  } catch (error) {
+    console.error(error);
+    let errorMsg = "An error occurred during sign in.";
+    
+    switch (error.code) {
+      case "auth/invalid-email":
+        errorMsg = "Invalid email address format.";
+        break;
+      case "auth/user-disabled":
+        errorMsg = "This account has been disabled.";
+        break;
+      case "auth/user-not-found":
+        errorMsg = "No teacher account found with this email.";
+        break;
+      case "auth/wrong-password":
+        errorMsg = "Incorrect password.";
+        break;
+      case "auth/too-many-requests":
+        errorMsg = "Too many failed attempts. Please try again later.";
+        break;
+      default:
+        errorMsg = error.message;
+    }
+    
+    showError(errorMsg);
+    resetButtonState();
+  }
+});
+
+function resetButtonState() {
+  signinButton.disabled = false;
+  buttonText.textContent = 'Sign In';
+}
+
+function showError(message) {
+  errorMessage.textContent = message;
+  errorMessage.style.display = 'block';
+  errorMessage.style.backgroundColor = 'rgba(255, 71, 87, 0.1)';
+  errorMessage.style.borderLeftColor = '#ff4757';
+  errorMessage.style.color = '#ff6b6b';
+}
+
+function showSuccess(message) {
+  errorMessage.textContent = message;
+  errorMessage.style.display = 'block';
+  errorMessage.style.backgroundColor = 'rgba(255, 107, 107, 0.1)';
+  errorMessage.style.borderLeftColor = '#ff6b6b';
+  errorMessage.style.color = '#ff6b6b';
+}
+
+// Initialize particles when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  createParticles();
+});
+  </script>
+</body>
+</html>

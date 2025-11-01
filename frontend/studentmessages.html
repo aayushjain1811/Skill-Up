@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages | SkillUp</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <style>
+    /* All CSS styles remain exactly the same as before */
+    :root {
+      --primary: #ffffff;
+      --primary-dark: #f8f9fa;
+      --primary-light: #e9ecef;
+      --secondary: #dee2e6;
+      --accent: #08d9d6;
+      --light: #4361ee;
+      --dark: #ffffff;
+      --gray: #adb5bd;
+      --gray-light: #343a40;
+      --success: #00f5ff;
+      --card-bg: linear-gradient(135deg, #ffffff, #f8f9fa);
+      --sidebar-bg: linear-gradient(180deg, #4361ee, #3a0ca3);
+      --bg-main: #1a1d29;
+      --bg-secondary: #252937;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: var(--bg-main);
+      color: var(--primary);
+      overflow-x: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* Futuristic Grid Animation */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(67, 97, 238, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(67, 97, 238, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    .dashboard-container {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--sidebar-bg);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 5px 0 30px rgba(67, 97, 238, 0.3);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(67, 97, 238, 0.1), rgba(58, 12, 163, 0.1));
+      animation: sidebarGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes sidebarGlow {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, #00f5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.8)); }
+    }
+
+    .close-sidebar {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .close-sidebar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .close-sidebar:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .close-sidebar:hover {
+      background: rgba(0, 245, 255, 0.2);
+      transform: rotate(180deg) scale(1.1);
+      box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 20px 0;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar-menu li {
+      margin-bottom: 5px;
+      position: relative;
+    }
+
+    .sidebar-menu a {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-menu a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, rgba(0, 245, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover::before, .sidebar-menu a.active::before {
+      width: 100%;
+    }
+
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      color: #00f5ff;
+      padding-left: 35px;
+      text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+    }
+
+    .sidebar-menu i {
+      margin-right: 15px;
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 5px rgba(0, 245, 255, 0.7));
+    }
+
+    /* Logout at bottom */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 2;
+    }
+
+    .logout-btn {
+      width: 100%;
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .main-content.sidebar-open {
+      margin-left: 280px;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: var(--bg-secondary);
+      backdrop-filter: blur(20px);
+      padding: 0 30px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-toggle {
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      font-size: 18px;
+      color: white;
+      cursor: pointer;
+      margin-right: 20px;
+      width:50px;
+      height: 50px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-toggle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+      transition: all 0.3s ease;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .sidebar-toggle:hover::before {
+      width: 100px;
+      height: 100px;
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.1) rotate(180deg);
+      box-shadow: 0 10px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    .topbar-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .notification-container {
+      position: relative;
+    }
+
+    .notification-icon {
+      position: relative;
+      background: linear-gradient(45deg, var(--light), var(--primary-light));
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff4757;
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .avatar span {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Messages Page Specific Styles */
+    .messages-page {
+      display: flex;
+      height: calc(100vh - 80px);
+      padding: 20px;
+      gap: 20px;
+    }
+
+    /* Conversations List */
+    .conversations-list {
+      width: 320px;
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 20px;
+      overflow-y: auto;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      position: relative;
+      z-index: 1;
+    }
+
+    .conversations-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+    }
+
+    .conversations-header h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .new-chat-btn {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .new-chat-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(67, 97, 238, 0.5);
+    }
+
+    .conversation-search {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .conversation-search input {
+      width: 100%;
+      padding: 12px 15px 12px 40px;
+      border-radius: 12px;
+      background: var(--bg-main);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      color: var(--primary);
+      font-size: 16px;
+    }
+
+    .conversation-search i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    .conversation-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .conversation-item.active, .conversation-item:hover {
+      background: rgba(67, 97, 238, 0.15);
+    }
+
+    .conversation-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .conversation-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .conversation-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .conversation-name {
+      font-weight: 600;
+      color: var(--primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .conversation-time {
+      color: var(--gray);
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+
+    .conversation-preview {
+      color: var(--gray);
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .unread-count {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--success);
+      color: var(--bg-main);
+      font-size: 12px;
+      font-weight: bold;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Chat Container */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .chat-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+      display: flex;
+      align-items: center;
+      background: rgba(67, 97, 238, 0.1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 2;
+    }
+
+    .chat-avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      margin-right: 15px;
+    }
+
+    .chat-info h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 3px;
+    }
+
+    .chat-info p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .chat-status {
+      display: flex;
+      align-items: center;
+      color: var(--success);
+      font-size: 12px;
+    }
+
+   .chat-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      margin-right: 5px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .chat-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-action-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-main);
+      border: none;
+      color: var(--gray);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .chat-action-btn:hover {
+      background: rgba(67, 97, 238, 0.2);
+      color: var(--primary);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .message {
+      max-width: 65%;
+      padding: 15px;
+      border-radius: 15px;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .incoming {
+      align-self: flex-start;
+      background: rgba(67, 97, 238, 0.15);
+      border-bottom-left-radius: 3px;
+    }
+
+    .outgoing {
+      align-self: flex-end;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border-bottom-right-radius: 3px;
+    }
+
+    .message-content {
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--primary);
+    }
+
+    .message-time {
+      font-size: 12px;
+      color: var(--gray);
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    .outgoing .message-time {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .chat-input-container {
+      padding: 15px;
+      border-top: 1px solid rgba(67, 97, 238, 0.3);
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .chat-input-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 15px 20px;
+      border-radius: 25px;
+      background: var(--bg-main);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      color: var(--primary);
+      font-size: 16px;
+      resize: none;
+      height: 50px;
+      max-height: 120px;
+      outline: none;
+    }
+
+    .chat-input:focus {
+      border-color: var(--success);
+    }
+
+    .chat-send-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .chat-send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+    }
+
+    .empty-chat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 30px;
+      color: var(--gray);
+    }
+
+    .empty-chat i {
+      font-size: 60px;
+      margin-bottom: 20px;
+      color: var(--success);
+      opacity: 0.5;
+    }
+
+    .empty-chat h3 {
+      font-size: 24px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .empty-chat p {
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(67, 97, 238, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--success);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Auth Required Message */
+    .auth-required {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 30px;
+      color: var(--gray);
+    }
+
+    .auth-required i {
+      font-size: 60px;
+      margin-bottom: 20px;
+      color: var(--success);
+      opacity: 0.5;
+    }
+
+    .auth-required h3 {
+      font-size: 24px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .auth-required p {
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+
+    .auth-btn {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+      padding: 30px;
+      position: relative;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .close-modal:hover {
+      color: var(--success);
+      transform: rotate(90deg);
+    }
+
+    .logout-icon {
+      text-align: center;
+      font-size: 60px;
+      color: #ff4757;
+      margin: 20px 0;
+    }
+
+    .logout-text {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 18px;
+      color: var(--primary);
+    }
+
+    .logout-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary {
+      background: var(--bg-main);
+      color: var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(67, 97, 238, 0.2);
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+    }
+
+    /* Notification Dropdown */
+    .notification-dropdown {
+      position: absolute;
+      top: 60px;
+      right: 0;
+      width: 350px;
+      background: var(--bg-secondary);
+      border-radius: 15px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      display: none;
+      animation: dropdownFadeIn 0.3s ease;
+    }
+
+    @keyframes dropdownFadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification-dropdown.active {
+      display: block;
+    }
+
+    .notification-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-header h3 {
+      font-size: 18px;
+      color: var(--primary);
+    }
+
+    .mark-all-read {
+      background: none;
+      border: none;
+      color: var(--success);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .notification-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .notification-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .notification-item:hover {
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .notification-item.unread {
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .notification-title {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .notification-time {
+      color: var(--gray);
+      font-size: 12px;
+    }
+
+    .no-notifications {
+      padding: 30px 20px;
+      text-align: center;
+      color: var(--gray);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .conversations-list {
+        width: 280px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .messages-page {
+        flex-direction: column;
+        height: auto;
+      }
+      
+      .conversations-list {
+        width: 100%;
+        height: 300px;
+      }
+      
+      .chat-container {
+        height: calc(100vh - 380px);
+      }
+      
+      .message {
+        max-width: 80%;
+      }
+      
+      .notification-dropdown {
+        width: 300px;
+        right: -50px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>SkillUp</h2>
+        <button class="close-sidebar" id="closeSidebar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <ul class="sidebar-menu">
+        <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="courses.html"><i class="fas fa-book"></i> My Courses</a></li>
+        <li><a href="mylearning.html"><i class="fas fa-chart-line"></i> Progress</a></li>
+        <li><a href="studentmessages.html" class="active"><i class="fas fa-comments"></i> Messages</a></li>
+        <li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Topbar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-title">Messages</div>
+        </div>
+        
+        <div class="user-info">
+          <div class="notification-container">
+            <button class="notification-icon" id="notificationIcon">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge">0</span>
+            </button>
+            <!-- Notification Dropdown -->
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="mark-all-read" id="markAllRead">Mark all as read</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be added here -->
+              </div>
+            </div>
+          </div>
+          <span id="userDisplayName">Loading...</span>
+          <div class="avatar">
+            <span id="userAvatar">U</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Page Content -->
+      <div class="messages-page">
+        <!-- Conversations List -->
+        <div class="conversations-list">
+          <div class="conversations-header">
+            <h2>Messages</h2>
+            <button class="new-chat-btn" id="newChatBtn">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+          
+          <div class="conversation-search">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search conversations...">
+          </div>
+          
+          <div class="conversations-container" id="conversationsList">
+            <div class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chat Container -->
+        <div class="chat-container">
+          <div class="chat-header">
+            <div class="chat-avatar" id="currentChatAvatar">SL</div>
+            <div class="chat-info">
+              <h3 id="currentChatName">Select a conversation</h3>
+              <p id="currentChatRole">Start chatting with your teachers</p>
+              <div class="chat-status" id="currentChatStatus">Select a conversation</div>
+            </div>
+            <div class="chat-actions">
+              <button class="chat-action-btn">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="chat-messages" id="chatMessages">
+            <div class="empty-chat">
+              <i class="fas fa-comments"></i>
+              <h3>No Conversation Selected</h3>
+              <p>Select a conversation from the list or start a new one to begin messaging.</p>
+            </div>
+          </div>
+          
+          <div class="chat-input-container">
+            <div class="chat-input-box">
+              <textarea class="chat-input" id="messageInput" placeholder="Select a conversation to start messaging..." disabled></textarea>
+              <button class="chat-send-btn" id="sendMessageBtn" disabled>
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div class="modal logout-modal" id="logoutModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Logout</h2>
+        <button class="close-modal" id="closeLogoutModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="logout-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <div class="logout-text">Are you sure you want to logout?</div>
+      <div class="logout-actions">
+        <button class="btn btn-secondary" id="cancelLogout">Cancel</button>
+        <button class="btn btn-danger" id="confirmLogout">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Chat Modal -->
+  <div class="modal" id="newChatModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Start New Conversation</h2>
+        <button class="close-modal" id="closeNewChatModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="conversation-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchContacts" placeholder="Search teachers...">
+      </div>
+      
+      <div class="contacts-list" id="contactsList">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Required Modal -->
+  <div class="modal" id="authRequiredModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Authentication Required</h2>
+        <button class="close-modal" id="closeAuthModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="auth-required">
+        <i class="fas fa-user-lock"></i>
+        <h3>Sign In Required</h3>
+        <p>You need to be signed in to access messages. Please sign in to continue.</p>
+        <button class="auth-btn" id="goToSignIn">Go to Sign In</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
+      authDomain: "growup-93f5d.firebaseapp.com",
+      projectId: "growup-93f5d",
+      storageBucket: "growup-93f5d.firebasestorage.app",
+      messagingSenderId: "775742235468",
+      appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
+      measurementId: "G-FWBKTSQDS9"
+    };
+
+    // Initialize Firebase
+    try {
+        firebase.initializeApp(firebaseConfig);
+    } catch (error) {
+        console.error("Firebase initialization error:", error);
+        showAuthRequired("Firebase configuration error. Please check your configuration.");
+    }
+    
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Real-time data storage
+    let conversations = [];
+    let currentUser = null;
+    let currentConversation = null;
+    let enrolledTeachers = [];
+    let unsubscribeConversations = null;
+    let unsubscribeMessages = null;
+
+    // DOM Elements
+    const conversationsList = document.getElementById('conversationsList');
+    const chatMessages = document.getElementById('chatMessages');
+    const currentChatName = document.getElementById('currentChatName');
+    const currentChatRole = document.getElementById('currentChatRole');
+    const currentChatAvatar = document.getElementById('currentChatAvatar');
+    const currentChatStatus = document.getElementById('currentChatStatus');
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const contactsList = document.getElementById('contactsList');
+    const newChatModal = document.getElementById('newChatModal');
+    const closeNewChatModal = document.getElementById('closeNewChatModal');
+    const searchContacts = document.getElementById('searchContacts');
+    const notificationIcon = document.getElementById('notificationIcon');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const notificationList = document.getElementById('notificationList');
+    const markAllReadBtn = document.getElementById('markAllRead');
+    const logoutModal = document.getElementById('logoutModal');
+    const closeLogoutModal = document.getElementById('closeLogoutModal');
+    const cancelLogout = document.getElementById('cancelLogout');
+    const confirmLogout = document.getElementById('confirmLogout');
+    const userDisplayName = document.getElementById('userDisplayName');
+    const userAvatar = document.getElementById('userAvatar');
+    const authRequiredModal = document.getElementById('authRequiredModal');
+    const closeAuthModal = document.getElementById('closeAuthModal');
+    const goToSignIn = document.getElementById('goToSignIn');
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      initSidebar();
+      initNewChatModal();
+      initNotifications();
+      initLogoutModal();
+      initAuthModal();
+      checkAuthState();
+      initParticles();
+      updateNotificationBadge(0);
+    });
+
+    // Check authentication state
+    function checkAuthState() {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          // User is signed in
+          currentUser = {
+            id: user.uid,
+            name: user.displayName || "Student",
+            email: user.email,
+            avatar: user.displayName ? user.displayName.charAt(0).toUpperCase() : "S"
+          };
+          
+          userDisplayName.textContent = currentUser.name;
+          userAvatar.textContent = currentUser.avatar;
+          
+          // Load user data from Firestore
+          loadUserData();
+        } else {
+          // User is signed out
+          showAuthRequired("Please sign in to access messages.");
+        }
+      }, (error) => {
+        console.error("Auth state error:", error);
+        showAuthRequired("Authentication error. Please sign in again.");
+      });
+    }
+
+    // Show authentication required message
+    function showAuthRequired(message) {
+      const authMessage = document.querySelector('#authRequiredModal .auth-required p');
+      if (authMessage) {
+        authMessage.textContent = message;
+      }
+      authRequiredModal.classList.add('active');
+      
+      // Replace conversations list with auth message
+      if (conversationsList) {
+        conversationsList.innerHTML = `
+          <div class="auth-required">
+            <i class="fas fa-user-lock"></i>
+            <h3>Sign In Required</h3>
+            <p>${message}</p>
+            <button class="auth-btn" onclick="document.getElementById('authRequiredModal').classList.add('active')">
+              Sign In
+            </button>
+          </div>
+        `;
+      }
+      
+      // Disable new chat button
+      if (newChatBtn) {
+        newChatBtn.disabled = true;
+      }
+    }
+
+    // Initialize auth modal
+    function initAuthModal() {
+      if (closeAuthModal) {
+        closeAuthModal.addEventListener('click', () => {
+          authRequiredModal.classList.remove('active');
+        });
+      }
+
+      if (goToSignIn) {
+        goToSignIn.addEventListener('click', () => {
+          window.location.href = "signin.html";
+        });
+      }
+
+      // Close modal when clicking outside
+      window.addEventListener('click', (e) => {
+        if (e.target === authRequiredModal) {
+          authRequiredModal.classList.remove('active');
+        }
+      });
+    }
+
+    // Load user data from Firestore
+    async function loadUserData() {
+      try {
+        const userDoc = await db.collection('users').doc(currentUser.id).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          currentUser.name = userData.displayName || userData.firstName + ' ' + userData.lastName || currentUser.name;
+          currentUser.avatar = (userData.firstName ? userData.firstName.charAt(0) : "S") + (userData.lastName ? userData.lastName.charAt(0) : "") || currentUser.avatar;
+          currentUser.role = userData.role || "student";
+          
+          userDisplayName.textContent = currentUser.name;
+          userAvatar.textContent = currentUser.avatar;
+        }
+        
+        // Load enrolled teachers
+        loadEnrolledTeachers();
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        // Continue with basic user data
+        loadEnrolledTeachers();
+      }
+    }
+
+    // Load enrolled teachers from Firebase
+    async function loadEnrolledTeachers() {
+      try {
+        // Get student's enrollments from users collection
+        const userDoc = await db.collection('users').doc(currentUser.id).get();
+        
+        enrolledTeachers = [];
+        
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          
+          // Check if user has enrollments
+          if (userData.enrollments) {
+            console.log("Found enrollments:", userData.enrollments);
+            
+            // Get teacher details for each enrollment
+            for (const courseId in userData.enrollments) {
+              const enrollment = userData.enrollments[courseId];
+              const teacherId = enrollment.teacherId;
+              
+              if (teacherId && !enrolledTeachers.find(t => t.id === teacherId)) {
+                try {
+                  // Get teacher details from teachers collection
+                  const teacherDoc = await db.collection('teachers').doc(teacherId).get();
+                  if (teacherDoc.exists) {
+                    const teacher = teacherDoc.data();
+                    enrolledTeachers.push({
+                      id: teacherId,
+                      name: teacher.displayName || teacher.firstName + ' ' + teacher.lastName || "Teacher",
+                      role: teacher.role || "Instructor",
+                      avatar: getInitials(teacher.firstName, teacher.lastName) || "T",
+                      course: enrollment.courseName || "Course",
+                      email: teacher.email,
+                      expertise: teacher.expertise || "General"
+                    });
+                    console.log("Loaded teacher:", teacher.displayName || teacher.firstName + ' ' + teacher.lastName);
+                  } else {
+                    console.log("Teacher document not found:", teacherId);
+                    // Add fallback teacher
+                    enrolledTeachers.push({
+                      id: teacherId,
+                      name: enrollment.teacherName || "Teacher",
+                      role: "Instructor",
+                      avatar: "T",
+                      course: enrollment.courseName || "Course",
+                      email: "teacher@example.com",
+                      expertise: "General"
+                    });
+                  }
+                } catch (error) {
+                  console.error("Error loading teacher:", error);
+                  // Add fallback teacher data
+                  enrolledTeachers.push({
+                    id: teacherId,
+                    name: enrollment.teacherName || "Teacher",
+                    role: "Instructor",
+                    avatar: "T",
+                    course: enrollment.courseName || "Course",
+                    email: "teacher@example.com",
+                    expertise: "General"
+                  });
+                }
+              }
+            }
+          } else {
+            console.log("No enrollments found for user");
+          }
+        }
+
+        console.log("Final enrolled teachers:", enrolledTeachers);
+        
+        // If no enrolled teachers found, show message
+        if (enrolledTeachers.length === 0) {
+          console.log("No enrolled teachers found");
+          conversationsList.innerHTML = `
+            <div class="empty-chat">
+              <i class="fas fa-users"></i>
+              <h3>No Teachers Found</h3>
+              <p>You need to be enrolled in a course with a teacher to start messaging.</p>
+              <p><small>Check your course enrollments or contact support.</small></p>
+            </div>
+          `;
+          return;
+        }
+        
+        // Load conversations
+        loadConversations();
+      } catch (error) {
+        console.error("Error loading enrolled teachers:", error);
+        conversationsList.innerHTML = `
+          <div class="empty-chat">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Error Loading Conversations</h3>
+            <p>Please try refreshing the page.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Helper function to get initials
+    function getInitials(firstName, lastName) {
+      if (!firstName && !lastName) return "T";
+      return ((firstName ? firstName.charAt(0) : "") + (lastName ? lastName.charAt(0) : "")).toUpperCase() || "T";
+    }
+
+    // Load conversations from Firebase
+    function loadConversations() {
+      if (!conversationsList) return;
+      
+      conversationsList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+      
+      try {
+        // Set up real-time listener for conversations where student is participant
+        unsubscribeConversations = db.collection('conversations')
+          .where('studentId', '==', currentUser.id)
+          .onSnapshot((snapshot) => {
+            conversations = [];
+            
+            if (!snapshot.empty) {
+              console.log(`Found ${snapshot.size} conversations`);
+              snapshot.forEach((doc) => {
+                const conversationData = doc.data();
+                const conversation = {
+                  id: doc.id,
+                  ...conversationData
+                };
+                
+                // Find teacher details
+                const teacher = enrolledTeachers.find(t => t.id === conversation.teacherId);
+                if (teacher) {
+                  conversations.push(conversation);
+                  console.log(`Added conversation with teacher: ${teacher.name}`);
+                } else {
+                  console.log("Teacher not in enrolled list:", conversation.teacherId);
+                }
+              });
+              
+              // Load last messages and unread counts for all conversations
+              loadConversationsDetails();
+            } else {
+              console.log("No conversations found, creating new ones");
+              // No conversations found, create them for enrolled teachers
+              if (enrolledTeachers.length > 0) {
+                createConversationsForTeachers();
+              } else {
+                renderConversationsList();
+              }
+            }
+          }, (error) => {
+            console.error("Error loading conversations:", error);
+            conversationsList.innerHTML = `
+              <div class="empty-chat">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Conversations</h3>
+                <p>Please try refreshing the page.</p>
+              </div>
+            `;
+          });
+      } catch (error) {
+        console.error("Error setting up conversations listener:", error);
+        conversationsList.innerHTML = `
+          <div class="empty-chat">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Error Loading Conversations</h3>
+            <p>Please try refreshing the page.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Load conversation details (last message and unread count)
+    async function loadConversationsDetails() {
+      try {
+        const conversationPromises = conversations.map(async (conversation) => {
+          try {
+            // Get the last message
+            const messagesQuery = await db.collection('conversations')
+              .doc(conversation.id)
+              .collection('messages')
+              .orderBy('timestamp', 'desc')
+              .limit(1)
+              .get();
+            
+            if (!messagesQuery.empty) {
+              const lastMessageDoc = messagesQuery.docs[0];
+              const lastMessageData = lastMessageDoc.data();
+              conversation.lastMessage = lastMessageData.text || "No message content";
+              conversation.lastMessageTime = lastMessageData.timestamp;
+            } else {
+              conversation.lastMessage = "Start a conversation...";
+              conversation.lastMessageTime = conversation.createdAt || new Date();
+            }
+            
+            // Count unread messages from teacher
+            const unreadQuery = await db.collection('conversations')
+              .doc(conversation.id)
+              .collection('messages')
+              .where('read', '==', false)
+              .where('senderId', '==', conversation.teacherId)
+              .get();
+            
+            conversation.unreadCount = unreadQuery.size;
+          } catch (error) {
+            console.error(`Error loading details for conversation ${conversation.id}:`, error);
+            conversation.lastMessage = "Error loading messages";
+            conversation.lastMessageTime = new Date();
+            conversation.unreadCount = 0;
+          }
+          
+          return conversation;
+        });
+        
+        await Promise.all(conversationPromises);
+        
+        // Sort conversations by last message time
+        conversations.sort((a, b) => {
+          const getTimeValue = (time) => {
+            if (!time) return 0;
+            if (typeof time.toDate === 'function') {
+              return time.toDate().getTime();
+            } else if (time instanceof Date) {
+              return time.getTime();
+            } else {
+              return new Date(time).getTime() || 0;
+            }
+          };
+          
+          const timeA = getTimeValue(a.lastMessageTime);
+          const timeB = getTimeValue(b.lastMessageTime);
+          return timeB - timeA;
+        });
+        
+        renderConversationsList();
+        
+      } catch (error) {
+        console.error("Error loading conversation details:", error);
+        renderConversationsList(); // Still render with basic data
+      }
+    }
+
+    // Create conversations for enrolled teachers
+    async function createConversationsForTeachers() {
+      try {
+        console.log("Creating conversations for", enrolledTeachers.length, "teachers");
+        
+        for (const teacher of enrolledTeachers) {
+          try {
+            // Check if conversation already exists
+            const existingConvQuery = await db.collection('conversations')
+              .where('studentId', '==', currentUser.id)
+              .where('teacherId', '==', teacher.id)
+              .get();
+              
+            if (existingConvQuery.empty) {
+              // Create new conversation
+              const conversationData = {
+                studentId: currentUser.id,
+                teacherId: teacher.id,
+                studentName: currentUser.name,
+                teacherName: teacher.name,
+                lastMessage: "Start a conversation...",
+                lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                courseName: teacher.course || "General Course"
+              };
+              
+              await db.collection('conversations').add(conversationData);
+              console.log(`Created conversation with ${teacher.name}`);
+            } else {
+              console.log(`Conversation already exists with ${teacher.name}`);
+            }
+          } catch (error) {
+            console.error(`Error creating conversation with ${teacher.name}:`, error);
+          }
+        }
+        
+        console.log("Conversation creation completed");
+        
+      } catch (error) {
+        console.error("Error creating conversations:", error);
+      }
+    }
+
+    // Render conversations list
+    function renderConversationsList() {
+      if (!conversationsList) return;
+      
+      conversationsList.innerHTML = '';
+      
+      if (conversations.length === 0) {
+        conversationsList.innerHTML = `
+          <div class="empty-chat">
+            <i class="fas fa-comments"></i>
+            <p>No conversations yet. Start a new chat with your teachers.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      conversations.forEach(conversation => {
+        // Find teacher details
+        const teacher = enrolledTeachers.find(t => t.id === conversation.teacherId);
+        
+        if (!teacher) {
+          return; // Skip if teacher not found in enrolled list
+        }
+        
+        const item = document.createElement('div');
+        item.classList.add('conversation-item');
+        if (currentConversation && currentConversation.id === conversation.id) {
+          item.classList.add('active');
+        }
+        item.dataset.conversationId = conversation.id;
+        
+        // Format time
+        const time = formatTime(conversation.lastMessageTime);
+        
+        item.innerHTML = `
+          <div class="conversation-avatar">${teacher.avatar}</div>
+          <div class="conversation-info">
+            <div class="conversation-top">
+              <div class="conversation-name">${teacher.name}</div>
+              <div class="conversation-time">${time}</div>
+            </div>
+            <div class="conversation-preview">${conversation.lastMessage || 'Start a conversation...'}</div>
+          </div>
+          ${conversation.unreadCount > 0 ? `<div class="unread-count">${conversation.unreadCount}</div>` : ''}
+        `;
+        
+        item.addEventListener('click', () => {
+          selectConversation(conversation, teacher);
+        });
+        
+        conversationsList.appendChild(item);
+      });
+    }
+
+    // Select conversation function
+    function selectConversation(conversation, teacher) {
+      console.log("Selecting conversation:", conversation.id, "with teacher:", teacher.name);
+      
+      // Update UI to show selected conversation
+      document.querySelectorAll('.conversation-item').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      const selectedItem = document.querySelector(`[data-conversation-id="${conversation.id}"]`);
+      if (selectedItem) {
+        selectedItem.classList.add('active');
+      }
+      
+      currentConversation = conversation;
+      loadChat(conversation, teacher);
+      
+      // Mark messages as read when conversation is opened
+      markMessagesAsRead(conversation.id);
+    }
+
+    // Format time for display
+    function formatTime(date) {
+      if (!date) return 'Just now';
+      
+      // Convert to Date object if it's a Firestore Timestamp
+      let dateObj;
+      if (date && typeof date.toDate === 'function') {
+        dateObj = date.toDate();
+      } else if (date instanceof Date) {
+        dateObj = date;
+      } else {
+        // If it's a string or other format, try to parse it
+        dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) {
+          return 'Just now';
+        }
+      }
+      
+      const now = new Date();
+      const diffMs = now - dateObj;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      
+      return dateObj.toLocaleDateString();
+    }
+
+    // Load chat messages
+    function loadChat(conversation, teacher) {
+      if (!chatMessages || !currentChatName) return;
+      
+      currentConversation = conversation;
+      
+      // Update chat header
+      currentChatName.textContent = teacher.name;
+      currentChatRole.textContent = `${teacher.role} - ${teacher.expertise}`;
+      currentChatAvatar.textContent = teacher.avatar;
+      currentChatStatus.innerHTML = '<div class="chat-status">Online</div>';
+      
+      // Enable input
+      const messageInput = document.getElementById('messageInput');
+      const sendBtn = document.getElementById('sendMessageBtn');
+      messageInput.disabled = false;
+      messageInput.placeholder = "Type your message...";
+      sendBtn.disabled = false;
+      
+      // Clear messages and show loading
+      chatMessages.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+      
+      // Load messages from Firebase
+      if (unsubscribeMessages) {
+        unsubscribeMessages();
+      }
+      
+      unsubscribeMessages = db.collection('conversations')
+        .doc(conversation.id)
+        .collection('messages')
+        .orderBy('timestamp', 'asc')
+        .onSnapshot((snapshot) => {
+          chatMessages.innerHTML = '';
+          
+          if (snapshot.empty) {
+            chatMessages.innerHTML = `
+              <div class="empty-chat">
+                <i class="fas fa-comments"></i>
+                <h3>No Messages Yet</h3>
+                <p>Start a conversation with ${teacher.name} by sending your first message.</p>
+              </div>
+            `;
+            return;
+          }
+          
+          let hasMessages = false;
+          snapshot.forEach((doc) => {
+            const message = doc.data();
+            if (message.text && message.senderId) {
+              // Use the fixed formatTime function for message timestamps
+              const messageTime = formatTime(message.timestamp);
+              addMessageToChat(
+                message.text, 
+                message.senderId !== currentUser.id,
+                messageTime, 
+                message.senderName || (message.senderId !== currentUser.id ? teacher.name : 'You')
+              );
+              hasMessages = true;
+            }
+          });
+          
+          if (!hasMessages) {
+            chatMessages.innerHTML = `
+              <div class="empty-chat">
+                <i class="fas fa-comments"></i>
+                <h3>No Messages Yet</h3>
+                <p>Start a conversation with ${teacher.name} by sending your first message.</p>
+              </div>
+            `;
+          }
+          
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, (error) => {
+          console.error("Error loading messages:", error);
+          chatMessages.innerHTML = `
+            <div class="empty-chat">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Error loading messages. Please try again.</p>
+            </div>
+          `;
+        });
+      
+      // Set up message sending
+      setupMessageSending(conversation, teacher);
+    }
+
+    // Set up message sending
+    function setupMessageSending(conversation, teacher) {
+      // Clear any existing event listeners
+      const newSendBtn = sendMessageBtn.cloneNode(true);
+      sendMessageBtn.parentNode.replaceChild(newSendBtn, sendMessageBtn);
+      
+      const newMessageInput = messageInput.cloneNode(true);
+      messageInput.parentNode.replaceChild(newMessageInput, messageInput);
+      
+      // Get fresh references to DOM elements
+      const updatedSendBtn = document.getElementById('sendMessageBtn');
+      const updatedMessageInput = document.getElementById('messageInput');
+      
+      // Add event listeners directly without storing references
+      updatedSendBtn.onclick = () => sendMessage(conversation, teacher);
+      
+      updatedMessageInput.onkeydown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage(conversation, teacher);
+        }
+      };
+      
+      updatedMessageInput.oninput = function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+      };
+    }
+
+    // Add a message to the chat
+    function addMessageToChat(content, incoming, time, sender) {
+      const messageEl = document.createElement('div');
+      messageEl.classList.add('message', incoming ? 'incoming' : 'outgoing');
+      
+      messageEl.innerHTML = `
+        <div class="message-content">${content}</div>
+        <div class="message-time">${time} ${incoming && sender ? `| ${sender}` : ''}</div>
+      `;
+      
+      chatMessages.appendChild(messageEl);
+      
+      // Scroll to bottom with smooth behavior
+      setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 100);
+    }
+
+    // Send a message
+    async function sendMessage(conversation, teacher) {
+      const messageInput = document.getElementById('messageInput');
+      const sendBtn = document.getElementById('sendMessageBtn');
+      const content = messageInput.value.trim();
+      
+      if (!content) return;
+      
+      try {
+        // Disable input temporarily to prevent multiple sends
+        sendBtn.disabled = true;
+        messageInput.disabled = true;
+        
+        const message = {
+          text: content,
+          senderId: currentUser.id,
+          senderName: currentUser.name,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          read: false
+        };
+        
+        console.log("Sending message:", content, "to conversation:", conversation.id);
+        
+        // Add message to subcollection
+        await db.collection('conversations')
+          .doc(conversation.id)
+          .collection('messages')
+          .add(message);
+        
+        // Update conversation with last message
+        await db.collection('conversations')
+          .doc(conversation.id)
+          .update({
+            lastMessage: content,
+            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+            lastMessageSender: currentUser.name
+          });
+        
+        console.log("Message sent successfully");
+        
+        // Clear input and re-enable
+        messageInput.value = '';
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        messageInput.focus();
+        
+        // Reset textarea height
+        messageInput.style.height = 'auto';
+        
+        // Create notification for teacher
+        await createNotification(
+          teacher.id,
+          'New Message',
+          `${currentUser.name} sent you a message: "${content}"`,
+          'message'
+        );
+        
+      } catch (error) {
+        console.error("Error sending message:", error);
+        
+        // Re-enable input on error
+        const sendBtn = document.getElementById('sendMessageBtn');
+        const messageInput = document.getElementById('messageInput');
+        sendBtn.disabled = false;
+        messageInput.disabled = false;
+        
+        alert("Error sending message. Please try again.");
+      }
+    }
+
+    // Create notification function
+    async function createNotification(userId, title, message, type) {
+      try {
+        await db.collection('notifications').add({
+          userId: userId,
+          title: title,
+          message: message,
+          type: type,
+          read: false,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (error) {
+        console.error("Error creating notification:", error);
+      }
+    }
+
+    // Mark messages as read
+    async function markMessagesAsRead(conversationId) {
+      try {
+        // Get unread messages from teacher
+        const unreadQuery = db.collection('conversations')
+          .doc(conversationId)
+          .collection('messages')
+          .where('read', '==', false)
+          .where('senderId', '!=', currentUser.id);
+        
+        const unreadSnapshot = await unreadQuery.get();
+        
+        // Mark each as read
+        const updatePromises = unreadSnapshot.docs.map(doc => {
+          return doc.ref.update({ read: true });
+        });
+        
+        await Promise.all(updatePromises);
+        
+        // Update conversation unread count in UI
+        const conversationItem = document.querySelector(`[data-conversation-id="${conversationId}"] .unread-count`);
+        if (conversationItem) {
+          conversationItem.remove();
+        }
+        
+        // Update local conversation data
+        const conversation = conversations.find(c => c.id === conversationId);
+        if (conversation) {
+          conversation.unreadCount = 0;
+        }
+        
+      } catch (error) {
+        console.error("Error marking messages as read:", error);
+      }
+    }
+
+    // Initialize new chat modal
+    function initNewChatModal() {
+      if (!newChatBtn || !closeNewChatModal || !contactsList || !searchContacts) return;
+      
+      newChatBtn.addEventListener('click', () => {
+        if (!currentUser) {
+          showAuthRequired("Please sign in to start a new conversation.");
+          return;
+        }
+        newChatModal.classList.add('active');
+        loadTeachers();
+      });
+      
+      closeNewChatModal.addEventListener('click', () => {
+        newChatModal.classList.remove('active');
+      });
+      
+      window.addEventListener('click', (e) => {
+        if (e.target === newChatModal) {
+          newChatModal.classList.remove('active');
+        }
+      });
+      
+      searchContacts.addEventListener('input', () => {
+        loadTeachers(searchContacts.value);
+      });
+    }
+
+    // Load teachers for new chat
+    function loadTeachers(searchTerm = '') {
+      if (!contactsList) return;
+      
+      contactsList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+      
+      setTimeout(() => {
+        const filteredTeachers = enrolledTeachers.filter(teacher => 
+          teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          teacher.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          teacher.expertise.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        contactsList.innerHTML = '';
+        
+        if (filteredTeachers.length === 0) {
+          contactsList.innerHTML = '<p class="no-contacts" style="text-align: center; padding: 20px; color: var(--gray);">No teachers found</p>';
+          return;
+        }
+        
+        filteredTeachers.forEach(teacher => {
+          const existingConversation = conversations.find(conv => 
+            conv.teacherId === teacher.id
+          );
+          
+          const contactEl = document.createElement('div');
+          contactEl.classList.add('conversation-item');
+          contactEl.dataset.teacherId = teacher.id;
+          
+          contactEl.innerHTML = `
+            <div class="conversation-avatar">${teacher.avatar}</div>
+            <div class="conversation-info">
+              <div class="conversation-top">
+                <div class="conversation-name">${teacher.name}</div>
+              </div>
+              <div class="conversation-preview">${teacher.role} - ${teacher.expertise}</div>
+            </div>
+            ${existingConversation ? '<div style="color: var(--success); font-size: 12px;">Existing chat</div>' : ''}
+          `;
+          
+          contactEl.addEventListener('click', async () => {
+            if (existingConversation) {
+              // Select existing conversation
+              selectConversation(existingConversation, teacher);
+              newChatModal.classList.remove('active');
+            } else {
+              try {
+                // Create new conversation
+                const newConversation = {
+                  studentId: currentUser.id,
+                  teacherId: teacher.id,
+                  studentName: currentUser.name,
+                  teacherName: teacher.name,
+                  lastMessage: "Start a new conversation...",
+                  lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                  courseName: teacher.course || "General Course"
+                };
+                
+                const docRef = await db.collection('conversations').add(newConversation);
+                
+                // Add to local conversations array
+                const conversation = {
+                  id: docRef.id,
+                  ...newConversation
+                };
+                conversations.push(conversation);
+                
+                // Select the new conversation
+                selectConversation(conversation, teacher);
+                newChatModal.classList.remove('active');
+                
+              } catch (error) {
+                console.error("Error creating conversation:", error);
+                alert("Error creating conversation. Please try again.");
+              }
+            }
+          });
+          
+          contactsList.appendChild(contactEl);
+        });
+      }, 500);
+    }
+
+    // Initialize sidebar functionality
+    function initSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const closeSidebar = document.getElementById('closeSidebar');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+          sidebar.classList.add('active');
+          mainContent.classList.add('sidebar-open');
+        });
+      }
+
+      if (closeSidebar) {
+        closeSidebar.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          mainContent.classList.remove('sidebar-open');
+        });
+      }
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          logoutModal.classList.add('active');
+        });
+      }
+    }
+
+    // Initialize logout modal
+    function initLogoutModal() {
+      if (closeLogoutModal) {
+        closeLogoutModal.addEventListener('click', () => {
+          logoutModal.classList.remove('active');
+        });
+      }
+
+      if (cancelLogout) {
+        cancelLogout.addEventListener('click', () => {
+          logoutModal.classList.remove('active');
+        });
+      }
+
+      if (confirmLogout) {
+        confirmLogout.addEventListener('click', () => {
+          if (unsubscribeConversations) unsubscribeConversations();
+          if (unsubscribeMessages) unsubscribeMessages();
+          
+          auth.signOut().then(() => {
+            window.location.href = "signin.html";
+          });
+        });
+      }
+
+      window.addEventListener('click', (e) => {
+        if (e.target === logoutModal) {
+          logoutModal.classList.remove('active');
+        }
+      });
+    }
+
+    // Initialize notifications
+    function initNotifications() {
+      if (!notificationIcon || !notificationDropdown) return;
+
+      notificationIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notificationDropdown.classList.toggle('active');
+      });
+
+      if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', () => {
+          updateNotificationBadge(0);
+        });
+      }
+
+      document.addEventListener('click', () => {
+        notificationDropdown.classList.remove('active');
+      });
+
+      notificationDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+
+    // Show notification
+    function showNotification(title, message) {
+      const badge = document.querySelector('.notification-badge');
+      const currentCount = parseInt(badge.textContent) || 0;
+      updateNotificationBadge(currentCount + 1);
+      
+      const notificationEl = document.createElement('div');
+      notificationEl.classList.add('notification-item', 'unread');
+      notificationEl.innerHTML = `
+        <div class="notification-title">${title}</div>
+        <div class="notification-message">${message}</div>
+        <div class="notification-time">Just now</div>
+      `;
+      
+      notificationList.insertBefore(notificationEl, notificationList.firstChild);
+    }
+
+    // Update notification badge count
+    function updateNotificationBadge(count) {
+      const badge = document.querySelector('.notification-badge');
+      if (!badge) return;
+      
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // Initialize floating particles
+    function initParticles() {
+      const particlesContainer = document.getElementById('particles');
+      if (!particlesContainer) return;
+      
+      const numberOfParticles = 20;
+
+      for (let i = 0; i < numberOfParticles; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.width = particle.style.height = Math.random() * 4 + 2 + 'px';
+        particle.style.animationDuration = Math.random() * 3 + 3 + 's';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        particle.style.backgroundColor = `rgba(67, 97, 238, ${Math.random() * 0.3})`;
+        particlesContainer.appendChild(particle);
+      }
+    }
+  </script>
+</body>
+</html>
