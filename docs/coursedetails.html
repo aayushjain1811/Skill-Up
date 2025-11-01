@@ -4335,6 +4335,7 @@ import {
   getFirestore, collection, query, limit, getDocs, doc, getDoc, updateDoc, arrayUnion, setDoc,
   where, orderBy, addDoc, onSnapshot, serverTimestamp, increment, Timestamp
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
 // Firebase Config
 const firebaseConfig = {
@@ -4351,6 +4352,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 console.log('Firebase initialized successfully');
 
@@ -4638,8 +4640,8 @@ document.addEventListener('keydown', (e) => {
   });
 }
 
-// NEW: Play video in popup modal
-window.playVideo = function(courseId, filename, lectureId, lectureTitle) {
+// Updated playVideo function with correct Storage path handling
+window.playVideo = async function(courseId, filename, lectureId, lectureTitle) {
   console.log(`=== PLAY VIDEO CALLED ===`);
   console.log(`Course ID: ${courseId}`);
   console.log(`Filename: ${filename}`);
@@ -4651,25 +4653,77 @@ window.playVideo = function(courseId, filename, lectureId, lectureTitle) {
   // Set video title
   videoPlayerTitle.textContent = lectureTitle;
   
-  // Set video source - try multiple possible paths
+  // Clean up filename - remove any path separators or extensions
+  let cleanFilename = filename;
+  if (cleanFilename && (cleanFilename.includes('/') || cleanFilename.includes('\\'))) {
+    cleanFilename = cleanFilename.split(/[/\\]/).pop();
+  }
+  
+  // Ensure filename has .mp4 extension
+  if (cleanFilename && !cleanFilename.endsWith('.mp4')) {
+    cleanFilename = cleanFilename + '.mp4';
+  }
+  
+  console.log(`Clean filename: ${cleanFilename}`);
+  
   let videoUrl;
   
-  // Check if filename is a full URL
-  if (filename && (filename.startsWith('http://') || filename.startsWith('https://') || filename.startsWith('blob:'))) {
-    videoUrl = filename;
-    console.log('Using filename as-is (full URL):', videoUrl);
-  } 
-  // Check if it's a data URL
-  else if (filename && filename.startsWith('data:')) {
-    videoUrl = filename;
-    console.log('Using data URL:', videoUrl.substring(0, 50) + '...');
-  }
-  // Try to construct the video URL using the correct path
-  else {
-    // Use the correct path to your videos
-    const correctPath = `/uploads/videos/${courseId}/${filename}`;
-    console.log('Using correct video path:', correctPath);
-    videoUrl = correctPath;
+  try {
+    console.log('Attempting to get video from Firebase Storage...');
+    
+    // Define all possible storage paths to try
+    const possiblePaths = [
+      `videos/course${courseId}/${cleanFilename}`,    // videos/course1/lecture1.mp4
+      `videos/${courseId}/${cleanFilename}`,           // videos/1/lecture1.mp4
+      `videos/course${courseId}/${lectureId}.mp4`,    // videos/course1/lectureId1.mp4
+      `videos/${courseId}/${lectureId}.mp4`,           // videos/1/lectureId1.mp4
+      `videos/${cleanFilename}`,                       // videos/lecture1.mp4 (root level)
+      `course${courseId}/videos/${cleanFilename}`,    // course1/videos/lecture1.mp4
+      `${courseId}/videos/${cleanFilename}`            // 1/videos/lecture1.mp4
+    ];
+    
+    let foundUrl = null;
+    let foundPath = null;
+    
+    // Try each possible path
+    for (const path of possiblePaths) {
+      try {
+        console.log(`Trying path: ${path}`);
+        const videoRef = ref(storage, path);
+        const url = await getDownloadURL(videoRef);
+        foundUrl = url;
+        foundPath = path;
+        console.log(`✓ Found video at path: ${path}`);
+        break;
+      } catch (error) {
+        console.log(`✗ Video not found at path: ${path}`);
+        continue;
+      }
+    }
+    
+    if (foundUrl) {
+      videoUrl = foundUrl;
+      console.log(`Using video URL from path: ${foundPath}`);
+    } else {
+      throw new Error('Video not found in any storage path');
+    }
+  } catch (error) {
+    console.error('Error getting video from Firebase Storage:', error);
+    
+    // Show error message to user
+    videoPlayerStatus.textContent = 'Error: Video file not found in storage';
+    videoPlayerStatus.style.color = '#ff4757';
+    
+    // Show error notification
+    addNotification({
+      title: "Video Not Available",
+      message: `The video file "${cleanFilename}" could not be found. Please contact support.`,
+      type: "video_error",
+      courseId: courseId,
+      read: false
+    });
+    
+    return; // Exit function if no video found
   }
   
   // Clear previous source and set new one
@@ -4679,32 +4733,54 @@ window.playVideo = function(courseId, filename, lectureId, lectureTitle) {
   source.type = 'video/mp4';
   videoPlayer.appendChild(source);
   
-  console.log('Video source set to:', videoUrl);
+  console.log('Video source set to Firebase Storage URL');
   
   // Show loading status
-  videoPlayerStatus.textContent = 'Loading video...';
+  videoPlayerStatus.textContent = 'Loading video from storage...';
+  videoPlayerStatus.style.color = 'var(--gray)';
   
   // Set up event listeners for the video
   videoPlayer.addEventListener('loadeddata', function onLoadedData() {
-    console.log('Video loaded successfully');
+    console.log('Video loaded successfully from Firebase Storage');
     videoPlayerStatus.textContent = 'Video loaded - Playing...';
+    videoPlayerStatus.style.color = 'var(--success)';
+    
+    // Try to auto-play the video
     videoPlayer.play().catch(error => {
       console.error('Error auto-playing video:', error);
       videoPlayerStatus.textContent = 'Click play to start video';
+      videoPlayerStatus.style.color = 'var(--gray)';
     });
+    
     videoPlayer.removeEventListener('loadeddata', onLoadedData);
   });
   
   videoPlayer.addEventListener('error', function onVideoError(e) {
     console.error('Video error:', e);
     console.error('Video error details:', videoPlayer.error);
-    videoPlayerStatus.textContent = 'Error loading video';
     
-    // Show error message
-    videoPlayerStatus.textContent = 'Error: Video file not found';
+    videoPlayerStatus.textContent = 'Error loading video from storage';
     videoPlayerStatus.style.color = '#ff4757';
     
+    addNotification({
+      title: "Video Playback Error",
+      message: "There was an error loading the video. Please try again.",
+      type: "video_error",
+      courseId: courseId,
+      read: false
+    });
+    
     videoPlayer.removeEventListener('error', onVideoError);
+  });
+  
+  videoPlayer.addEventListener('waiting', function() {
+    videoPlayerStatus.textContent = 'Buffering video...';
+    videoPlayerStatus.style.color = 'var(--gray)';
+  });
+  
+  videoPlayer.addEventListener('playing', function() {
+    videoPlayerStatus.textContent = 'Playing...';
+    videoPlayerStatus.style.color = 'var(--success)';
   });
   
   // Auto-mark as complete when video reaches 90%
@@ -4720,7 +4796,7 @@ window.playVideo = function(courseId, filename, lectureId, lectureTitle) {
         console.log('Auto-marking lecture as complete at 90%');
         markLectureComplete(lectureId);
         videoPlayerStatus.textContent = 'Lecture completed!';
-        videoPlayerStatus.style.color = '#00f5ff';
+        videoPlayerStatus.style.color = 'var(--success)';
       }
     }
   });
@@ -4836,7 +4912,7 @@ async function markLectureComplete(lectureId) {
   }
 }
 
-// NEW: Force progress update in Firestore
+// Update progress calculation to equal distribution
 async function updateProgressInFirestore() {
   console.log("=== UPDATING PROGRESS IN FIRESTORE ===");
   
@@ -4846,36 +4922,65 @@ async function updateProgressInFirestore() {
   }
 
   try {
-    // Calculate lecture progress (70% of total)
-    const completedLectures = userEnrollmentData.completedLessons?.length || 0;
-    const totalLectures = allLectures.length || 1; // Prevent division by zero
-    const lectureProgress = (completedLectures / totalLectures) * 70;
-
-    // Calculate assignment progress (20% of total) - Only count passed assignments
-    const passedAssignments = getPassedAssignmentsCount();
-    const totalAssignments = courseAssignments.length || 1; // Prevent division by zero
-    const assignmentProgress = (passedAssignments / totalAssignments) * 20;
-
-    // Calculate test progress (10% of total) - only if test is evaluated and passed
-    let testProgress = 0;
-    if (userEnrollmentData.testEvaluated && userEnrollmentData.testGrade >= 70) {
-      testProgress = 10;
+    // First, reload user data to ensure we have the latest grades
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const courseEnrollment = userData.enrollments?.[courseId];
+      
+      if (courseEnrollment) {
+        // Update local data with latest from Firestore
+        userEnrollmentData = { ...userEnrollmentData, ...courseEnrollment };
+      }
     }
     
-    // Overall progress: Sum of all three components
+    // Count total components (lectures + assignments + final test)
+    const totalLectures = allLectures.length || 0;
+    const totalAssignments = courseAssignments.length || 0;
+    const hasFinalTest = 1; // Final test counts as 1 component
+    
+    const totalComponents = totalLectures + totalAssignments + hasFinalTest;
+    
+    if (totalComponents === 0) {
+      console.log("No components found for progress calculation");
+      return;
+    }
+    
+    // Calculate value per component (100% divided by total components)
+    const valuePerComponent = 100 / totalComponents;
+    
+    // Calculate lecture progress
+    const completedLectures = userEnrollmentData.completedLessons?.length || 0;
+    const lectureProgress = completedLectures * valuePerComponent;
+
+    // Calculate assignment progress - Only count passed assignments
+    const passedAssignments = getPassedAssignmentsCount();
+    const assignmentProgress = passedAssignments * valuePerComponent;
+
+    // Calculate test progress - only if test is evaluated and passed
+    let testProgress = 0;
+    if (userEnrollmentData.testEvaluated && userEnrollmentData.testGrade >= 70) {
+      testProgress = hasFinalTest * valuePerComponent;
+    }
+    
+    // Overall progress: Sum of all components
     const overallProgress = Math.min(Math.round(lectureProgress + assignmentProgress + testProgress), 100);
     
-    console.log(`Progress Calculation (70-20-10 split):`);
-    console.log(`- Lectures: ${completedLectures}/${totalLectures} × 70% = ${lectureProgress.toFixed(2)}%`);
-    console.log(`- Passed Assignments: ${passedAssignments}/${totalAssignments} × 20% = ${assignmentProgress.toFixed(2)}%`);
-    console.log(`- Test: ${userEnrollmentData.testEvaluated ? (userEnrollmentData.testGrade >= 70 ? '10%' : '0%') : '0%'}`);
+    console.log(`Progress Calculation (Equal Distribution):`);
+    console.log(`- Total Components: ${totalComponents} (${totalLectures} lectures + ${totalAssignments} assignments + 1 test)`);
+    console.log(`- Value per component: ${valuePerComponent.toFixed(2)}%`);
+    console.log(`- Lectures: ${completedLectures}/${totalLectures} × ${valuePerComponent.toFixed(2)}% = ${lectureProgress.toFixed(2)}%`);
+    console.log(`- Passed Assignments: ${passedAssignments}/${totalAssignments} × ${valuePerComponent.toFixed(2)}% = ${assignmentProgress.toFixed(2)}%`);
+    console.log(`- Assignment Grades:`, userEnrollmentData.assignmentGrades);
+    console.log(`- Test: ${userEnrollmentData.testEvaluated ? (userEnrollmentData.testGrade >= 70 ? `${valuePerComponent.toFixed(2)}%` : '0%') : '0%'}`);
     console.log(`- Overall Progress: ${overallProgress}%`);
     
     // Update Firestore with detailed progress breakdown
-    const userRef = doc(db, "users", currentUser.uid);
     await updateDoc(userRef, {
       [`enrollments.${courseId}.progress`]: overallProgress,
-      [`enrollments.${courseId}.lectureProgress`]: Math.round(lectureProgress * 10) / 10, // Store with 1 decimal
+      [`enrollments.${courseId}.lectureProgress`]: Math.round(lectureProgress * 10) / 10,
       [`enrollments.${courseId}.assignmentProgress`]: Math.round(assignmentProgress * 10) / 10,
       [`enrollments.${courseId}.testProgress`]: testProgress,
       [`enrollments.${courseId}.lastAccessed`]: Timestamp.now()
@@ -4967,7 +5072,7 @@ function updateLectureUI(lectureId, isCompleted) {
   console.log('Lecture UI updated successfully');
 }
 
-// FIXED: Update progress display
+// FIXED: Update progress display with equal distribution
 function updateProgressDisplay() {
   console.log("=== UPDATING PROGRESS DISPLAY ===");
   
@@ -4976,35 +5081,46 @@ function updateProgressDisplay() {
     return;
   }
 
-  // Calculate lecture progress (70% of total)
+  // Count total components (lectures + assignments + final test)
+  const totalLectures = allLectures.length;
+  const totalAssignments = courseAssignments.length;
+  const hasFinalTest = 1; // Final test counts as 1 component
+  
+  const totalComponents = totalLectures + totalAssignments + hasFinalTest;
+  
+  if (totalComponents === 0) {
+    console.log("No components found for progress calculation");
+    return;
+  }
+  
+  // Calculate value per component (100% divided by total components)
+  const valuePerComponent = 100 / totalComponents;
+  
+  // Calculate lecture progress
   const completedLectures = userEnrollmentData.completedLessons 
     ? userEnrollmentData.completedLessons.length 
     : 0;
-  const totalLectures = allLectures.length;
-  const lectureProgress = totalLectures > 0 
-    ? (completedLectures / totalLectures) * 70 
-    : 0;
+  const lectureProgress = completedLectures * valuePerComponent;
 
-  // Calculate assignment progress (20% of total) - Only count passed assignments
+  // Calculate assignment progress - Only count passed assignments
   const passedAssignments = getPassedAssignmentsCount();
-  const totalAssignments = courseAssignments.length;
-  const assignmentProgress = totalAssignments > 0 
-    ? (passedAssignments / totalAssignments) * 20 
-    : 0;
+  const assignmentProgress = passedAssignments * valuePerComponent;
 
-  // Calculate test progress (10% of total) - only if test is evaluated and passed
+  // Calculate test progress - only if test is evaluated and passed
   let testProgress = 0;
   if (userEnrollmentData.testEvaluated && userEnrollmentData.testGrade >= 70) {
-    testProgress = 10;
+    testProgress = hasFinalTest * valuePerComponent;
   }
   
-  // Overall progress: 70% from lectures, 20% from assignments, 10% from test
+  // Overall progress: Sum of all components
   const overallProgressValue = Math.min(Math.round(lectureProgress + assignmentProgress + testProgress), 100);
   
-  console.log(`Progress Display Update:`);
+  console.log(`Progress Display Update (Equal Distribution):`);
+  console.log(`- Total Components: ${totalComponents}`);
+  console.log(`- Value per component: ${valuePerComponent.toFixed(2)}%`);
   console.log(`- Lectures: ${completedLectures}/${totalLectures} = ${lectureProgress.toFixed(1)}%`);
   console.log(`- Assignments: ${passedAssignments}/${totalAssignments} = ${assignmentProgress.toFixed(1)}%`);
-  console.log(`- Test: ${testProgress}%`);
+  console.log(`- Test: ${testProgress.toFixed(1)}%`);
   console.log(`- Overall: ${overallProgressValue}%`);
   
   // Update the DOM elements
@@ -5096,7 +5212,7 @@ function checkAllAssignmentsPassed() {
   return true;
 }
 
-// Build curriculum with lectures and assignments from Firestore
+// Updated buildCurriculum function with better filename handling
 async function buildCurriculum() {
   const curriculumList = document.querySelector(".curriculum-list") || document.getElementById("course-list");
   curriculumList.innerHTML = "<div class='loading-text'>Loading lectures...</div>";
@@ -5111,19 +5227,37 @@ async function buildCurriculum() {
     
     console.log("Lectures snapshot size:", lecturesSnap.size);
     
-    // Store lectures for progress calculation
     if (!lecturesSnap.empty) {
       allLectures = lecturesSnap.docs.map(doc => {
         const data = doc.data();
         console.log(`Lecture ${doc.id} data:`, data);
+        
+        // Extract filename from various possible fields
+        let videoFilename = data.filename || data.videoUrl || data.video || data.url || data.videoFile;
+        
+        // If it's a full path, extract just the filename
+        if (videoFilename && (videoFilename.includes('/') || videoFilename.includes('\\'))) {
+          videoFilename = videoFilename.split(/[/\\]/).pop();
+        }
+        
+        // Remove file extension for consistency (we'll add .mp4 in playVideo)
+        if (videoFilename && videoFilename.includes('.')) {
+          videoFilename = videoFilename.split('.').slice(0, -1).join('.');
+        }
+        
+        // Default filename if none found
+        if (!videoFilename) {
+          videoFilename = `lecture_${doc.id}`;
+        }
+        
+        console.log(`Processed filename for ${doc.id}: ${videoFilename}`);
+        
         return { 
           id: doc.id, 
           title: data.title || "Untitled Lecture",
           duration: data.duration || "N/A",
           description: data.description || "No description available",
-          // Try multiple possible field names for video
-          filename: data.filename || data.videoUrl || data.video || data.url || `lecture_${doc.id}.mp4`,
-          videoUrl: data.videoUrl || data.filename || data.video || data.url,
+          filename: videoFilename,
           ...data
         };
       });
@@ -5132,11 +5266,11 @@ async function buildCurriculum() {
       // Create default lectures if none exist
       console.log("No lectures found in Firestore, using defaults");
       allLectures = [
-        { id: "lectureId1", title: "Introduction to HTML", duration: "30 min", filename: "lecture1.mp4", description: "Learn the basics of HTML" },
-        { id: "lectureId2", title: "HTML Tags and Elements", duration: "45 min", filename: "lecture2.mp4", description: "Understanding HTML tags" },
-        { id: "lectureId3", title: "Forms and Inputs", duration: "40 min", filename: "lecture3.mp4", description: "Working with forms" },
-        { id: "lectureId4", title: "HTML5 Semantic Elements", duration: "35 min", filename: "lecture4.mp4", description: "Modern HTML5 features" },
-        { id: "lectureId5", title: "Final Project", duration: "50 min", filename: "lecture5.mp4", description: "Build a complete website" }
+        { id: "lectureId1", title: "Introduction to HTML", duration: "30 min", filename: "lecture1", description: "Learn the basics of HTML" },
+        { id: "lectureId2", title: "HTML Tags and Elements", duration: "45 min", filename: "lecture2", description: "Understanding HTML tags" },
+        { id: "lectureId3", title: "Forms and Inputs", duration: "40 min", filename: "lecture3", description: "Working with forms" },
+        { id: "lectureId4", title: "HTML5 Semantic Elements", duration: "35 min", filename: "lecture4", description: "Modern HTML5 features" },
+        { id: "lectureId5", title: "Final Project", duration: "50 min", filename: "lecture5", description: "Build a complete website" }
       ];
     }
     
@@ -5162,15 +5296,13 @@ async function buildCurriculum() {
 
     // Add lectures to curriculum
     allLectures.forEach((lecture, index) => {
-      // Check if this lecture is completed
       const isCompleted = userEnrollmentData?.completedLessons?.includes(lecture.id) || false;
 
       const lessonItem = document.createElement("li");
       lessonItem.className = `lecture-item ${isCompleted ? 'completed' : ''}`;
       lessonItem.setAttribute('data-lecture-id', lecture.id);
 
-      // Get video filename - try multiple fields
-      const videoFile = lecture.filename || lecture.videoUrl || lecture.video || lecture.url || `lecture_${lecture.id}.mp4`;
+      const videoFile = lecture.filename;
       
       console.log(`Lecture ${lecture.id}: title="${lecture.title}", videoFile="${videoFile}", completed=${isCompleted}`);
 
@@ -5201,7 +5333,7 @@ async function buildCurriculum() {
         console.log(`Toggled lecture ${lecture.id}`);
       });
 
-      // Add event listeners for the play button
+      // Add play button event listener
       const playButton = lessonItem.querySelector('.btn-play');
       playButton.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -5595,73 +5727,219 @@ async function loadAssignments() {
   }
 }
 
-// Load resources
+// Load resources from Firebase Storage - works with any notes filename
 async function loadResources() {
   const resourcesGrid = document.getElementById("resourcesGrid");
   if (!resourcesGrid) return;
   
-  resourcesGrid.innerHTML = "<div class='loading-text'>Loading resources...</div>";
+  resourcesGrid.innerHTML = "<div class='loading-text'>Loading course notes...</div>";
 
   try {
-    // Try to get resources from Firestore
-    const resourcesRef = collection(db, "courses", courseId, "resources");
-    const resourcesSnap = await getDocs(resourcesRef);
+    // First, try to list all files in the course resources folder to find any PDF
+    await findAndDisplayNotes();
     
-    if (resourcesSnap.empty) {
-      // If no resources found, show default resources
-      resourcesGrid.innerHTML = `
-        <div class="resource-section">
-          <div class="section-header">
-            <i class="fas fa-file-pdf"></i>
-            <h3>Course Materials</h3>
-          </div>
-          <div class="resource-item">
-            <div class="resource-info">
-              <h4>Course Syllabus</h4>
-              <p>Complete course outline and learning objectives</p>
-              <small>PDF • 1.2 MB</small>
-            </div>
-            <button class="btn-download"><i class="fas fa-download"></i> Download</button>
-          </div>
-        </div>
-      `;
-    } else {
-      // If resources exist in Firestore, display them
-      resourcesGrid.innerHTML = '';
-      
-      resourcesSnap.forEach((doc) => {
-        const resource = doc.data();
-        const resourceItem = document.createElement('div');
-        resourceItem.className = 'resource-item';
-        
-        resourceItem.innerHTML = `
-          <div class="resource-icon">
-            <i class="fas fa-${resource.type === 'pdf' ? 'file-pdf' : resource.type === 'zip' ? 'file-archive' : 'file'}"></i>
-          </div>
-          <div class="resource-info">
-            <h4>${resource.title || 'Untitled Resource'}</h4>
-            <p>${resource.description || 'No description available'}</p>
-            <small>${resource.format || 'File'} • ${resource.size || 'Unknown size'}</small>
-          </div>
-          <button class="btn-download" onclick="downloadResource('${resource.url || ''}')">
-            <i class="fas fa-download"></i> Download
-          </button>
-        `;
-        
-        resourcesGrid.appendChild(resourceItem);
-      });
-    }
   } catch (error) {
     console.error("Error loading resources:", error);
-    resourcesGrid.innerHTML = `
+    showErrorState();
+  }
+}
+// Find and display any PDF files in the resources folder
+async function findAndDisplayNotes() {
+  const resourcesGrid = document.getElementById("resourcesGrid");
+  
+  try {
+    // List all files in the course resources folder
+    const resourcesRef = ref(storage, `resources/course${courseId}`);
+    const resourcesList = await listAll(resourcesRef);
+    
+    // Filter for PDF files (notes)
+    const pdfFiles = resourcesList.items.filter(item => 
+      item.name.toLowerCase().endsWith('.pdf')
+    );
+    
+    if (pdfFiles.length > 0) {
+      // Display all PDF files found
+      displayNotesFiles(pdfFiles);
+    } else {
+      // No PDF files found, try alternative locations
+      await checkAlternativeLocations();
+    }
+    
+  } catch (error) {
+    console.log(`No resources folder found for course${courseId}, trying alternative locations...`);
+    await checkAlternativeLocations();
+  }
+}
+// Display all PDF files found
+async function displayNotesFiles(pdfFiles) {
+  const resourcesGrid = document.getElementById("resourcesGrid");
+  
+  resourcesGrid.innerHTML = `
+    <div class="resource-section">
+      <div class="section-header">
+        <i class="fas fa-file-pdf"></i>
+        <h3>Course Notes & Materials</h3>
+      </div>
+    </div>
+  `;
+  
+  const notesSection = resourcesGrid.querySelector('.resource-section');
+  
+  for (const fileRef of pdfFiles) {
+    try {
+      const url = await getDownloadURL(fileRef);
+      const fileName = fileRef.name;
+      const fileSize = await getFileSize(fileRef); // Optional: get file size
+      
+      const displayName = getDisplayName(fileName);
+      
+      const resourceItem = document.createElement('div');
+      resourceItem.className = 'resource-item';
+      resourceItem.innerHTML = `
+        <div class="resource-icon">
+          <i class="fas fa-file-pdf"></i>
+        </div>
+        <div class="resource-info">
+          <h4>${displayName}</h4>
+          <p>Course study material</p>
+          <small>PDF • ${fileSize}</small>
+        </div>
+        <button class="btn-download" onclick="downloadResource('${url}', '${fileName}')">
+          <i class="fas fa-download"></i> Download
+        </button>
+      `;
+      
+      notesSection.appendChild(resourceItem);
+      
+    } catch (error) {
+      console.error(`Error loading file ${fileRef.name}:`, error);
+    }
+  }
+  
+  // If no PDFs were successfully loaded, show unavailable message
+  if (notesSection.querySelectorAll('.resource-item').length === 0) {
+    showUnavailableState();
+  }
+}
+
+// Check alternative storage locations for notes
+async function checkAlternativeLocations() {
+  const resourcesGrid = document.getElementById("resourcesGrid");
+  
+  const alternativeLocations = [
+    `resources/${courseId}`,           // resources/1/
+    `course${courseId}/resources`,     // course1/resources/
+    `${courseId}/resources`,           // 1/resources/
+    `resources`,                       // resources/ (root)
+    `course${courseId}`,               // course1/
+    `${courseId}`                      // 1/
+  ];
+  
+  for (const location of alternativeLocations) {
+    try {
+      console.log(`Checking location: ${location}`);
+      const locationRef = ref(storage, location);
+      const locationList = await listAll(locationRef);
+      
+      // Filter for PDF files
+      const pdfFiles = locationList.items.filter(item => 
+        item.name.toLowerCase().endsWith('.pdf')
+      );
+      
+      if (pdfFiles.length > 0) {
+        console.log(`✓ Found ${pdfFiles.length} PDF files in: ${location}`);
+        await displayNotesFiles(pdfFiles);
+        return; // Exit if found
+      }
+      
+    } catch (error) {
+      console.log(`✗ No access or no files in: ${location}`);
+      continue;
+    }
+  }
+  
+  // If no PDFs found anywhere, show unavailable message
+  showUnavailableState();
+}
+// Helper function to get display name from filename
+function getDisplayName(fileName) {
+  // Remove file extension
+  let displayName = fileName.replace(/\.pdf$/i, '');
+  
+  // Replace underscores and hyphens with spaces
+  displayName = displayName.replace(/[_-]/g, ' ');
+  
+  // Capitalize first letter of each word
+  displayName = displayName.replace(/\b\w/g, l => l.toUpperCase());
+  
+  // Common name mappings
+  const nameMap = {
+    'notes': 'Course Notes',
+    'lecture notes': 'Lecture Notes', 
+    'study guide': 'Study Guide',
+    'course material': 'Course Material',
+    'cheat sheet': 'Cheat Sheet',
+    'reference': 'Reference Guide'
+  };
+  
+  return nameMap[displayName.toLowerCase()] || displayName;
+}
+
+// Helper function to get file size (optional)
+async function getFileSize(fileRef) {
+  try {
+    const metadata = await getMetadata(fileRef);
+    const sizeInMB = (metadata.size / (1024 * 1024)).toFixed(1);
+    return `${sizeInMB} MB`;
+  } catch (error) {
+    return 'PDF Document';
+  }
+}
+
+// Show unavailable state
+function showUnavailableState() {
+  const resourcesGrid = document.getElementById("resourcesGrid");
+  resourcesGrid.innerHTML = `
+    <div class="resource-section">
+      <div class="section-header">
+        <i class="fas fa-file-pdf"></i>
+        <h3>Course Notes</h3>
+      </div>
       <div class="resource-item">
         <div class="resource-info">
-          <h4>Course Materials</h4>
-          <p>Resources will be available soon</p>
+          <h4>No Notes Available</h4>
+          <p>Course notes will be added by your instructor</p>
+          <small>Check back later for updates</small>
         </div>
+        <button class="btn-download" disabled>
+          <i class="fas fa-download"></i> Not Available
+        </button>
       </div>
-    `;
-  }
+    </div>
+  `;
+}
+
+// Show error state
+function showErrorState() {
+  const resourcesGrid = document.getElementById("resourcesGrid");
+  resourcesGrid.innerHTML = `
+    <div class="resource-section">
+      <div class="section-header">
+        <i class="fas fa-file-pdf"></i>
+        <h3>Course Notes</h3>
+      </div>
+      <div class="resource-item">
+        <div class="resource-info">
+          <h4>Error Loading Notes</h4>
+          <p>Unable to load course notes at this time</p>
+          <small>Please try again later</small>
+        </div>
+        <button class="btn-download" disabled>
+          <i class="fas fa-download"></i> Unavailable
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 // Load notes
@@ -5696,6 +5974,7 @@ function checkCertificateEligibility() {
     }
   }
 }
+
 
 // Check if assignments should be unlocked based on lecture completion AND assignment passing
 function checkAssignmentUnlock() {
@@ -6891,26 +7170,37 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
       !(notification.assignmentId === assignmentId && notification.type === 'assignment_submission')
     );
     
-    // Calculate new progress with assignment evaluation
+    // Calculate new progress with equal distribution
     const totalLectures = allLectures.length;
     const completedLectures = courseEnrollment.completedLessons?.length || 0;
-    const lectureProgress = totalLectures > 0 ? (completedLectures / totalLectures) * 70 : 0;
-    
-    // Calculate assignment progress (20% of total) - Only count passed assignments
-    const passedAssignments = Object.values(assignmentGrades).filter(g => g >= 70).length;
     const totalAssignments = courseAssignments.length;
-    const assignmentProgress = totalAssignments > 0 ? (passedAssignments / totalAssignments) * 20 : 0;
+    const hasFinalTest = 1;
     
-    // Calculate test progress (10% of total) - only if test is evaluated and passed
+    const totalComponents = totalLectures + totalAssignments + hasFinalTest;
+    const valuePerComponent = 100 / totalComponents;
+    
+    // Calculate lecture progress
+    const lectureProgress = completedLectures * valuePerComponent;
+    
+    // Calculate assignment progress - Only count passed assignments
+    const passedAssignments = Object.values(assignmentGrades).filter(g => g >= 70).length;
+    const assignmentProgress = passedAssignments * valuePerComponent;
+    
+    // Calculate test progress - only if test is evaluated and passed
     let testProgress = 0;
     if (courseEnrollment.testEvaluated && courseEnrollment.testGrade >= 70) {
-      testProgress = 10;
+      testProgress = hasFinalTest * valuePerComponent;
     }
     
-    // Overall progress is the sum of lecture, assignment and test progress
+    // Overall progress is the sum of all components
     const newProgress = Math.min(Math.round(lectureProgress + assignmentProgress + testProgress), 100);
     
-    console.log(`Progress calculation: lectures=${lectureProgress.toFixed(1)}%, assignments=${assignmentProgress.toFixed(1)}%, test=${testProgress}%, total=${newProgress}%`);
+    console.log(`Progress calculation (Equal Distribution):`);
+    console.log(`- Total Components: ${totalComponents}, Value per: ${valuePerComponent.toFixed(2)}%`);
+    console.log(`- Lectures: ${completedLectures}/${totalLectures} = ${lectureProgress.toFixed(1)}%`);
+    console.log(`- Assignments: ${passedAssignments}/${totalAssignments} = ${assignmentProgress.toFixed(1)}%`);
+    console.log(`- Test: ${testProgress.toFixed(1)}%`);
+    console.log(`- Total: ${newProgress}%`);
     
     // Prepare update data
     const updateData = {
@@ -6988,7 +7278,6 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
     console.error('Error updating evaluation status:', error);
   }
 }
-
 // Add notification to user's notifications
 async function addNotification(notificationData) {
   if (!currentUser) return;
@@ -7536,11 +7825,16 @@ async function saveCertificate(certificateId, userName, courseName, instructorNa
 }
 
 // Download resource function
-window.downloadResource = function(url) {
+window.downloadResource = function(url, fileName) {
   console.log(`Downloading resource: ${url}`);
   
   if (url) {
-    window.open(url, '_blank');
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName || 'resource';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   } else {
     addNotification({
       title: "Download Unavailable",
