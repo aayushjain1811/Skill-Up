@@ -2170,16 +2170,31 @@
       }
     }
 
-    // Fetch enrolled courses - UPDATED to match your Firestore structure
+   // Track if courses are currently loading to prevent concurrent calls
+    let isLoadingCourses = false;
+
+    // Fetch enrolled courses - FIXED: Prevent duplicate course cards
     async function loadEnrolledCourses(userId) {
       try {
-        if (!enrolledCoursesList) return;
+        // Prevent concurrent loading
+        if (isLoadingCourses) {
+          console.log("Already loading courses, skipping...");
+          return;
+        }
+        
+        isLoadingCourses = true;
+        
+        if (!enrolledCoursesList) {
+          isLoadingCourses = false;
+          return;
+        }
 
         console.log("Loading enrolled courses for user:", userId);
 
         const userRef = doc(db, "users", userId);
         const userSnap = await getDoc(userRef);
 
+        // Clear the list completely before adding new cards
         enrolledCoursesList.innerHTML = "";
 
         if (userSnap.exists() && userSnap.data().enrollments) {
@@ -2190,6 +2205,7 @@
 
           if (enrolledCourseIds.length === 0) {
             enrolledCoursesList.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
+            isLoadingCourses = false;
             return;
           }
 
@@ -2204,8 +2220,6 @@
               if (courseSnap.exists()) {
                 const course = courseSnap.data();
                 const enrollment = enrollments[courseId];
-                
-                console.log(`Course ${courseId} enrollment data:`, enrollment);
                 
                 // Use the progress from enrollment data (matches your Firestore structure)
                 let progress = enrollment.progress || 0;
@@ -2263,11 +2277,14 @@
         } else {
           enrolledCoursesList.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
         }
+        
+        isLoadingCourses = false;
       } catch (error) {
         console.error("Error loading enrolled courses:", error);
         if (enrolledCoursesList) {
           enrolledCoursesList.innerHTML = "<p class='error-msg'>Error loading courses. Please try again.</p>";
         }
+        isLoadingCourses = false;
       }
     }
 
@@ -2316,15 +2333,23 @@
           `;
           recommendedCoursesList.appendChild(card);
 
-          const enrollBtn = card.querySelector(".enroll-btn");
+                   const enrollBtn = card.querySelector(".enroll-btn");
           if (!isEnrolled) {
             enrollBtn.addEventListener("click", async () => {
+              // Disable the button to prevent multiple clicks
+              enrollBtn.disabled = true;
+              enrollBtn.textContent = "Loading...";
+              
               currentCourseToEnroll = {
                 id: docSnap.id,
                 name: course.name || course.title || "Untitled Course"
               };
               await loadTeachers();
               if (teacherModal) teacherModal.classList.add("active");
+              
+              // Re-enable button
+              enrollBtn.disabled = false;
+              enrollBtn.textContent = "Enroll Now";
             });
           }
           

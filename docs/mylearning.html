@@ -1993,7 +1993,7 @@
       }
     }
 
-    // Load enrolled courses for student
+// Load enrolled courses for student
     async function loadEnrolledCourses(userId) {
       try {
         if (!coursesGrid) return;
@@ -2024,12 +2024,16 @@
               const courseData = courseSnap.data();
               const enrollment = enrollments[courseId];
               
-              // Get progress data from enrollment
-              let progress = enrollment.progress || 0;
-              let completedLessons = enrollment.completedLessons 
+              // Get progress data directly from enrollment object
+              const progress = enrollment.progress || 0;
+              const lectureProgress = enrollment.lectureProgress || 0;
+              const assignmentProgress = enrollment.assignmentProgress || 0;
+              const testProgress = enrollment.testProgress || 0;
+              
+              const completedLessons = enrollment.completedLessons 
                 ? enrollment.completedLessons.length 
                 : 0;
-              let hasPassedTest = enrollment.hasPassedTest || false;
+              const hasPassedTest = enrollment.hasPassedTest || false;
               
               // Get total lessons count for this course
               let totalLessons = 0;
@@ -2041,19 +2045,18 @@
                 totalLessons = 0;
               }
               
-              // If all lessons are completed but progress isn't 100%, set it to 100%
-              if (totalLessons > 0 && completedLessons >= totalLessons && progress < 100) {
-                progress = 100;
-              }
-              
               courses.push({
                 id: courseId,
-                name: courseData.name || courseData.title || "Untitled Course",
+                name: enrollment.courseName || courseData.name || courseData.title || "Untitled Course",
                 description: courseData.description || 'No description available',
                 progress: progress,
+                lectureProgress: lectureProgress,
+                assignmentProgress: assignmentProgress,
+                testProgress: testProgress,
                 completedLessons: completedLessons,
                 totalLessons: totalLessons,
-                hasPassedTest: hasPassedTest
+                hasPassedTest: hasPassedTest,
+                teacherName: enrollment.teacherName || "Unknown Teacher"
               });
             }
           }

@@ -1970,30 +1970,39 @@
       setupMessageSending(conversation, teacher);
     }
 
-    // Set up message sending
+// Set up message sending
     function setupMessageSending(conversation, teacher) {
-      // Clear any existing event listeners
-      const newSendBtn = sendMessageBtn.cloneNode(true);
-      sendMessageBtn.parentNode.replaceChild(newSendBtn, sendMessageBtn);
+      // Get references to DOM elements
+      const sendBtn = document.getElementById('sendMessageBtn');
+      const msgInput = document.getElementById('messageInput');
       
-      const newMessageInput = messageInput.cloneNode(true);
-      messageInput.parentNode.replaceChild(newMessageInput, messageInput);
+      if (!sendBtn || !msgInput) {
+        console.error("Message input elements not found");
+        return;
+      }
       
-      // Get fresh references to DOM elements
-      const updatedSendBtn = document.getElementById('sendMessageBtn');
-      const updatedMessageInput = document.getElementById('messageInput');
+      // Store current conversation and teacher in a closure to prevent stale references
+      const currentConv = conversation;
+      const currentTeacher = teacher;
       
-      // Add event listeners directly without storing references
-      updatedSendBtn.onclick = () => sendMessage(conversation, teacher);
+      // Remove old event listeners by cloning
+      const newSendBtn = sendBtn.cloneNode(true);
+      const newMsgInput = msgInput.cloneNode(true);
       
-      updatedMessageInput.onkeydown = (e) => {
+      sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+      msgInput.parentNode.replaceChild(newMsgInput, msgInput);
+      
+      // Add event listeners to new elements with closured variables
+      newSendBtn.onclick = () => sendMessage(currentConv, currentTeacher);
+      
+      newMsgInput.onkeydown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          sendMessage(conversation, teacher);
+          sendMessage(currentConv, currentTeacher);
         }
       };
       
-      updatedMessageInput.oninput = function() {
+      newMsgInput.oninput = function() {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       };
