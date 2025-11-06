@@ -6,6 +6,7 @@
   <title>Course Details - SkillUp</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
 :root {
   --primary: #ffffff;
@@ -2186,29 +2187,33 @@ body::before {
 }
 
 .certificate-actions {
-  display: flex;
-  gap: 20px;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  gap: 15px;
   justify-content: center;
-  margin-top: 30px;
-  position: relative;
-  z-index: 2;
+  margin-top: 20px;
+  padding: 20px;
+  background: transparent;
 }
 
 .certificate-download-btn,
 .certificate-print-btn {
-  background: linear-gradient(135deg, #4361ee, #3a0ca3);
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: linear-gradient(45deg, #4361ee, #3a0ca3);
   color: white;
-  padding: 15px 35px;
   border: none;
-  border-radius: 10px;
+  padding: 12px 25px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
   transition: all 0.3s ease;
-  display: flex;
+  text-decoration: none;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
-  box-shadow: 0 5px 20px rgba(67, 97, 238, 0.3);
+  gap: 8px;
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
 }
 
 .certificate-print-btn {
@@ -4554,38 +4559,38 @@ function initCoursePage() {
   });
 
   // NEW: Modal close functionality
-closeAssignmentSubmissionModal?.addEventListener('click', () => {
-  assignmentSubmissionModal.classList.remove('active');
-});
-
-closeTestResultsModal?.addEventListener('click', () => {
-  testResultsModal.classList.remove('active');
-});
-
-// Close modals when clicking outside
-assignmentSubmissionModal?.addEventListener('click', (e) => {
-  if (e.target === assignmentSubmissionModal) {
+  closeAssignmentSubmissionModal?.addEventListener('click', () => {
     assignmentSubmissionModal.classList.remove('active');
-  }
-});
+  });
 
-testResultsModal?.addEventListener('click', (e) => {
-  if (e.target === testResultsModal) {
+  closeTestResultsModal?.addEventListener('click', () => {
     testResultsModal.classList.remove('active');
-  }
-});
+  });
 
-// Close modals with Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    if (assignmentSubmissionModal?.classList.contains('active')) {
+  // Close modals when clicking outside
+  assignmentSubmissionModal?.addEventListener('click', (e) => {
+    if (e.target === assignmentSubmissionModal) {
       assignmentSubmissionModal.classList.remove('active');
     }
-    if (testResultsModal?.classList.contains('active')) {
+  });
+
+  testResultsModal?.addEventListener('click', (e) => {
+    if (e.target === testResultsModal) {
       testResultsModal.classList.remove('active');
     }
-  }
-});
+  });
+
+  // Close modals with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (assignmentSubmissionModal?.classList.contains('active')) {
+        assignmentSubmissionModal.classList.remove('active');
+      }
+      if (testResultsModal?.classList.contains('active')) {
+        testResultsModal.classList.remove('active');
+      }
+    }
+  });
 
   console.log("Event listeners attached");
 
@@ -5743,6 +5748,7 @@ async function loadResources() {
     showErrorState();
   }
 }
+
 // Find and display any PDF files in the resources folder
 async function findAndDisplayNotes() {
   const resourcesGrid = document.getElementById("resourcesGrid");
@@ -5770,6 +5776,7 @@ async function findAndDisplayNotes() {
     await checkAlternativeLocations();
   }
 }
+
 // Display all PDF files found
 async function displayNotesFiles(pdfFiles) {
   const resourcesGrid = document.getElementById("resourcesGrid");
@@ -5861,6 +5868,7 @@ async function checkAlternativeLocations() {
   // If no PDFs found anywhere, show unavailable message
   showUnavailableState();
 }
+
 // Helper function to get display name from filename
 function getDisplayName(fileName) {
   // Remove file extension
@@ -5975,7 +5983,6 @@ function checkCertificateEligibility() {
   }
 }
 
-
 // Check if assignments should be unlocked based on lecture completion AND assignment passing
 function checkAssignmentUnlock() {
   if (!userEnrollmentData || !allLectures.length) return;
@@ -6082,17 +6089,7 @@ function updateTestSectionUI() {
         <button class="btn-take-test" id="viewCertificateBtn">
           <i class="fas fa-award"></i> View Certificate
         </button>
-        <button class="btn-take-test" id="viewTestResultsBtn" style="    background: linear-gradient(45deg, #4bb71b, #28a745);
-    background-image: linear-gradient(45deg, #4bb71b, #28a745);
-    background-position-x: initial;
-    background-position-y: initial;
-    background-size: initial;
-    background-repeat: initial;
-    background-attachment: initial;
-    background-origin: initial;
-    background-clip: initial;
-    background-color: initial;
-}; margin-left: 10px;">
+        <button class="btn-take-test" id="viewTestResultsBtn" style="background: linear-gradient(45deg, #4bb71b, #28a745); margin-left: 10px;">
           <i class="fas fa-chart-bar"></i> View Test Results
         </button>
       </div>
@@ -6124,17 +6121,7 @@ function updateTestSectionUI() {
         <button class="btn-take-test" id="viewCertificateBtn">
           <i class="fas fa-award"></i> View Certificate
         </button>
-        <button class="btn-take-test" id="viewTestResultsBtn" style="    background: linear-gradient(45deg, #4bb71b, #28a745);
-    background-image: linear-gradient(45deg, #4bb71b, #28a745);
-    background-position-x: initial;
-    background-position-y: initial;
-    background-size: initial;
-    background-repeat: initial;
-    background-attachment: initial;
-    background-origin: initial;
-    background-clip: initial;
-    background-color: initial;
-};; margin-left: 10px;">
+        <button class="btn-take-test" id="viewTestResultsBtn" style="background: linear-gradient(45deg, #4bb71b, #28a745); margin-left: 10px;">
           <i class="fas fa-chart-bar"></i> View Test Results
         </button>
         ${currentTestAttempt < maxTestAttempts ? `
@@ -6438,7 +6425,7 @@ async function loadTestEvaluationData() {
       // Update user enrollment with test evaluation if evaluated
       if ((testEvaluationData.status === "evaluated" || testEvaluationData.status === "completed") && 
           (testEvaluationData.finalGrade !== undefined || testEvaluationData.grade !== undefined)) {
-        await updateUserTestEvaluation(testEvaluationData);
+        updateUserTestEvaluation(testEvaluationData);
       }
       
       // Update test section UI based on evaluation
@@ -6540,79 +6527,71 @@ function showTestResults() {
     return;
   }
 
-  const finalGrade = testEvaluationData.finalGrade || testEvaluationData.grade;
-  const passed = finalGrade >= 70;
-  const feedback = testEvaluationData.feedback || testEvaluationData.instructorFeedback || 'No feedback provided.';
-  const questions = testEvaluationData.questions || [];
-  const totalPoints = questions.reduce((sum, q) => sum + (q.points || 0), 0);
-  const earnedPoints = questions.reduce((sum, q) => sum + (q.earnedPoints || 0), 0);
+  const finalGrade = testEvaluationData.grade || testEvaluationData.finalGrade;
+  const passed = testEvaluationData.isPass || finalGrade >= 70;
+  const feedback = testEvaluationData.feedback || 'No overall feedback provided.';
+  const answers = testEvaluationData.answers || [];
+  const evaluations = testEvaluationData.evaluations || [];
   
-  console.log(`Showing test results: Grade=${finalGrade}%, Questions=${questions.length}`);
+  console.log(`Showing test results: Grade=${finalGrade}%, Questions=${answers.length}`);
   
   let resultsHTML = `
     <div class="test-results-summary">
-      <h3>Test Results Summary</h3>
+      <h3>Test Evaluation Summary</h3>
       <div class="test-results-score">${finalGrade}%</div>
       <div class="test-results-status ${passed ? 'passed' : 'failed'}">
-        ${passed ? 'PASSED' : 'FAILED'}
+        ${passed ? '✓ PASSED' : '✗ FAILED'}
       </div>
       <div class="test-results-details">
         <div class="test-detail-item">
           <div class="test-detail-label">Attempt</div>
-          <div class="test-detail-value">${currentTestAttempt} of ${maxTestAttempts}</div>
+          <div class="test-detail-value">${testEvaluationData.attemptNumber || currentTestAttempt} of ${testEvaluationData.maxAttempts || maxTestAttempts}</div>
         </div>
         <div class="test-detail-item">
-          <div class="test-detail-label">Score</div>
-          <div class="test-detail-value">${earnedPoints}/${totalPoints}</div>
-        </div>
-        <div class="test-detail-item">
-          <div class="test-detail-label">Percentage</div>
-          <div class="test-detail-value">${finalGrade}%</div>
+          <div class="test-detail-label">Passing Grade</div>
+          <div class="test-detail-value">70%</div>
         </div>
       </div>
     </div>
     
     <div class="test-results-feedback">
-      <h4><i class="fas fa-comment"></i> Instructor Feedback</h4>
+      <h4><i class="fas fa-comment-dots"></i> Overall Instructor Feedback</h4>
       <div class="test-feedback-content">${feedback}</div>
     </div>
   `;
   
-  if (questions && questions.length > 0) {
+  if (answers && answers.length > 0) {
     resultsHTML += `
       <div class="test-question-results">
-        <h4><i class="fas fa-list"></i> Question Results</h4>
+        <h4><i class="fas fa-list-ol"></i> Question-by-Question Breakdown</h4>
     `;
     
-    questions.forEach((question, index) => {
+    answers.forEach((question, index) => {
       const questionNumber = index + 1;
-      const earned = question.earnedPoints || 0;
-      const total = question.points || 0;
+      const evaluation = evaluations[index] || {};
+      const earned = evaluation.score || 0;
+      const total = evaluation.maxScore || question.points || 0;
       const correct = earned === total;
-      const studentAnswer = question.studentAnswer || 'No answer provided';
-      const correctAnswer = question.correctAnswer || 'Not specified';
-      const questionFeedback = question.feedback || 'No specific feedback for this question.';
+      const studentAnswer = question.answer || 'No answer provided';
+      const questionFeedback = evaluation.feedback || 'No specific feedback provided for this question.';
       
       resultsHTML += `
         <div class="test-question-result-item ${correct ? 'correct' : 'incorrect'}">
           <div class="test-question-result-header">
             <div class="test-question-result-text">
-              Question ${questionNumber}: ${question.questionText || 'No question text'}
+              <strong>Question ${questionNumber}:</strong> ${question.questionText || 'No question text'}
             </div>
-            <div class="test-question-result-points">${earned}/${total}</div>
+            <div class="test-question-result-points">
+              ${correct ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'} 
+              ${earned}/${total} pts
+            </div>
           </div>
           <div class="test-question-result-answer">
-            <div class="test-answer-label">Your Answer:</div>
+            <div class="test-answer-label"><strong>Your Answer:</strong></div>
             <div class="test-answer-value">${studentAnswer}</div>
-            ${!correct ? `
-              <div class="test-correct-answer">
-                <div class="test-correct-answer-label">Correct Answer:</div>
-                <div class="test-correct-answer-value">${correctAnswer}</div>
-              </div>
-            ` : ''}
           </div>
           <div class="test-question-result-comment">
-            <div class="test-comment-label">Instructor Comment:</div>
+            <div class="test-comment-label"><i class="fas fa-comment"></i> Instructor Feedback:</div>
             <div class="test-comment-text">${questionFeedback}</div>
           </div>
         </div>
@@ -6630,7 +6609,6 @@ function showTestResults() {
     console.error("Test results content element not found");
   }
 }
-
 // Load assignments for the assignments tab
 async function loadAssignmentsForTab() {
   console.log("=== LOADING ASSIGNMENTS FOR TAB ===");
@@ -6817,109 +6795,146 @@ function showAssignmentSubmission(assignmentId) {
     return;
   }
   
-  // Get submission data
-  const submissionData = userEnrollmentData?.assignmentSubmissions?.[assignmentId];
-  const grade = userEnrollmentData?.assignmentGrades?.[assignmentId];
-  const feedback = userEnrollmentData?.assignmentFeedback?.[assignmentId];
-  const isEvaluated = userEnrollmentData?.evaluatedAssignments?.includes(assignmentId);
+  // Get submission data from Firestore
+  fetchSubmissionData(assignmentId);
+}
+
+// NEW: Fetch and display submission data from Firestore
+async function fetchSubmissionData(assignmentId) {
+  console.log(`Fetching submission data for assignment: ${assignmentId}`);
   
-  console.log(`Submission data: grade=${grade}, isEvaluated=${isEvaluated}`);
-  
-  let submissionHTML = `
-    <div class="submission-details">
-      <h4><i class="fas fa-info-circle"></i> Assignment Details</h4>
-      <div class="submission-details-grid">
-        <div class="submission-detail-item">
-          <div class="submission-detail-label">Assignment Title</div>
-          <div class="submission-detail-value">${assignment.title || 'Untitled Assignment'}</div>
-        </div>
-        <div class="submission-detail-item">
-          <div class="submission-detail-label">Points</div>
-          <div class="submission-detail-value">${assignment.points || 100}</div>
-        </div>
-        <div class="submission-detail-item">
-          <div class="submission-detail-label">Due Date</div>
-          <div class="submission-detail-value">${assignment.dueDate || 'No due date'}</div>
-        </div>
-        <div class="submission-detail-item">
-          <div class="submission-detail-label">Status</div>
-          <div class="submission-detail-value">${isEvaluated ? 'Evaluated' : 'Submitted'}</div>
+  try {
+    // Query submissions collection
+    const submissionsQuery = query(
+      collection(db, "submissions"),
+      where("courseId", "==", courseId),
+      where("studentId", "==", currentUser.uid),
+      where("assignmentId", "==", assignmentId),
+      orderBy("submittedAt", "desc"),
+      limit(1)
+    );
+    
+    const submissionsSnap = await getDocs(submissionsQuery);
+    
+    if (submissionsSnap.empty) {
+      alert("No submission found for this assignment.");
+      return;
+    }
+    
+    // Get the latest submission
+    const submissionData = submissionsSnap.docs[0].data();
+    const assignment = courseAssignments.find(a => a.id === assignmentId);
+    
+    const grade = submissionData.grade;
+    const feedback = submissionData.feedback;
+    const isEvaluated = submissionData.evaluated;
+    const answers = submissionData.answers || [];
+    const evaluations = submissionData.evaluations || [];
+    
+    console.log(`Submission data: grade=${grade}, isEvaluated=${isEvaluated}, answers=${answers.length}`);
+    
+    let submissionHTML = `
+      <div class="submission-details">
+        <h4><i class="fas fa-info-circle"></i> Assignment Details</h4>
+        <div class="submission-details-grid">
+          <div class="submission-detail-item">
+            <div class="submission-detail-label">Assignment Title</div>
+            <div class="submission-detail-value">${assignment.title || 'Untitled Assignment'}</div>
+          </div>
+          <div class="submission-detail-item">
+            <div class="submission-detail-label">Points</div>
+            <div class="submission-detail-value">${submissionData.totalPoints || 100}</div>
+          </div>
+          <div class="submission-detail-item">
+            <div class="submission-detail-label">Due Date</div>
+            <div class="submission-detail-value">${assignment.dueDate || 'No due date'}</div>
+          </div>
+          <div class="submission-detail-item">
+            <div class="submission-detail-label">Status</div>
+            <div class="submission-detail-value">${isEvaluated ? 'Evaluated' : 'Submitted'}</div>
+          </div>
         </div>
       </div>
-    </div>
-  `;
-  
-  if (isEvaluated && grade !== undefined) {
-    const passed = grade >= 70;
-    submissionHTML += `
-      <div class="submission-grade">
-        <h4>Assignment Grade</h4>
-        <div class="grade-display">${grade}%</div>
-        <div class="grade-status ${passed ? 'passed' : 'failed'}">
-          ${passed ? 'PASSED' : 'FAILED'}
-        </div>
-        <p>Minimum passing grade: 70%</p>
-      </div>
-      
-      <div class="submission-feedback">
-        <h4><i class="fas fa-comment"></i> Instructor Feedback</h4>
-        <div class="feedback-content">${feedback || 'No feedback provided.'}</div>
-      </div>
-    `;
-  } else {
-    submissionHTML += `
-      <div class="submission-grade">
-        <h4>Assignment Status</h4>
-        <div class="grade-status" style="color: #ffc107;">SUBMITTED</div>
-        <p>Your assignment has been submitted and is awaiting evaluation by the instructor.</p>
-      </div>
-    `;
-  }
-  
-  // Add question-specific feedback if available
-  if (submissionData && submissionData.questions && submissionData.questions.length > 0) {
-    submissionHTML += `
-      <div class="question-feedback-list">
-        <h4><i class="fas fa-list-check"></i> Question Feedback</h4>
     `;
     
-    submissionData.questions.forEach((question, index) => {
-      const questionNumber = index + 1;
-      const earned = question.earnedPoints || 0;
-      const total = question.points || 0;
-      const correct = earned === total;
-      const studentAnswer = question.studentAnswer || 'No answer provided';
-      const questionFeedback = question.feedback || 'No specific feedback for this question.';
-      
+    if (isEvaluated && grade !== undefined) {
+      const passed = submissionData.isPass || grade >= 70;
       submissionHTML += `
-        <div class="question-feedback-item ${correct ? 'correct' : 'incorrect'}">
-          <div class="question-feedback-header">
-            <div class="question-feedback-text">
-              Question ${questionNumber}: ${question.questionText || 'No question text'}
-            </div>
-            <div class="question-feedback-points">${earned}/${total}</div>
+        <div class="submission-grade">
+          <h4>Assignment Grade</h4>
+          <div class="grade-display">${grade}%</div>
+          <div class="grade-status ${passed ? 'passed' : 'failed'}">
+            ${passed ? '✓ PASSED' : '✗ FAILED'}
           </div>
-          <div class="question-feedback-answer">
-            <div class="answer-label">Your Answer:</div>
-            <div class="answer-value">${studentAnswer}</div>
-          </div>
-          <div class="question-feedback-comment">
-            <div class="feedback-comment-label">Instructor Comment:</div>
-            <div class="feedback-comment-text">${questionFeedback}</div>
-          </div>
+          <p>Minimum passing grade: 70%</p>
+        </div>
+        
+        <div class="submission-feedback">
+          <h4><i class="fas fa-comment"></i> Overall Instructor Feedback</h4>
+          <div class="feedback-content">${feedback || 'No feedback provided.'}</div>
         </div>
       `;
-    });
+    } else {
+      submissionHTML += `
+        <div class="submission-grade">
+          <h4>Assignment Status</h4>
+          <div class="grade-status" style="color: #ffc107;">SUBMITTED</div>
+          <p>Your assignment has been submitted and is awaiting evaluation by the instructor.</p>
+        </div>
+      `;
+    }
     
-    submissionHTML += `</div>`;
-  }
-  
-  if (assignmentSubmissionContent) {
-    assignmentSubmissionContent.innerHTML = submissionHTML;
-    assignmentSubmissionModal.classList.add('active');
-    console.log("Assignment submission modal opened");
-  } else {
-    console.error("Assignment submission content element not found");
+    // Add question-specific feedback using evaluations array
+    if (answers && answers.length > 0 && isEvaluated) {
+      submissionHTML += `
+        <div class="question-feedback-list">
+          <h4><i class="fas fa-list-check"></i> Question-by-Question Feedback</h4>
+      `;
+      
+      answers.forEach((question, index) => {
+        const questionNumber = index + 1;
+        const evaluation = evaluations[index] || {};
+        const earned = evaluation.score || 0;
+        const total = evaluation.maxScore || question.points || 0;
+        const correct = earned === total;
+        const studentAnswer = question.answer || 'No answer provided';
+        const questionFeedback = evaluation.feedback || 'No specific feedback for this question.';
+        
+        submissionHTML += `
+          <div class="question-feedback-item ${correct ? 'correct' : 'incorrect'}">
+            <div class="question-feedback-header">
+              <div class="question-feedback-text">
+                <strong>Question ${questionNumber}:</strong> ${question.questionText || 'No question text'}
+              </div>
+              <div class="question-feedback-points">
+                ${correct ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>'} 
+                ${earned}/${total} pts
+              </div>
+            </div>
+            <div class="question-feedback-answer">
+              <div class="answer-label"><strong>Your Answer:</strong></div>
+              <div class="answer-value">${studentAnswer}</div>
+            </div>
+            <div class="question-feedback-comment">
+              <div class="feedback-comment-label"><i class="fas fa-comment"></i> Instructor Feedback:</div>
+              <div class="feedback-comment-text">${questionFeedback}</div>
+            </div>
+          </div>
+        `;
+      });
+      
+      submissionHTML += `</div>`;
+    }
+    
+    if (assignmentSubmissionContent) {
+      assignmentSubmissionContent.innerHTML = submissionHTML;
+      assignmentSubmissionModal.classList.add('active');
+      console.log("Assignment submission modal opened");
+    }
+    
+  } catch (error) {
+    console.error("Error fetching submission data:", error);
+    alert("Error loading submission details. Please try again.");
   }
 }
 
@@ -7079,9 +7094,10 @@ function setupAssignmentListeners() {
   console.log("Assignment listeners set up successfully");
 }
 
-// Update local assignment status when submitted
+// FIXED: Update local assignment status when submitted
 function updateLocalAssignmentStatus(assignmentId, submission) {
-  if (!userEnrollmentData.completedAssignments) {
+  // Initialize completedAssignments as an array if it doesn't exist
+  if (!userEnrollmentData.completedAssignments || !Array.isArray(userEnrollmentData.completedAssignments)) {
     userEnrollmentData.completedAssignments = [];
   }
   
@@ -7089,8 +7105,8 @@ function updateLocalAssignmentStatus(assignmentId, submission) {
     userEnrollmentData.completedAssignments.push(assignmentId);
   }
   
-  // Update assignment progress
-  if (!userEnrollmentData.assignmentProgress) {
+  // Initialize assignmentProgress as an object if it doesn't exist
+  if (!userEnrollmentData.assignmentProgress || typeof userEnrollmentData.assignmentProgress !== 'object') {
     userEnrollmentData.assignmentProgress = {};
   }
   userEnrollmentData.assignmentProgress[assignmentId] = 100; // 100% when submitted
@@ -7101,13 +7117,13 @@ function updateLocalAssignmentStatus(assignmentId, submission) {
 // Enhanced updateLocalAssignmentEvaluation function
 function updateLocalAssignmentEvaluation(assignmentId, evaluation) {
   // Initialize objects if they don't exist
-  if (!userEnrollmentData.assignmentGrades) {
+  if (!userEnrollmentData.assignmentGrades || typeof userEnrollmentData.assignmentGrades !== 'object') {
     userEnrollmentData.assignmentGrades = {};
   }
-  if (!userEnrollmentData.assignmentFeedback) {
+  if (!userEnrollmentData.assignmentFeedback || typeof userEnrollmentData.assignmentFeedback !== 'object') {
     userEnrollmentData.assignmentFeedback = {};
   }
-  if (!userEnrollmentData.evaluatedAssignments) {
+  if (!userEnrollmentData.evaluatedAssignments || !Array.isArray(userEnrollmentData.evaluatedAssignments)) {
     userEnrollmentData.evaluatedAssignments = [];
   }
   
@@ -7218,9 +7234,9 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
     console.log("Firestore updated with evaluation data");
     
     // Update local data
-    if (!userEnrollmentData.assignmentGrades) userEnrollmentData.assignmentGrades = {};
-    if (!userEnrollmentData.assignmentFeedback) userEnrollmentData.assignmentFeedback = {};
-    if (!userEnrollmentData.evaluatedAssignments) userEnrollmentData.evaluatedAssignments = [];
+    if (!userEnrollmentData.assignmentGrades || typeof userEnrollmentData.assignmentGrades !== 'object') userEnrollmentData.assignmentGrades = {};
+    if (!userEnrollmentData.assignmentFeedback || typeof userEnrollmentData.assignmentFeedback !== 'object') userEnrollmentData.assignmentFeedback = {};
+    if (!userEnrollmentData.evaluatedAssignments || !Array.isArray(userEnrollmentData.evaluatedAssignments)) userEnrollmentData.evaluatedAssignments = [];
     
     userEnrollmentData.assignmentGrades[assignmentId] = submissionData.grade;
     userEnrollmentData.assignmentFeedback[assignmentId] = submissionData.feedback || submissionData.instructorFeedback || "No feedback provided.";
@@ -7278,6 +7294,7 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
     console.error('Error updating evaluation status:', error);
   }
 }
+
 // Add notification to user's notifications
 async function addNotification(notificationData) {
   if (!currentUser) return;
@@ -7486,7 +7503,7 @@ async function awardCertificate() {
   }
 }
 
-// Update the generateCertificate function - change certificate HTML
+// UPDATED: Generate certificate with proper button display
 async function generateCertificate() {
   console.log("=== GENERATING CERTIFICATE ===");
   
@@ -7554,59 +7571,44 @@ async function generateCertificate() {
             </div>
           </div>
 
-          <p class="certificate-text" style="margin-top: 15px;">
-            This certificate verifies the successful completion of the online course and 
-            demonstrates the recipient's commitment to professional development and lifelong learning.
-            This achievement reflects dedication, skill mastery, and academic excellence.
-          </p>
+    
         </div>
 
-        <!-- Certificate Footer -->
-        <div class="certificate-footer">
-          <div class="certificate-signature">
-            <div class="signature-image">
-              <i class="fas fa-signature"></i>
-            </div>
-            <div class="signature-line"></div>
-            <div class="signature-name">${instructorName}</div>
-            <div class="signature-title">Course Instructor</div>
-          </div>
-          
-          <div class="certificate-signature">
-            <div class="signature-image">
-              <i class="fas fa-university"></i>
-            </div>
-            <div class="signature-line"></div>
-            <div class="signature-name">${providerName}</div>
-            <div class="signature-title">Authorized Learning Partner</div>
-          </div>
-        </div>
-
-        <!-- Certificate Actions -->
-        <div class="certificate-actions">
-          <button class="certificate-download-btn" id="downloadCertificateBtn">
-            <i class="fas fa-download"></i> Download Certificate
-          </button>
-          <button class="certificate-print-btn" id="printCertificateBtn">
-            <i class="fas fa-print"></i> Print Certificate
-          </button>
-        </div>
+       
+    </div>
+      
+      <!-- Certificate Actions - OUTSIDE certificate container -->
+      <div class="certificate-actions" style="display: flex !important; visibility: visible !important; opacity: 1 !important; justify-content: center; gap: 15px; margin-top: 20px; padding: 20px;">
+        <button class="certificate-download-btn" id="downloadCertificatePDFBtn" style="display: inline-flex !important; visibility: visible !important;">
+          <i class="fas fa-file-pdf"></i> Download PDF
+        </button>
+        <button class="certificate-print-btn" id="shareCertificateBtn" style="display: inline-flex !important; visibility: visible !important; background: linear-gradient(135deg, #667eea, #764ba2);">
+          <i class="fas fa-share-alt"></i> Share Link
+        </button>
       </div>
     `;
+    
+    
+    // Remove any existing certificate modal first
+    const existingModal = document.getElementById('certificateModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
     
     // Create a new modal for the certificate
     const certificateModal = document.createElement('div');
     certificateModal.className = 'modal active certificate-modal';
     certificateModal.id = 'certificateModal';
+    certificateModal.style.display = 'flex';
     certificateModal.innerHTML = `
-      <div class="certificate-modal-content">
+      <div class="certificate-modal-content" style="max-width: 1000px; width: 95%;">
         <div class="modal-header">
           <h2 class="modal-title">Your Certificate of Completion</h2>
           <button class="close-modal" id="closeCertificateModal">
             <i class="fas fa-times"></i>
           </button>
         </div>
-        <div id="certificateModalContent">
+        <div id="certificateModalContent" style="padding: 0;">
           ${certificateHTML}
         </div>
       </div>
@@ -7621,11 +7623,25 @@ async function generateCertificate() {
       certificateModal.remove();
     });
     
-    // Add event listener for download button
-    document.getElementById('downloadCertificateBtn').addEventListener('click', downloadCertificateAsImage);
-    
-    // Add event listener for print button
-    document.getElementById('printCertificateBtn').addEventListener('click', printCertificate);
+    // Add event listeners for new buttons - with delay to ensure DOM is ready
+    setTimeout(() => {
+      const downloadBtn = document.getElementById('downloadCertificatePDFBtn');
+      const shareBtn = document.getElementById('shareCertificateBtn');
+      
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', downloadCertificateAsPDF);
+        console.log("Download PDF button event listener attached");
+      } else {
+        console.error("Download PDF button not found");
+      }
+      
+      if (shareBtn) {
+        shareBtn.addEventListener('click', shareCertificateLink);
+        console.log("Share button event listener attached");
+      } else {
+        console.error("Share button not found");
+      }
+    }, 100);
     
     // Save certificate to user data
     await saveCertificate(certificateId, userName, courseName, instructorName, providerName, completionDate, finalGrade);
@@ -7636,9 +7652,8 @@ async function generateCertificate() {
   }
 }
 
-// Replace the downloadCertificateAsImage function
-async function downloadCertificateAsImage() {
-  console.log("=== DOWNLOADING CERTIFICATE AS IMAGE ===");
+async function downloadCertificateAsPDF() {
+  console.log("=== DOWNLOADING CERTIFICATE AS PDF ===");
   
   try {
     const certificateElement = document.getElementById('certificate-content');
@@ -7647,140 +7662,197 @@ async function downloadCertificateAsImage() {
     }
 
     // Show loading state
-    const downloadBtn = document.getElementById('downloadCertificateBtn');
+    const downloadBtn = document.getElementById('downloadCertificatePDFBtn');
     const originalText = downloadBtn.innerHTML;
-    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Image...';
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
     downloadBtn.disabled = true;
 
-    console.log("Capturing certificate as image...");
+    console.log("Generating PDF certificate...");
 
-    // Hide buttons before capturing
-    const actionsElement = certificateElement.querySelector('.certificate-actions');
-    if (actionsElement) {
-      actionsElement.style.display = 'none';
-    }
+    // Get the computed dimensions
+    const rect = certificateElement.getBoundingClientRect();
+    const elementWidth = certificateElement.scrollWidth;
+    const elementHeight = certificateElement.scrollHeight;
 
-    // Wait a moment for layout to settle
-    await new Promise(resolve => setTimeout(resolve, 300));
+    console.log(`Certificate dimensions: ${elementWidth}x${elementHeight}`);
 
-    // Use html2canvas to capture ONLY the certificate without buttons
+    // Wait for fonts and layout to settle
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Use html2canvas with optimal settings for certificate
     const canvas = await html2canvas(certificateElement, {
-      scale: 3, // High quality
+      scale: 3, // Higher quality
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       backgroundColor: '#ffffff',
       logging: false,
-      width: certificateElement.offsetWidth,
-      height: certificateElement.offsetHeight,
-      windowWidth: certificateElement.offsetWidth,
-      windowHeight: certificateElement.offsetHeight,
+      width: elementWidth,
+      height: elementHeight,
+      windowWidth: elementWidth,
+      windowHeight: elementHeight,
       scrollX: 0,
-      scrollY: 0
+      scrollY: -window.scrollY,
+      x: 0,
+      y: 0,
+      foreignObjectRendering: false, // Better rendering for complex layouts
+      imageTimeout: 0
     });
 
-    // Show buttons again
-    if (actionsElement) {
-      actionsElement.style.display = 'flex';
+    console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
+
+    // Convert canvas to PDF in landscape orientation
+    const { jsPDF } = window.jspdf;
+    
+    // Calculate PDF dimensions based on canvas aspect ratio
+    const canvasAspectRatio = canvas.width / canvas.height;
+    let pdfOrientation = canvasAspectRatio > 1.3 ? 'landscape' : 'portrait';
+    
+    const pdf = new jsPDF(pdfOrientation, 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    console.log(`PDF page size: ${pdfWidth}x${pdfHeight}mm`);
+    
+    // Calculate dimensions to fit certificate perfectly
+    let imgWidth, imgHeight, imgX, imgY;
+    
+    if (canvasAspectRatio > (pdfWidth / pdfHeight)) {
+      // Width is the limiting factor
+      imgWidth = pdfWidth * 0.95; // 95% of page width
+      imgHeight = imgWidth / canvasAspectRatio;
+      imgX = (pdfWidth - imgWidth) / 2;
+      imgY = (pdfHeight - imgHeight) / 2;
+    } else {
+      // Height is the limiting factor
+      imgHeight = pdfHeight * 0.95; // 95% of page height
+      imgWidth = imgHeight * canvasAspectRatio;
+      imgX = (pdfWidth - imgWidth) / 2;
+      imgY = (pdfHeight - imgHeight) / 2;
     }
+    
+    console.log(`Image placement: ${imgX}, ${imgY}, ${imgWidth}x${imgHeight}mm`);
+    
+    // Convert canvas to high-quality image
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    
+    // Add image to PDF
+    pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
+    
+    // Generate filename
+    const userName = currentUser.displayName || currentUser.email.split('@')[0];
+    const courseName = courseData?.name || 'Course';
+    const fileName = `Certificate_${courseName.replace(/\s+/g, '_')}_${userName.replace(/\s+/g, '_')}.pdf`;
+    
+    // Save the PDF
+    pdf.save(fileName);
 
-    console.log("Certificate captured successfully");
+    console.log(`✓ Certificate downloaded as PDF: ${fileName}`);
 
-    // Convert canvas to blob for better quality
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      
-      // Create download link
-      const link = document.createElement('a');
-      const userName = currentUser.displayName || currentUser.email.split('@')[0];
-      const courseName = courseData?.name || "Course";
-      const fileName = `Certificate_${courseName.replace(/\s+/g, '_')}_${userName.replace(/\s+/g, '_')}.png`;
-      
-      link.download = fileName;
-      link.href = url;
-      
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up
-      URL.revokeObjectURL(url);
+    // Restore button state
+    downloadBtn.innerHTML = originalText;
+    downloadBtn.disabled = false;
 
-      console.log(`Certificate downloaded as: ${fileName}`);
-
-      // Restore button state
-      downloadBtn.innerHTML = originalText;
-      downloadBtn.disabled = false;
-
-      // Show success message
-      const successMsg = document.createElement('div');
-      successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #48bb78; color: white; padding: 15px 25px; border-radius: 10px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.3);';
-      successMsg.innerHTML = '<i class="fas fa-check-circle"></i> Certificate downloaded successfully!';
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 3000);
-
-    }, 'image/png', 1.0);
-
+    // Show success message
+    showNotification('✓ PDF downloaded successfully!', 'success');
+    
   } catch (error) {
-    console.error("Error downloading certificate:", error);
+    console.error("Error downloading certificate as PDF:", error);
     
-    // Show buttons again on error
-    const actionsElement = document.querySelector('.certificate-actions');
-    if (actionsElement) {
-      actionsElement.style.display = 'flex';
-    }
-    
-    // Restore button state on error
-    const downloadBtn = document.getElementById('downloadCertificateBtn');
+    const downloadBtn = document.getElementById('downloadCertificatePDFBtn');
     if (downloadBtn) {
-      downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Certificate';
+      downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
       downloadBtn.disabled = false;
     }
     
-    alert("Error downloading certificate. Please try again or use the print option.");
+    showNotification('Error downloading PDF. Please try again.', 'error');
   }
 }
 
-// Print certificate
-function printCertificate() {
-  console.log("=== PRINTING CERTIFICATE ===");
+// FIXED: Share certificate link with better error handling
+async function shareCertificateLink() {
+  console.log("=== SHARING CERTIFICATE LINK ===");
   
-  const printBtn = document.getElementById('printCertificateBtn');
-  const originalText = printBtn.innerHTML;
-  
-  printBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-  printBtn.disabled = true;
+  try {
+    const certificateId = `CERT-${courseId}-${currentUser.uid}-${Date.now()}`;
+    const shareUrl = `${window.location.origin}/certificate.html?id=${certificateId}`;
+    const courseName = courseData?.name || 'the course';
+    const userName = currentUser.displayName || currentUser.email.split('@')[0];
+    
+    // Show loading state
+    const shareBtn = document.getElementById('shareCertificateBtn');
+    const originalText = shareBtn.innerHTML;
+    shareBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+    shareBtn.disabled = true;
 
-  // Use setTimeout to ensure the button state updates before print dialog
-  setTimeout(() => {
-    try {
-      // Hide action buttons before printing
-      const actions = document.querySelector('.certificate-actions');
-      if (actions) actions.style.display = 'none';
-      
-      // Print
-      window.print();
-      
-      console.log("Print dialog opened");
-      
-      // Show success message
-      const successMsg = document.createElement('div');
-      successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #48bb78; color: white; padding: 15px 25px; border-radius: 10px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.3);';
-      successMsg.innerHTML = '<i class="fas fa-check-circle"></i> Print dialog opened!';
-      document.body.appendChild(successMsg);
-      setTimeout(() => successMsg.remove(), 3000);
-      
-    } catch (error) {
-      console.error("Error printing certificate:", error);
-      alert("Error printing certificate. Please try using the download option.");
-    } finally {
-      // Restore button state and show actions
-      printBtn.innerHTML = originalText;
-      printBtn.disabled = false;
-      const actions = document.querySelector('.certificate-actions');
-      if (actions) actions.style.display = 'flex';
+    // Try to use the Web Share API if available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Course Certificate',
+          text: `I completed "${courseName}" on SkillUp! Check out my certificate.`,
+          url: shareUrl
+        });
+        console.log('Certificate shared successfully');
+        showNotification('Certificate shared successfully!', 'success');
+        
+      } catch (error) {
+        console.log('Error sharing:', error);
+        if (error.name !== 'AbortError') {
+          fallbackShare(shareUrl, courseName, userName);
+        }
+      }
+    } else {
+      fallbackShare(shareUrl, courseName, userName);
     }
-  }, 500);
+
+    // Restore button state
+    shareBtn.innerHTML = originalText;
+    shareBtn.disabled = false;
+    
+  } catch (error) {
+    console.error("Error sharing certificate:", error);
+    
+    // Restore button state on error
+    const shareBtn = document.getElementById('shareCertificateBtn');
+    if (shareBtn) {
+      shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Link';
+      shareBtn.disabled = false;
+    }
+    
+    showNotification('Error sharing certificate. Please try again.', 'error');
+  }
+}
+
+// Enhanced fallback share function
+function fallbackShare(shareUrl, courseName, userName) {
+  // Copy to clipboard
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showNotification('Certificate link copied to clipboard!', 'success');
+      console.log("Certificate link copied to clipboard");
+    }).catch((err) => {
+      console.error('Failed to copy: ', err);
+      prompt("Copy this certificate link to share:", shareUrl);
+    });
+  } else {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = shareUrl;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showNotification('Certificate link copied to clipboard!', 'success');
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      prompt("Copy this certificate link to share:", shareUrl);
+    }
+    document.body.removeChild(textArea);
+  }
 }
 
 // Save certificate to user data
@@ -7845,6 +7917,19 @@ window.downloadResource = function(url, fileName) {
     });
   }
 };
+
+// Show notification function
+function showNotification(message, type = 'success') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+  notification.textContent = message;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
 
 // Clean up all event listeners
 function cleanupAllListeners() {

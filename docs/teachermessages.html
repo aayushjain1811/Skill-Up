@@ -1553,7 +1553,7 @@
           console.log("Teacher data loaded:", currentTeacher);
           
           // Update teacher's online status
-          await updateOnlineStatus(true);
+          await updateOnlineStatus();
           
           // Set up real-time notifications
           setupNotifications();
@@ -1586,21 +1586,7 @@
     }
   });
 
-  // Update teacher's online status
-  async function updateOnlineStatus(isOnline) {
-    try {
-      const statusRef = doc(db, "onlineStatus", currentTeacher.id);
-      await setDoc(statusRef, {
-        isOnline: isOnline,
-        lastSeen: serverTimestamp(),
-        userId: currentTeacher.id,
-        userType: "teacher",
-        name: `${currentTeacher.firstName} ${currentTeacher.lastName}`
-      }, { merge: true });
-    } catch (error) {
-      console.error("Error updating online status:", error);
-    }
-  }
+
 
 // Set up online status tracking from users collection
 function setupOnlineStatusTracking() {

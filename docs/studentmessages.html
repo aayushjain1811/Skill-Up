@@ -1645,72 +1645,99 @@
       }
     }
 
-// Set up teacher status tracking for student
-function setupTeacherStatusTracking() {
-  // Listen to teacher status changes
-  const teachersQuery = db.collection('teachers')
-    .where('isOnline', '==', true);
-  
-  unsubscribeTeachers = teachersQuery.onSnapshot((snapshot) => {
-    onlineTeachers = {};
+    function setupOnlineStatusTracking() {
+    // Initialize student status first
+    initializeStudentStatus();
     
-    snapshot.forEach(doc => {
-      const teacherData = doc.data();
-      onlineTeachers[doc.id] = {
-        isOnline: teacherData.isOnline || false,
-        lastSeen: teacherData.lastSeen,
-        userId: doc.id,
-        userType: "teacher",
-        name: teacherData.displayName || `${teacherData.firstName} ${teacherData.lastName}`
-      };
+    // Set up teacher status tracking
+    setupTeacherStatusTracking();
+    
+    // Update student status to online
+    updateStudentOnlineStatus(true);
+    
+    // Set up activity tracking for student
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            updateStudentOnlineStatus(true);
+        } else {
+            updateStudentOnlineStatus(false);
+        }
     });
     
-    console.log("Teacher online status updated:", onlineTeachers);
-    
-    // Update conversation statuses
-    updateConversationStatuses();
-    
-    // Update active chat status
-    if (currentConversation) {
-      updateChatStatus(currentConversation.teacherId);
-    }
-  }, (error) => {
-    console.error("Error listening to teacher status:", error);
-  });
+    // Set offline when leaving the page
+    window.addEventListener('beforeunload', () => {
+        updateStudentOnlineStatus(false);
+    });
 }
-// Update student's online status in users collection
+function setupTeacherStatusTracking() {
+    // Listen to teacher status changes from onlineStatus collection
+    unsubscribeOnlineStatus = db.collection('onlineStatus')
+        .where('userType', '==', 'teacher')
+        .onSnapshot((snapshot) => {
+            onlineTeachers = {};
+            
+            snapshot.forEach(doc => {
+                const statusData = doc.data();
+                if (statusData.userType === 'teacher') {
+                    onlineTeachers[doc.id] = {
+                        isOnline: statusData.isOnline || false,
+                        lastSeen: statusData.lastSeen,
+                        userId: doc.id,
+                        userType: "teacher",
+                        name: statusData.name || "Teacher"
+                    };
+                }
+            });
+            
+            console.log("Teacher online status updated:", onlineTeachers);
+            
+            // Update conversation statuses
+            updateConversationStatuses();
+            
+            // Update active chat status
+            if (currentConversation) {
+                updateChatStatus(currentConversation.teacherId);
+            }
+        }, (error) => {
+            console.error("Error listening to teacher status:", error);
+        });
+}
 async function updateStudentOnlineStatus(isOnline) {
-  try {
-    const userRef = db.collection('users').doc(currentUser.id);
-    await userRef.update({
-      isOnline: isOnline,
-      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    console.log(`Student online status updated to: ${isOnline}`);
-  } catch (error) {
-    console.error("Error updating student online status:", error);
-  }
+    try {
+        await db.collection('onlineStatus').doc(currentUser.id).set({
+            isOnline: isOnline,
+            lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: currentUser.id,
+            userType: "student",
+            name: currentUser.name
+        }, { merge: true });
+        console.log(`Student online status updated to: ${isOnline}`);
+    } catch (error) {
+        console.error("Error updating student online status:", error);
+    }
 }
 
+
+// Initialize student status in the database
 async function initializeStudentStatus() {
-  try {
-    const userRef = db.collection('users').doc(currentUser.id);
-    const userDoc = await userRef.get();
-    
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
-      // Initialize if fields don't exist
-      if (userData.isOnline === undefined) {
-        await userRef.update({
-          isOnline: true,
-          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        console.log("Student status initialized");
-      }
+    try {
+        const statusRef = db.collection('onlineStatus').doc(currentUser.id);
+        const statusDoc = await statusRef.get();
+        
+        if (!statusDoc.exists) {
+            // Initialize if document doesn't exist
+            await statusRef.set({
+                isOnline: true,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: currentUser.id,
+                userType: "student",
+                name: currentUser.name
+            });
+            console.log("Student status initialized");
+        }
+    } catch (error) {
+        console.error("Error initializing student status:", error);
     }
-  } catch (error) {
-    console.error("Error initializing student status:", error);
-  }
 }
 
     // Update conversation statuses in the list
