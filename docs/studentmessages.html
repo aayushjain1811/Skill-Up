@@ -604,6 +604,53 @@
       align-items: center;
       justify-content: center;
     }
+    .conversation-status {
+    font-size: 12px;
+    color: var(--gray);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+}
+
+.conversation-status.online {
+    color: var(--success);
+}
+
+.conversation-status.offline {
+    color: var(--gray);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.online {
+    background-color: var(--success);
+    box-shadow: 0 0 5px var(--success);
+}
+
+.status-dot.offline {
+    background-color: var(--gray);
+}
+
+.chat-status {
+    display: flex;
+    align-items: center;
+    color: var(--gray);
+    font-size: 12px;
+    gap: 5px;
+}
+
+.chat-status.online {
+    color: var(--success);
+}
+
+.chat-status.offline {
+    color: var(--gray);
+}
 
     /* Chat Container */
     .chat-container {
@@ -1353,6 +1400,8 @@
     let enrolledTeachers = [];
     let unsubscribeConversations = null;
     let unsubscribeMessages = null;
+    let unsubscribeOnlineStatus = null;
+    let onlineTeachers = {};
 
     // DOM Elements
     const conversationsList = document.getElementById('conversationsList');
@@ -1565,6 +1614,9 @@
 
         console.log("Final enrolled teachers:", enrolledTeachers);
         
+        // Set up online status tracking
+        setupOnlineStatusTracking();
+        
         // If no enrolled teachers found, show message
         if (enrolledTeachers.length === 0) {
           console.log("No enrolled teachers found");
@@ -1591,6 +1643,104 @@
           </div>
         `;
       }
+    }
+
+    // Set up online status tracking for teachers
+    function setupOnlineStatusTracking() {
+      // Listen to online status changes for all teachers
+      unsubscribeOnlineStatus = db.collection('onlineStatus')
+        .where('userType', '==', 'teacher')
+        .onSnapshot((snapshot) => {
+          onlineTeachers = {};
+          
+          snapshot.forEach(doc => {
+            const statusData = doc.data();
+            onlineTeachers[statusData.userId] = statusData;
+          });
+          
+          console.log("Updated online teachers:", onlineTeachers);
+          
+          // Update conversation statuses if we have an active conversation
+          if (currentConversation) {
+            updateChatStatus(currentConversation.teacherId);
+          }
+          
+          // Update all conversation statuses in the list
+          updateConversationStatuses();
+        }, (error) => {
+          console.error("Error listening to online status:", error);
+        });
+    }
+
+    // Update conversation statuses in the list
+    function updateConversationStatuses() {
+      const conversationItems = document.querySelectorAll('.conversation-item');
+      
+      conversationItems.forEach(item => {
+        const conversationId = item.dataset.conversationId;
+        const conversation = conversations.find(c => c.id === conversationId);
+        
+        if (conversation) {
+          updateConversationStatus(conversation.teacherId, item);
+        }
+      });
+    }
+
+    // Update status for a specific conversation
+    function updateConversationStatus(teacherId, conversationElement) {
+      const statusElement = conversationElement.querySelector('.conversation-status');
+      if (!statusElement) return;
+      
+      const statusData = onlineTeachers[teacherId];
+      
+      if (statusData && statusData.isOnline) {
+        statusElement.innerHTML = '<span class="status-dot online"></span> Online';
+        statusElement.className = 'conversation-status online';
+      } else if (statusData && statusData.lastSeen) {
+        const lastSeen = statusData.lastSeen.toDate();
+        statusElement.innerHTML = `<span class="status-dot offline"></span> Last seen ${getTimeAgo(lastSeen)}`;
+        statusElement.className = 'conversation-status offline';
+      } else {
+        statusElement.innerHTML = '<span class="status-dot offline"></span> Offline';
+        statusElement.className = 'conversation-status offline';
+      }
+    }
+
+    // Update chat status in the chat header
+    function updateChatStatus(teacherId) {
+      const statusData = onlineTeachers[teacherId];
+      
+      if (statusData && statusData.isOnline) {
+        currentChatStatus.innerHTML = '<span class="status-dot online"></span> Online';
+        currentChatStatus.className = 'chat-status online';
+      } else if (statusData && statusData.lastSeen) {
+        const lastSeen = statusData.lastSeen.toDate();
+        currentChatStatus.innerHTML = `<span class="status-dot offline"></span> Last seen ${getTimeAgo(lastSeen)}`;
+        currentChatStatus.className = 'chat-status offline';
+      } else {
+        currentChatStatus.innerHTML = '<span class="status-dot offline"></span> Offline';
+        currentChatStatus.className = 'chat-status offline';
+      }
+    }
+
+    // Helper function to get time ago
+    function getTimeAgo(date) {
+      if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        return 'Never';
+      }
+      
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      
+      return date.toLocaleDateString();
     }
 
     // Helper function to get initials
@@ -1819,9 +1969,13 @@
               <div class="conversation-time">${time}</div>
             </div>
             <div class="conversation-preview">${conversation.lastMessage || 'Start a conversation...'}</div>
+            <div class="conversation-status">Loading status...</div>
           </div>
           ${conversation.unreadCount > 0 ? `<div class="unread-count">${conversation.unreadCount}</div>` : ''}
         `;
+        
+        // Update status immediately
+        updateConversationStatus(conversation.teacherId, item);
         
         item.addEventListener('click', () => {
           selectConversation(conversation, teacher);
@@ -1894,7 +2048,9 @@
       currentChatName.textContent = teacher.name;
       currentChatRole.textContent = `${teacher.role} - ${teacher.expertise}`;
       currentChatAvatar.textContent = teacher.avatar;
-      currentChatStatus.innerHTML = '<div class="chat-status">Online</div>';
+      
+      // Update chat status
+      updateChatStatus(conversation.teacherId);
       
       // Enable input
       const messageInput = document.getElementById('messageInput');
@@ -1970,7 +2126,7 @@
       setupMessageSending(conversation, teacher);
     }
 
-// Set up message sending
+    // Set up message sending
     function setupMessageSending(conversation, teacher) {
       // Get references to DOM elements
       const sendBtn = document.getElementById('sendMessageBtn');
@@ -2212,9 +2368,13 @@
                 <div class="conversation-name">${teacher.name}</div>
               </div>
               <div class="conversation-preview">${teacher.role} - ${teacher.expertise}</div>
+              <div class="conversation-status">Loading status...</div>
             </div>
             ${existingConversation ? '<div style="color: var(--success); font-size: 12px;">Existing chat</div>' : ''}
           `;
+          
+          // Update status for this teacher
+          updateConversationStatus(teacher.id, contactEl);
           
           contactEl.addEventListener('click', async () => {
             if (existingConversation) {
@@ -2307,6 +2467,7 @@
         confirmLogout.addEventListener('click', () => {
           if (unsubscribeConversations) unsubscribeConversations();
           if (unsubscribeMessages) unsubscribeMessages();
+          if (unsubscribeOnlineStatus) unsubscribeOnlineStatus();
           
           auth.signOut().then(() => {
             window.location.href = "signin.html";
