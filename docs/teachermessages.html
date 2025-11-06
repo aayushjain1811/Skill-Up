@@ -1602,18 +1602,29 @@
     }
   }
 
-// Set up online status tracking
+// Set up online status tracking from users collection
 function setupOnlineStatusTracking() {
-  // Listen to online status changes for ALL users (both teachers and students)
-  onlineStatusListener = onSnapshot(collection(db, "onlineStatus"), (snapshot) => {
+  // Listen to student status changes
+  const studentsQuery = query(
+    collection(db, "users"),
+    where("role", "==", "student")
+  );
+  
+  onlineStatusListener = onSnapshot(studentsQuery, (snapshot) => {
     onlineUsers = {};
     
     snapshot.forEach(doc => {
-      const statusData = doc.data();
-      onlineUsers[statusData.userId] = statusData;
+      const userData = doc.data();
+      onlineUsers[doc.id] = {
+        isOnline: userData.isOnline || false,
+        lastSeen: userData.lastSeen,
+        userId: doc.id,
+        userType: "student",
+        name: userData.displayName || `${userData.firstName} ${userData.lastName}`
+      };
     });
     
-    console.log("Online users updated:", onlineUsers);
+    console.log("Student online status updated:", onlineUsers);
     
     // Update conversation statuses if we have an active conversation
     if (activeConversation) {
@@ -1623,6 +1634,38 @@ function setupOnlineStatusTracking() {
     // Update all conversation statuses in the list
     updateConversationStatuses();
   });
+}
+async function updateOnlineStatus(isOnline) {
+  try {
+    const statusRef = doc(db, "teachers", currentTeacher.id);
+    await updateDoc(statusRef, {
+      isOnline: isOnline,
+      lastSeen: serverTimestamp()
+    });
+    console.log(`Teacher status updated to: ${isOnline}`);
+  } catch (error) {
+    console.error("Error updating teacher online status:", error);
+  }
+}
+async function initializeTeacherStatus() {
+  try {
+    const teacherRef = doc(db, "teachers", currentTeacher.id);
+    const teacherDoc = await getDoc(teacherRef);
+    
+    if (teacherDoc.exists()) {
+      const teacherData = teacherDoc.data();
+      // Initialize if fields don't exist
+      if (teacherData.isOnline === undefined) {
+        await updateDoc(teacherRef, {
+          isOnline: true,
+          lastSeen: serverTimestamp()
+        });
+        console.log("Teacher status initialized");
+      }
+    }
+  } catch (error) {
+    console.error("Error initializing teacher status:", error);
+  }
 }
 
   // Update conversation statuses in the list

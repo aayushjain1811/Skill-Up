@@ -1645,32 +1645,73 @@
       }
     }
 
-    // Set up online status tracking for teachers
-    function setupOnlineStatusTracking() {
-      // Listen to online status changes for all teachers
-      unsubscribeOnlineStatus = db.collection('onlineStatus')
-        .where('userType', '==', 'teacher')
-        .onSnapshot((snapshot) => {
-          onlineTeachers = {};
-          
-          snapshot.forEach(doc => {
-            const statusData = doc.data();
-            onlineTeachers[statusData.userId] = statusData;
-          });
-          
-          console.log("Updated online teachers:", onlineTeachers);
-          
-          // Update conversation statuses if we have an active conversation
-          if (currentConversation) {
-            updateChatStatus(currentConversation.teacherId);
-          }
-          
-          // Update all conversation statuses in the list
-          updateConversationStatuses();
-        }, (error) => {
-          console.error("Error listening to online status:", error);
-        });
+// Set up teacher status tracking for student
+function setupTeacherStatusTracking() {
+  // Listen to teacher status changes
+  const teachersQuery = db.collection('teachers')
+    .where('isOnline', '==', true);
+  
+  unsubscribeTeachers = teachersQuery.onSnapshot((snapshot) => {
+    onlineTeachers = {};
+    
+    snapshot.forEach(doc => {
+      const teacherData = doc.data();
+      onlineTeachers[doc.id] = {
+        isOnline: teacherData.isOnline || false,
+        lastSeen: teacherData.lastSeen,
+        userId: doc.id,
+        userType: "teacher",
+        name: teacherData.displayName || `${teacherData.firstName} ${teacherData.lastName}`
+      };
+    });
+    
+    console.log("Teacher online status updated:", onlineTeachers);
+    
+    // Update conversation statuses
+    updateConversationStatuses();
+    
+    // Update active chat status
+    if (currentConversation) {
+      updateChatStatus(currentConversation.teacherId);
     }
+  }, (error) => {
+    console.error("Error listening to teacher status:", error);
+  });
+}
+// Update student's online status in users collection
+async function updateStudentOnlineStatus(isOnline) {
+  try {
+    const userRef = db.collection('users').doc(currentUser.id);
+    await userRef.update({
+      isOnline: isOnline,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log(`Student online status updated to: ${isOnline}`);
+  } catch (error) {
+    console.error("Error updating student online status:", error);
+  }
+}
+
+async function initializeStudentStatus() {
+  try {
+    const userRef = db.collection('users').doc(currentUser.id);
+    const userDoc = await userRef.get();
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      // Initialize if fields don't exist
+      if (userData.isOnline === undefined) {
+        await userRef.update({
+          isOnline: true,
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log("Student status initialized");
+      }
+    }
+  } catch (error) {
+    console.error("Error initializing student status:", error);
+  }
+}
 
     // Update conversation statuses in the list
     function updateConversationStatuses() {
