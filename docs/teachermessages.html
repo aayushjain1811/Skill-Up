@@ -1602,28 +1602,28 @@
     }
   }
 
-  // Set up online status tracking
-  function setupOnlineStatusTracking() {
-    // Listen to online status changes for all users
-    onlineStatusListener = onSnapshot(collection(db, "onlineStatus"), (snapshot) => {
-      onlineUsers = {};
-      
-      snapshot.forEach(doc => {
-        const statusData = doc.data();
-        onlineUsers[statusData.userId] = statusData;
-      });
-      
-      console.log("Online users updated:", onlineUsers);
-      
-      // Update conversation statuses if we have an active conversation
-      if (activeConversation) {
-        updateChatStatus(activeConversation.studentId);
-      }
-      
-      // Update all conversation statuses in the list
-      updateConversationStatuses();
+// Set up online status tracking
+function setupOnlineStatusTracking() {
+  // Listen to online status changes for ALL users (both teachers and students)
+  onlineStatusListener = onSnapshot(collection(db, "onlineStatus"), (snapshot) => {
+    onlineUsers = {};
+    
+    snapshot.forEach(doc => {
+      const statusData = doc.data();
+      onlineUsers[statusData.userId] = statusData;
     });
-  }
+    
+    console.log("Online users updated:", onlineUsers);
+    
+    // Update conversation statuses if we have an active conversation
+    if (activeConversation) {
+      updateChatStatus(activeConversation.studentId);
+    }
+    
+    // Update all conversation statuses in the list
+    updateConversationStatuses();
+  });
+}
 
   // Update conversation statuses in the list
   function updateConversationStatuses() {
@@ -1691,26 +1691,35 @@
   }
 
   // Update chat status in the chat header
-  function updateChatStatus(studentId) {
-    const statusData = onlineUsers[studentId];
-    const statusDot = currentChatStatus.querySelector('.status-dot');
-    const statusText = currentChatStatus.querySelector('span');
-    
-    if (statusData && statusData.isOnline) {
-      statusDot.className = 'status-dot online';
-      statusText.textContent = 'Online';
-      currentChatStatus.className = 'chat-status online';
-    } else if (statusData && statusData.lastSeen) {
-      const lastSeen = statusData.lastSeen.toDate();
-      statusDot.className = 'status-dot offline';
-      statusText.textContent = `Last seen ${getTimeAgo(lastSeen)}`;
-      currentChatStatus.className = 'chat-status offline';
-    } else {
-      statusDot.className = 'status-dot offline';
-      statusText.textContent = 'Offline';
-      currentChatStatus.className = 'chat-status offline';
-    }
+function updateChatStatus(studentId) {
+  const statusData = onlineUsers[studentId];
+  const statusDot = currentChatStatus.querySelector('.status-dot');
+  const statusText = currentChatStatus.querySelector('span');
+  
+  if (!statusDot) {
+    // Create status dot if it doesn't exist
+    const newStatusDot = document.createElement('div');
+    newStatusDot.className = 'status-dot';
+    currentChatStatus.insertBefore(newStatusDot, statusText);
   }
+  
+  const actualStatusDot = currentChatStatus.querySelector('.status-dot');
+  
+  if (statusData && statusData.isOnline) {
+    actualStatusDot.className = 'status-dot online';
+    statusText.textContent = 'Online';
+    currentChatStatus.className = 'chat-status online';
+  } else if (statusData && statusData.lastSeen) {
+    const lastSeen = statusData.lastSeen.toDate();
+    actualStatusDot.className = 'status-dot offline';
+    statusText.textContent = `Last seen ${getTimeAgo(lastSeen)}`;
+    currentChatStatus.className = 'chat-status offline';
+  } else {
+    actualStatusDot.className = 'status-dot offline';
+    statusText.textContent = 'Offline';
+    currentChatStatus.className = 'chat-status offline';
+  }
+}
 
   // Helper function to get initials
   function getInitials(firstName, lastName) {

@@ -1685,7 +1685,38 @@
         }
       });
     }
+// Add this to the student messages page after authentication
+async function updateStudentOnlineStatus(isOnline) {
+  try {
+    const statusRef = db.collection('onlineStatus').doc(currentUser.id);
+    await statusRef.set({
+      isOnline: isOnline,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+      userId: currentUser.id,
+      userType: "student",
+      name: currentUser.name
+    }, { merge: true });
+  } catch (error) {
+    console.error("Error updating student online status:", error);
+  }
+}
 
+// Call when student opens messages page
+if (currentUser) {
+  updateStudentOnlineStatus(true);
+  
+  // Set up activity tracking
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+      updateStudentOnlineStatus(true);
+    }
+  });
+  
+  // Set offline when leaving
+  window.addEventListener('beforeunload', () => {
+    updateStudentOnlineStatus(false);
+  });
+}
     // Update status for a specific conversation
     function updateConversationStatus(teacherId, conversationElement) {
       const statusElement = conversationElement.querySelector('.conversation-status');

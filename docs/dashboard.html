@@ -2287,6 +2287,56 @@
         isLoadingCourses = false;
       }
     }
+    // Function to update student's online status
+async function updateStudentOnlineStatus(isOnline) {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (user) {
+      const db = getFirestore();
+      const statusRef = doc(db, "onlineStatus", user.uid);
+      
+      // Get student data
+      const studentDoc = await getDoc(doc(db, "users", user.uid));
+      if (studentDoc.exists()) {
+        const studentData = studentDoc.data();
+        
+        await setDoc(statusRef, {
+          isOnline: isOnline,
+          lastSeen: serverTimestamp(),
+          userId: user.uid,
+          userType: "student",
+          name: `${studentData.firstName} ${studentData.lastName}`
+        }, { merge: true });
+      }
+    }
+  } catch (error) {
+    console.error("Error updating student online status:", error);
+  }
+}
+
+// Call this when student signs in
+updateStudentOnlineStatus(true);
+
+// Update status when student is active
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    updateStudentOnlineStatus(true);
+  }
+});
+
+// Update status periodically
+setInterval(() => {
+  if (document.visibilityState === 'visible') {
+    updateStudentOnlineStatus(true);
+  }
+}, 30000); // Every 30 seconds
+
+// Set offline when leaving
+window.addEventListener('beforeunload', () => {
+  updateStudentOnlineStatus(false);
+});
 
     // Fetch recommended courses - Updated enrollment check
     async function loadRecommendedCourses(userId) {
