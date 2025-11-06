@@ -1613,6 +1613,8 @@
         onlineUsers[statusData.userId] = statusData;
       });
       
+      console.log("Online users updated:", onlineUsers);
+      
       // Update conversation statuses if we have an active conversation
       if (activeConversation) {
         updateChatStatus(activeConversation.studentId);
