@@ -489,6 +489,44 @@
       z-index: 2;
     }
 
+    .status-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-secondary);
+}
+
+.status-indicator.status-online {
+    background-color: var(--online-green);
+    box-shadow: 0 0 5px var(--online-green);
+}
+
+.status-indicator.status-offline {
+    background-color: var(--offline-red);
+}
+
+.conversation-avatar, .chat-avatar {
+    position: relative;
+}
+
+.conversation-status.online {
+    color: var(--online-green);
+}
+
+.conversation-status.offline {
+    color: var(--offline-red);
+}
+
+.chat-status.online {
+    color: var(--online-green);
+}
+
+.chat-status.offline {
+    color: var(--offline-red);
+}
     /* Messages Page Specific Styles */
     .messages-page {
       display: flex;
@@ -1541,50 +1579,53 @@
   let allStudents = [];
   let onlineUsers = {};
 
-  // Check authentication state
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      console.log("User authenticated:", user.uid);
-      try {
-        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    console.log("User authenticated:", user.uid);
+    try {
+      const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+      
+      if (teacherDoc.exists()) {
+        currentTeacher = { id: user.uid, ...teacherDoc.data() };
+        console.log("Teacher data loaded:", currentTeacher);
         
-        if (teacherDoc.exists()) {
-          currentTeacher = { id: user.uid, ...teacherDoc.data() };
-          console.log("Teacher data loaded:", currentTeacher);
-          
-          // Update teacher's online status
-          await updateOnlineStatus();
-          
-          // Set up real-time notifications
-          setupNotifications();
-          
-          // Set up online status tracking
-          setupOnlineStatusTracking();
-          
-          // Load students and conversations
-          await loadStudentsAndConversations();
-          
-          // Update user initials in the avatar
-          updateUserAvatar();
-          
-          // Hide loading animation
-          setTimeout(() => {
-            if (loadingContainer) loadingContainer.classList.add('hidden');
-          }, 1000);
-          
-        } else {
-          console.error("Teacher document not found for user:", user.uid);
-          window.location.href = "teachersignin.html";
-        }
-      } catch (error) {
-        console.error("Error getting teacher document:", error);
-        showError("Authentication error: " + error.message);
+        // IMPORTANT: Initialize teacher status BEFORE setting up tracking
+        await initializeTeacherStatus();
+        
+        // Set up connection state monitoring
+        setupConnectionStateMonitoring();
+        
+        // Set up real-time notifications
+        setupNotifications();
+        
+        // Set up online status tracking (this will call updateOnlineStatus internally)
+        setupOnlineStatusTracking();
+        
+        // Load students and conversations
+        await loadStudentsAndConversations();
+        
+        // Update user initials in the avatar
+        updateUserAvatar();
+        
+        // Hide loading animation
+        setTimeout(() => {
+          if (loadingContainer) loadingContainer.classList.add('hidden');
+        }, 1000);
+        
+      } else {
+        console.error("Teacher document not found for user:", user.uid);
+        window.location.href = "teachersignin.html";
       }
-    } else {
-      console.log("User not authenticated, redirecting to login");
-      window.location.href = "teachersignin.html";
+    } catch (error) {
+      console.error("Error getting teacher document:", error);
+      showError("Authentication error: " + error.message);
     }
-  });
+  } else {
+    console.log("User not authenticated, redirecting to login");
+    window.location.href = "teachersignin.html";
+  }
+});
+
 
 
 
@@ -1622,102 +1663,142 @@ function setupOnlineStatusTracking() {
   });
 }
 async function updateOnlineStatus(isOnline) {
+  if (!currentTeacher) return;
+  
   try {
-    const statusRef = doc(db, "teachers", currentTeacher.id);
-    await updateDoc(statusRef, {
+    // Update in teachers collection (main status)
+    const teacherRef = doc(db, "teachers", currentTeacher.id);
+    await updateDoc(teacherRef, {
       isOnline: isOnline,
       lastSeen: serverTimestamp()
     });
-    console.log(`Teacher status updated to: ${isOnline}`);
+    console.log(`Teacher status updated to: ${isOnline ? 'online' : 'offline'}`);
   } catch (error) {
     console.error("Error updating teacher online status:", error);
   }
 }
 async function initializeTeacherStatus() {
+  if (!currentTeacher) return;
+  
   try {
     const teacherRef = doc(db, "teachers", currentTeacher.id);
     const teacherDoc = await getDoc(teacherRef);
     
     if (teacherDoc.exists()) {
-      const teacherData = teacherDoc.data();
-      // Initialize if fields don't exist
-      if (teacherData.isOnline === undefined) {
-        await updateDoc(teacherRef, {
-          isOnline: true,
-          lastSeen: serverTimestamp()
-        });
-        console.log("Teacher status initialized");
-      }
+      // Update existing teacher with online status fields
+      await updateDoc(teacherRef, {
+        isOnline: true,
+        lastSeen: serverTimestamp()
+      });
+      console.log("Teacher status initialized to online");
     }
   } catch (error) {
     console.error("Error initializing teacher status:", error);
   }
 }
-
-  // Update conversation statuses in the list
-  function updateConversationStatuses() {
-    const conversationItems = document.querySelectorAll('.conversation-item');
-    
-    conversationItems.forEach(item => {
-      const conversationName = item.querySelector('.conversation-name').textContent;
-      const conversation = conversations.find(c => c.studentName === conversationName);
-      
-      if (conversation) {
-        updateConversationStatus(conversation.studentId, item);
-      }
-    });
-  }
-
-  // Update status for a specific conversation
-  function updateConversationStatus(studentId, conversationElement) {
-    const statusElement = conversationElement.querySelector('.conversation-status');
-    const statusData = onlineUsers[studentId];
-    
-    if (statusData && statusData.isOnline) {
-      statusElement.innerHTML = '<span class="status-dot online"></span> Online';
-      statusElement.className = 'conversation-status online';
-      
-      // Update the status indicator on the avatar
-      const avatar = conversationElement.querySelector('.conversation-avatar');
-      const existingIndicator = avatar.querySelector('.status-indicator');
-      if (existingIndicator) {
-        existingIndicator.className = 'status-indicator status-online';
-      } else {
-        const indicator = document.createElement('div');
-        indicator.className = 'status-indicator status-online';
-        avatar.appendChild(indicator);
-      }
-    } else if (statusData && statusData.lastSeen) {
-      const lastSeen = statusData.lastSeen.toDate();
-      statusElement.innerHTML = `<span class="status-dot offline"></span> Last seen ${getTimeAgo(lastSeen)}`;
-      statusElement.className = 'conversation-status offline';
-      
-      // Update the status indicator on the avatar
-      const avatar = conversationElement.querySelector('.conversation-avatar');
-      const existingIndicator = avatar.querySelector('.status-indicator');
-      if (existingIndicator) {
-        existingIndicator.className = 'status-indicator status-offline';
-      } else {
-        const indicator = document.createElement('div');
-        indicator.className = 'status-indicator status-offline';
-        avatar.appendChild(indicator);
+// Set up connection state monitoring
+function setupConnectionStateMonitoring() {
+  if (!currentTeacher) return;
+  
+  const teacherRef = doc(db, "teachers", currentTeacher.id);
+  
+  // Set up visibility change handler
+  const handleVisibilityChange = async () => {
+    if (document.hidden) {
+      console.log("Page hidden - setting teacher offline");
+      try {
+        await updateDoc(teacherRef, {
+          isOnline: false,
+          lastSeen: serverTimestamp()
+        });
+      } catch (error) {
+        console.error("Error setting offline on visibility change:", error);
       }
     } else {
-      statusElement.innerHTML = '<span class="status-dot offline"></span> Offline';
-      statusElement.className = 'conversation-status offline';
-      
-      // Update the status indicator on the avatar
-      const avatar = conversationElement.querySelector('.conversation-avatar');
-      const existingIndicator = avatar.querySelector('.status-indicator');
-      if (existingIndicator) {
-        existingIndicator.className = 'status-indicator status-offline';
-      } else {
-        const indicator = document.createElement('div');
-        indicator.className = 'status-indicator status-offline';
-        avatar.appendChild(indicator);
+      console.log("Page visible - setting teacher online");
+      try {
+        await updateDoc(teacherRef, {
+          isOnline: true,
+          lastSeen: serverTimestamp()
+        });
+      } catch (error) {
+        console.error("Error setting online on visibility change:", error);
       }
     }
+  };
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  
+  // Set offline on page unload using sendBeacon
+  const handleBeforeUnload = () => {
+    console.log("Page unloading - setting teacher offline");
+    // Use navigator.sendBeacon for more reliable offline status
+    const offlineData = {
+      isOnline: false,
+      lastSeen: new Date().toISOString()
+    };
+    
+    // Attempt synchronous update (may not complete but worth trying)
+    try {
+      updateDoc(teacherRef, {
+        isOnline: false,
+        lastSeen: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error in beforeunload:", error);
+    }
+  };
+  
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('unload', handleBeforeUnload);
+}
+
+  // Update conversation statuses in the list
+function updateConversationStatuses() {
+  const conversationItems = document.querySelectorAll('.conversation-item');
+  
+  conversationItems.forEach(item => {
+    const conversationName = item.querySelector('.conversation-name').textContent;
+    const conversation = conversations.find(c => c.studentName === conversationName);
+    
+    if (conversation) {
+      updateConversationStatus(conversation.studentId, item);
+    }
+  });
+}
+
+  // Update status for a specific conversation
+function updateConversationStatus(studentId, conversationElement) {
+  const statusElement = conversationElement.querySelector('.conversation-status');
+  const avatarElement = conversationElement.querySelector('.conversation-avatar');
+  
+  if (!statusElement) return;
+  
+  const statusData = onlineUsers[studentId];
+  
+  // Update status indicator on avatar
+  let statusIndicator = avatarElement.querySelector('.status-indicator');
+  if (!statusIndicator) {
+    statusIndicator = document.createElement('div');
+    statusIndicator.className = 'status-indicator';
+    avatarElement.appendChild(statusIndicator);
   }
+  
+  if (statusData && statusData.isOnline) {
+    statusElement.innerHTML = '<span class="status-dot online"></span> Online';
+    statusElement.className = 'conversation-status online';
+    statusIndicator.className = 'status-indicator status-online';
+  } else if (statusData && statusData.lastSeen) {
+    const lastSeen = statusData.lastSeen.toDate();
+    statusElement.innerHTML = `<span class="status-dot offline"></span> Last seen ${getTimeAgo(lastSeen)}`;
+    statusElement.className = 'conversation-status offline';
+    statusIndicator.className = 'status-indicator status-offline';
+  } else {
+    statusElement.innerHTML = '<span class="status-dot offline"></span> Offline';
+    statusElement.className = 'conversation-status offline';
+    statusIndicator.className = 'status-indicator status-offline';
+  }
+}
 
   // Update chat status in the chat header
 function updateChatStatus(studentId) {
@@ -1726,30 +1807,45 @@ function updateChatStatus(studentId) {
   const statusText = currentChatStatus.querySelector('span');
   
   if (!statusDot) {
-    // Create status dot if it doesn't exist
     const newStatusDot = document.createElement('div');
     newStatusDot.className = 'status-dot';
-    currentChatStatus.insertBefore(newStatusDot, statusText);
+    currentChatStatus.innerHTML = '';
+    currentChatStatus.appendChild(newStatusDot);
+    const newStatusText = document.createElement('span');
+    currentChatStatus.appendChild(newStatusText);
   }
   
   const actualStatusDot = currentChatStatus.querySelector('.status-dot');
+  const actualStatusText = currentChatStatus.querySelector('span:last-child');
+  
+  // Update status indicator on chat avatar
+  const chatAvatar = document.getElementById('currentChatAvatar');
+  let statusIndicator = chatAvatar.querySelector('.status-indicator');
+  if (!statusIndicator) {
+    statusIndicator = document.createElement('div');
+    statusIndicator.className = 'status-indicator';
+    chatAvatar.style.position = 'relative';
+    chatAvatar.appendChild(statusIndicator);
+  }
   
   if (statusData && statusData.isOnline) {
     actualStatusDot.className = 'status-dot online';
-    statusText.textContent = 'Online';
+    actualStatusText.textContent = 'Online';
     currentChatStatus.className = 'chat-status online';
+    statusIndicator.className = 'status-indicator status-online';
   } else if (statusData && statusData.lastSeen) {
     const lastSeen = statusData.lastSeen.toDate();
     actualStatusDot.className = 'status-dot offline';
-    statusText.textContent = `Last seen ${getTimeAgo(lastSeen)}`;
+    actualStatusText.textContent = `Last seen ${getTimeAgo(lastSeen)}`;
     currentChatStatus.className = 'chat-status offline';
+    statusIndicator.className = 'status-indicator status-offline';
   } else {
     actualStatusDot.className = 'status-dot offline';
-    statusText.textContent = 'Offline';
+    actualStatusText.textContent = 'Offline';
     currentChatStatus.className = 'chat-status offline';
+    statusIndicator.className = 'status-indicator status-offline';
   }
 }
-
   // Helper function to get initials
   function getInitials(firstName, lastName) {
     if (!firstName || !lastName) return "TU";
@@ -2371,25 +2467,24 @@ function updateChatStatus(studentId) {
   }
 
   // Utility functions
-  function getTimeAgo(date) {
-    // Handle cases where date might not be a valid Date object
-    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-        return 'Never';
-    }
-    
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    
-    return date.toLocaleDateString();
+function getTimeAgo(date) {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    return 'Never';
   }
+  
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString();
+}
   
   function scrollToBottom() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -2610,22 +2705,43 @@ function updateChatStatus(studentId) {
     logoutModal.classList.remove('active');
   });
 
-  confirmLogoutBtn.addEventListener('click', async () => {
-    try {
-      // Update online status to offline
-      await updateOnlineStatus(false);
-      
-      // Clean up listeners
-      if (messagesListener) messagesListener();
-      if (notificationsListener) notificationsListener();
-      if (onlineStatusListener) onlineStatusListener();
-      
-      await signOut(auth);
-      window.location.href = "index.html";
-    } catch (error) {
-      console.error("Error signing out:", error);
+confirmLogoutBtn.addEventListener('click', async () => {
+  try {
+    console.log("Logging out teacher...");
+    
+    // CRITICAL: Update online status to offline FIRST
+    if (currentTeacher) {
+      const teacherRef = doc(db, "teachers", currentTeacher.id);
+      await updateDoc(teacherRef, {
+        isOnline: false,
+        lastSeen: serverTimestamp()
+      });
+      console.log("Teacher status set to offline");
     }
-  });
+    
+    // Clean up listeners
+    if (messagesListener) messagesListener();
+    if (notificationsListener) notificationsListener();
+    if (onlineStatusListener) onlineStatusListener();
+    
+    // Wait a moment to ensure Firestore update completes
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Sign out
+    await signOut(auth);
+    console.log("Teacher signed out successfully");
+    window.location.href = "index.html";
+  } catch (error) {
+    console.error("Error signing out:", error);
+    // Even if there's an error, try to sign out
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error("Error in fallback signout:", e);
+    }
+    window.location.href = "index.html";
+  }
+});
 
   // Close sidebar on outside click
   document.addEventListener('click', (e) => {
@@ -2658,6 +2774,39 @@ function updateChatStatus(studentId) {
       </div>
     `;
   }
+  // Handle page close/refresh - set offline status
+window.addEventListener('beforeunload', async (e) => {
+  if (currentTeacher) {
+    // Use sendBeacon for reliable offline status update
+    const teacherRef = doc(db, "teachers", currentTeacher.id);
+    try {
+      // Use a synchronous update for beforeunload
+      await updateDoc(teacherRef, {
+        isOnline: false,
+        lastSeen: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error setting offline status:", error);
+    }
+  }
+});
+
+// Also handle visibility change
+document.addEventListener('visibilitychange', async () => {
+  if (currentTeacher) {
+    if (document.hidden) {
+      // User switched tabs or minimized - set offline after delay
+      setTimeout(async () => {
+        if (document.hidden) {
+          await updateOnlineStatus(false);
+        }
+      }, 5000); // 5 second grace period
+    } else {
+      // User returned - set online
+      await updateOnlineStatus(true);
+    }
+  }
+});
 
   // Create floating particles
   function createParticles() {
