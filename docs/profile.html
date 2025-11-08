@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile - SkillUp</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <style>
     :root {
       --primary: #ffffff;
@@ -592,18 +594,59 @@
       flex-direction: column;
       gap: 0.8rem;
     }
-    .profile-avatar-large img,
-.avatar img {
+
+/* Image Crop Styles */
+#imageCropContainer {
   position: relative;
-  z-index: 2;
+  width: 100%;
+  margin: 0 auto;
 }
 
-.avatar::before {
+#imageToCrop {
+  max-height: 400px;
+  width: auto;
+  margin: 0 auto;
+}
+
+.cropper-container {
+  border-radius: 10px;
+}
+
+.cropper-view-box {
+  outline: 2px solid var(--light);
+  outline-offset: -1px;
+}
+
+.cropper-face {
+  background-color: transparent !important;
+}
+
+/* Remove camera icon from avatar */
+.profile-avatar-large .avatar-upload {
   display: none;
 }
 
-.avatar.has-image::before {
-  display: block;
+/* Better image fit in avatar containers */
+.profile-avatar-large img,
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.profile-avatar-large {
+  position: relative;
+  overflow: hidden;
+}
+
+.avatar {
+  position: relative;
+  overflow: hidden;
 }
 
     /* Form Sections */
@@ -1224,10 +1267,8 @@
         <div class="profile-card">
           <div class="profile-avatar-large" id="profileAvatar">
             <span id="avatarInitials">U</span>
-            <div class="avatar-upload" onclick="uploadAvatar()">
-              <i class="fas fa-camera"></i>
-            </div>
           </div>
+        </div>
           
           <h2 class="profile-name" id="userName">Loading...</h2>
           <p class="profile-title">Student</p>
@@ -1306,33 +1347,101 @@
     </div>
   </div>
 
-  <!-- Edit Profile Modal -->
-  <div class="modal" id="editProfileModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Edit Profile</h2>
-        <button class="close-modal" onclick="closeModal('editProfileModal')">&times;</button>
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2 class="modal-title">Edit Profile</h2>
+      <button class="close-modal" onclick="closeModal('editProfileModal')">&times;</button>
+    </div>
+    <form id="editForm">
+      <!-- Profile Picture Section -->
+      <div class="form-group" style="text-align: center; margin-bottom: 2rem;">
+        <label class="form-label">Profile Picture</label>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+          <div id="editProfileAvatar" class="profile-avatar-large" style="margin: 0;">
+            <span id="editAvatarInitials">U</span>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+            <label for="profilePicInput" class="btn btn-primary" style="margin: 0; cursor: pointer;">
+              <i class="fas fa-upload"></i> Upload Picture
+            </label>
+            <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+            
+            <button type="button" class="btn btn-secondary" id="removeProfilePicBtn" style="display: none;">
+              <i class="fas fa-trash"></i> Remove Picture
+            </button>
+          </div>
+          
+          <p style="color: var(--gray); font-size: 0.85rem; margin: 0;">
+            Recommended: Square image, at least 200x200px, max 5MB
+          </p>
+        </div>
       </div>
-      <form id="editForm">
-        <div class="form-group">
-          <label class="form-label" for="editName">Full Name</label>
-          <input type="text" class="form-input" id="editName" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="editEmail">Email</label>
-          <input type="email" class="form-input" id="editEmail" disabled>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="editBio">Bio</label>
-          <textarea class="form-input form-textarea" id="editBio"></textarea>
-        </div>
-        <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
-          <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
-          <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')" style="flex: 1;">Cancel</button>
-        </div>
-      </form>
+
+      <div class="form-group">
+        <label class="form-label" for="editName">Full Name</label>
+        <input type="text" class="form-input" id="editName" required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="editEmail">Email</label>
+        <input type="email" class="form-input" id="editEmail" disabled>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="editBio">Bio</label>
+        <textarea class="form-input form-textarea" id="editBio"></textarea>
+      </div>
+      
+      <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('editProfileModal')" style="flex: 1;">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Image Crop Modal -->
+<div class="modal" id="imageCropModal">
+  <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-header">
+      <h2 class="modal-title">Crop Profile Picture</h2>
+      <button class="close-modal" onclick="closeCropModal()">&times;</button>
+    </div>
+    
+    <div style="margin-bottom: 1.5rem;">
+      <div id="imageCropContainer" style="max-height: 400px; overflow: hidden; background: #000; border-radius: 10px;">
+        <img id="imageToCrop" style="max-width: 100%; display: block;">
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem;">
+      <button type="button" class="btn btn-secondary" onclick="rotateCropImage(-90)">
+        <i class="fas fa-undo"></i> Rotate Left
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="rotateCropImage(90)">
+        <i class="fas fa-redo"></i> Rotate Right
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="flipCropImage('horizontal')">
+        <i class="fas fa-arrows-alt-h"></i> Flip H
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="flipCropImage('vertical')">
+        <i class="fas fa-arrows-alt-v"></i> Flip V
+      </button>
+    </div>
+    
+    <div style="display: flex; gap: 1rem;">
+      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeCropModal()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-primary" style="flex: 1;" onclick="applyCrop()">
+        <i class="fas fa-check"></i> Apply & Upload
+      </button>
     </div>
   </div>
+</div>
 
   <!-- Change Password Modal -->
   <div class="modal" id="changePasswordModal">
@@ -2042,9 +2151,15 @@ if (photoURL) {
     }
 
     // Modal Controls
-    window.openModal = (modalId) => {
-      document.getElementById(modalId).classList.add("active");
-    };
+// Modal Controls
+window.openModal = (modalId) => {
+  document.getElementById(modalId).classList.add("active");
+  
+  // If opening edit profile modal, initialize profile picture
+  if (modalId === 'editProfileModal') {
+    initEditModalProfilePic();
+  }
+};
 
     window.closeModal = (modalId) => {
       document.getElementById(modalId).classList.remove("active");
@@ -2194,71 +2309,229 @@ passwordForm.addEventListener("submit", async (e) => {
       }
     };
 
-// Upload avatar function
-window.uploadAvatar = () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
+// Global variables for cropper
+let cropper = null;
+let selectedImageFile = null;
+let currentProfilePicURL = null;
+
+// Initialize profile picture in edit modal
+function initEditModalProfilePic() {
+  const user = auth.currentUser;
+  if (!user) return;
   
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const editProfileAvatar = document.getElementById('editProfileAvatar');
+  const editAvatarInitials = document.getElementById('editAvatarInitials');
+  const removeBtn = document.getElementById('removeProfilePicBtn');
+  
+  if (user.photoURL) {
+    editAvatarInitials.innerHTML = `<img src="${user.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    removeBtn.style.display = 'inline-flex';
+    currentProfilePicURL = user.photoURL;
+  } else {
+    const displayName = user.displayName || "User";
+    const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase();
+    editAvatarInitials.textContent = initials;
+    removeBtn.style.display = 'none';
+    currentProfilePicURL = null;
+  }
+}
+
+// Handle profile picture upload
+document.getElementById('profilePicInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showNotification("❌ Image size should be less than 5MB", "error");
+    return;
+  }
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    showNotification("❌ Please select an image file", "error");
+    return;
+  }
+  
+  selectedImageFile = file;
+  
+  // Read and display image for cropping
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const imageToCrop = document.getElementById('imageToCrop');
+    imageToCrop.src = event.target.result;
     
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showNotification("❌ Image size should be less than 5MB", "error");
-      return;
+    // Open crop modal
+    document.getElementById('imageCropModal').classList.add('active');
+    
+    // Initialize cropper
+    if (cropper) {
+      cropper.destroy();
     }
     
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      showNotification("❌ Please select an image file", "error");
-      return;
-    }
-    
-    try {
-      const user = auth.currentUser;
-      if (!user) return;
-      
-      // Show loading
-      const avatarElement = document.getElementById('profileAvatar');
-      const originalContent = avatarElement.innerHTML;
-      avatarElement.innerHTML = '<span class="spinner"></span>';
-      
-      // Create storage reference
-      const storageRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}_${file.name}`);
-      
-      // Upload file
-      await uploadBytes(storageRef, file);
-      
-      // Get download URL
-      const photoURL = await getDownloadURL(storageRef);
-      
-      // Update user profile in Auth
-      await updateProfile(user, { photoURL });
-      
-      // Update Firestore
-      const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, { 
-        photoURL: photoURL 
-      }, { merge: true });
-      
-      // Update UI
-      await loadUserProfile(user);
-      
-      showNotification("✅ Profile picture updated successfully!");
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      showNotification("❌ Error uploading image: " + error.message, "error");
-      
-      // Restore original content on error
-      const avatarElement = document.getElementById('profileAvatar');
-      avatarElement.innerHTML = originalContent;
-    }
+    cropper = new Cropper(imageToCrop, {
+      aspectRatio: 1,
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 1,
+      restore: false,
+      guides: true,
+      center: true,
+      highlight: false,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: false,
+    });
   };
   
-  input.click();
+  reader.readAsDataURL(file);
+  
+  // Reset file input
+  this.value = '';
+});
+
+// Close crop modal
+window.closeCropModal = function() {
+  document.getElementById('imageCropModal').classList.remove('active');
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+  selectedImageFile = null;
 };
+
+// Rotate crop image
+window.rotateCropImage = function(degree) {
+  if (cropper) {
+    cropper.rotate(degree);
+  }
+};
+
+// Flip crop image
+window.flipCropImage = function(direction) {
+  if (!cropper) return;
+  
+  if (direction === 'horizontal') {
+    cropper.scaleX(-cropper.getData().scaleX || -1);
+  } else if (direction === 'vertical') {
+    cropper.scaleY(-cropper.getData().scaleY || -1);
+  }
+};
+
+// Apply crop and upload
+window.applyCrop = async function() {
+  if (!cropper) return;
+  
+  try {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    // Show loading in crop modal
+    const applyBtn = document.querySelector('#imageCropModal .btn-primary');
+    const originalText = applyBtn.innerHTML;
+    applyBtn.innerHTML = '<span class="spinner"></span> Uploading...';
+    applyBtn.disabled = true;
+    
+    // Get cropped canvas
+    const canvas = cropper.getCroppedCanvas({
+      width: 400,
+      height: 400,
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    });
+    
+    // Convert canvas to blob
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    
+    // Create storage reference
+    const storageRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}.jpg`);
+    
+    // Upload file
+    await uploadBytes(storageRef, blob);
+    
+    // Get download URL
+    const photoURL = await getDownloadURL(storageRef);
+    
+    // Update user profile in Auth
+    await updateProfile(user, { photoURL });
+    
+    // Update Firestore
+    const userRef = doc(db, "users", user.uid);
+    await setDoc(userRef, { 
+      photoURL: photoURL 
+    }, { merge: true });
+    
+    // Update edit modal preview
+    const editAvatarInitials = document.getElementById('editAvatarInitials');
+    editAvatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    document.getElementById('removeProfilePicBtn').style.display = 'inline-flex';
+    currentProfilePicURL = photoURL;
+    
+    // Close crop modal
+    closeCropModal();
+    
+    showNotification("✅ Profile picture uploaded successfully!");
+    
+    // Update main profile display
+    await loadUserProfile(user);
+    
+  } catch (error) {
+    console.error("Error uploading avatar:", error);
+    showNotification("❌ Error uploading image: " + error.message, "error");
+  } finally {
+    // Restore button
+    const applyBtn = document.querySelector('#imageCropModal .btn-primary');
+    if (applyBtn) {
+      applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply & Upload';
+      applyBtn.disabled = false;
+    }
+  }
+};
+
+// Remove profile picture button handler
+document.getElementById('removeProfilePicBtn').addEventListener('click', async function() {
+  if (!confirm('Are you sure you want to remove your profile picture?')) {
+    return;
+  }
+  
+  try {
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    // Show loading
+    this.innerHTML = '<span class="spinner"></span> Removing...';
+    this.disabled = true;
+    
+    // Update user profile in Auth
+    await updateProfile(user, { photoURL: null });
+    
+    // Update Firestore
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, { 
+      photoURL: null 
+    });
+    
+    // Update edit modal
+    const displayName = user.displayName || "User";
+    const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase();
+    document.getElementById('editAvatarInitials').textContent = initials;
+    this.style.display = 'none';
+    currentProfilePicURL = null;
+    
+    // Update main profile display
+    await loadUserProfile(user);
+    
+    showNotification("✅ Profile picture removed successfully!");
+  } catch (error) {
+    console.error("Error removing profile picture:", error);
+    showNotification("❌ Error removing picture: " + error.message, "error");
+  } finally {
+    this.innerHTML = '<i class="fas fa-trash"></i> Remove Picture';
+    this.disabled = false;
+  }
+});
+
+
 // Delete profile picture
 window.deleteProfilePicture = async () => {
   if (!confirm('Are you sure you want to remove your profile picture?')) {
