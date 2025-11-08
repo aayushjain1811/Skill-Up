@@ -682,6 +682,20 @@
       background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
       animation: rotate 3s linear infinite;
     }
+    /* Profile picture styling */
+.avatar img {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Hide the rotating background when image is present */
+.avatar.has-image::before {
+  display: none;
+}
 
     @keyframes rotate {
       0% { transform: rotate(0deg); }
@@ -1213,6 +1227,15 @@
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       }
     }
+    @keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
 
     @media (max-width: 768px) {
       .main-content.sidebar-open {
@@ -1460,17 +1483,25 @@
     // Firebase Import
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  collection,
+  getDocs,
+  query,
+  where,
+  updateDoc,
+  onSnapshot,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { 
-      getFirestore, 
-      doc, 
-      getDoc, 
-      collection,
-      getDocs,
-      query,
-      where,
-      updateDoc,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  getStorage, 
+  ref, 
+  uploadBytes, 
+  getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
     // Firebase Config
     const firebaseConfig = {
@@ -1487,6 +1518,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     // DOM elements with null checks
     function getElement(id) {
@@ -1674,21 +1706,98 @@
       });
     }
 
-    // Set up real-time listeners for updates
-    function setupRealtimeListeners(userId) {
-      // Listen for user data changes
-      const userRef = doc(db, "users", userId);
-      onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          if (!isTeacher) {
-            loadEnrolledCourses(userId);
-            updateStats();
-            createProgressChart();
-          }
-          loadNotifications(userId);
-        }
-      });
+// Set up real-time listeners for updates
+function setupRealtimeListeners(userId) {
+  // Listen for user data changes
+  const userRef = doc(db, "users", userId);
+  onSnapshot(userRef, (doc) => {
+    if (doc.exists()) {
+      if (!isTeacher) {
+        loadEnrolledCourses(userId);
+        updateStats();
+        createProgressChart();
+      }
     }
+  });
+  
+  // Listen for new student notifications
+  const notificationsQuery = query(
+    collection(db, "studentNotifications"),
+    where("studentId", "==", userId),
+    where("read", "==", false)
+  );
+  
+  onSnapshot(notificationsQuery, (snapshot) => {
+    console.log("Notifications updated");
+    loadNotifications(userId);
+    
+    // Show toast notification for new notifications
+    snapshot.docChanges().forEach(change => {
+      if (change.type === "added") {
+        const notification = change.doc.data();
+        showToastNotification(notification);
+      }
+    });
+  });
+}
+// Show toast notification for real-time updates
+function showToastNotification(notification) {
+  // Don't show if page just loaded (to avoid showing all existing notifications)
+  if (Date.now() - pageLoadTime < 3000) return;
+  
+  let icon = '🔔';
+  if (notification.type === 'enrollment') icon = '📚';
+  else if (notification.type === 'course_update') icon = '📝';
+  else if (notification.type === 'message') icon = '💬';
+  else if (notification.type === 'achievement') icon = '🏆';
+  
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 100px;
+    right: 30px;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(67, 97, 238, 0.3);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    z-index: 3000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+    max-width: 350px;
+    cursor: pointer;
+  `;
+  
+  toast.innerHTML = `
+    <div style="display: flex; align-items: start; gap: 15px;">
+      <div style="font-size: 24px;">${icon}</div>
+      <div style="flex: 1;">
+        <div style="font-weight: 600; margin-bottom: 5px; color: var(--primary);">${notification.title}</div>
+        <div style="font-size: 14px; color: var(--gray);">${notification.message}</div>
+      </div>
+    </div>
+  `;
+  
+  toast.addEventListener('click', () => {
+    if (notification.courseId) {
+      window.location.href = `coursedetails.html?id=${notification.courseId}`;
+    }
+  });
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = "slideOut 0.3s ease";
+    setTimeout(() => {
+      if (toast.parentNode) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, 5000);
+}
+
+// Track page load time to avoid showing old notifications as new
+const pageLoadTime = Date.now();
 
     // Update stats based on enrolled courses
     function updateStats() {
@@ -1716,162 +1825,230 @@
       if (avgProgressEl) avgProgressEl.textContent = `${avgProgress}%`;
     }
 
-    // Setup user information
-    async function setupUserInfo(user) {
-      try {
-        const displayName = user.displayName || user.email.split('@')[0];
-        if (userDisplayName) userDisplayName.textContent = displayName;
+// Setup user information - UPDATED with profile picture support
+async function setupUserInfo(user) {
+  try {
+    const displayName = user.displayName || user.email.split('@')[0];
+    if (userDisplayName) userDisplayName.textContent = displayName;
+    
+    // Handle profile picture or initials
+    const photoURL = user.photoURL;
+    const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+    
+    if (userInitials) {
+      if (photoURL) {
+        // Display profile picture
+        userInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
         
-        if (userInitials) {
-          const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
-          userInitials.textContent = initials;
+        // Add has-image class to show image properly
+        const avatarContainer = userInitials.parentElement;
+        if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+          avatarContainer.classList.add('has-image');
         }
+      } else {
+        // Display initials
+        userInitials.textContent = initials;
         
-        // Update welcome message if element exists
-        if (welcomeMessage) welcomeMessage.textContent = `Your Learning Journey, ${displayName}!`;
-        
-        // Update welcome subtitle based on user data
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          let subtitle = "Track your progress, visualize your achievements, and continue your path to mastery.";
-          
-          if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
-            const enrolledCount = Object.keys(userData.enrollments).length;
-            subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Track your progress and continue your learning journey!`;
-          }
-          
-          if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+        // Remove has-image class
+        const avatarContainer = userInitials.parentElement;
+        if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+          avatarContainer.classList.remove('has-image');
         }
-      } catch (error) {
-        console.error("Error setting up user info:", error);
       }
     }
+    
+    // Update welcome message if element exists
+    if (welcomeMessage) welcomeMessage.textContent = `Your Learning Journey, ${displayName}!`;
+    
+    // Update welcome subtitle based on user data
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      let subtitle = "Track your progress, visualize your achievements, and continue your path to mastery.";
+      
+      if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
+        const enrolledCount = Object.keys(userData.enrollments).length;
+        subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Track your progress and continue your learning journey!`;
+      }
+      
+      if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+    }
+  } catch (error) {
+    console.error("Error setting up user info:", error);
+  }
+}
 
-    // Load notifications from Firebase
-    async function loadNotifications(userId) {
-      try {
-        if (!notificationList) return;
+// Load notifications from Firebase - UPDATED to use studentNotifications collection
+async function loadNotifications(userId) {
+  try {
+    if (!notificationList) return;
 
-        const userRef = doc(db, "users", userId);
-        const userSnap = await getDoc(userRef);
+    // Query studentNotifications collection for this user
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", userId),
+      orderBy("timestamp", "desc")
+    );
+    
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
+    notificationList.innerHTML = "";
 
-        notificationList.innerHTML = "";
+    if (!notificationsSnap.empty) {
+      const notifications = [];
+      notificationsSnap.forEach(doc => {
+        notifications.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
 
-        if (userSnap.exists() && userSnap.data().notifications) {
-          const notifications = userSnap.data().notifications;
+      const notificationsToShow = notifications.slice(0, 5);
+
+      if (notificationsToShow.length === 0) {
+        notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+        if (notificationBadge) {
+          notificationBadge.textContent = '0';
+          notificationBadge.style.display = 'none';
+        }
+        return;
+      }
+
+      const unreadCount = notifications.filter(n => !n.read).length;
+      if (notificationBadge) {
+        notificationBadge.textContent = unreadCount;
+        notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+      }
+
+      notificationsToShow.forEach(notification => {
+        const notificationItem = document.createElement("div");
+        notificationItem.classList.add("notification-item");
+        if (!notification.read) {
+          notificationItem.classList.add("unread");
+        }
+        
+        let timeDisplay = "Recently";
+        if (notification.timestamp) {
+          const now = new Date();
+          const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
+          const diffMs = now - notificationTime;
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
           
-          // Sort by timestamp (newest first)
-          notifications.sort((a, b) => {
-            const timeA = a.timestamp ? (a.timestamp.toDate ? a.timestamp.toDate().getTime() : new Date(a.timestamp).getTime()) : 0;
-            const timeB = b.timestamp ? (b.timestamp.toDate ? b.timestamp.toDate().getTime() : new Date(b.timestamp).getTime()) : 0;
-            return timeB - timeA;
-          });
-
-          const notificationsToShow = notifications.slice(0, 5);
-
-          if (notificationsToShow.length === 0) {
-            notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-            if (notificationBadge) {
-              notificationBadge.textContent = '0';
-              notificationBadge.style.display = 'none';
-            }
-            return;
-          }
-
-          const unreadCount = notifications.filter(n => !n.read).length;
-          if (notificationBadge) {
-            notificationBadge.textContent = unreadCount;
-            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
-          }
-
-          notificationsToShow.forEach(notification => {
-            const notificationItem = document.createElement("div");
-            notificationItem.classList.add("notification-item");
-            if (!notification.read) {
-              notificationItem.classList.add("unread");
-            }
-            
-            let timeDisplay = "Recently";
-            if (notification.timestamp) {
-              const now = new Date();
-              const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
-              const diffMs = now - notificationTime;
-              const diffMins = Math.floor(diffMs / 60000);
-              const diffHours = Math.floor(diffMs / 3600000);
-              const diffDays = Math.floor(diffMs / 86400000);
-              
-              if (diffMins < 1) timeDisplay = "Just now";
-              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
-              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
-              else timeDisplay = `${diffDays}d ago`;
-            }
-            
-            notificationItem.innerHTML = `
-              <div class="notification-title">${notification.title}</div>
-              <div class="notification-message">${notification.message}</div>
-              <div class="notification-time">${timeDisplay}</div>
-            `;
-            
-            notificationItem.addEventListener('click', async () => {
-              if (!notification.read) {
-                // Mark as read
-                const updatedNotifications = notifications.map(n => 
-                  n.id === notification.id ? {...n, read: true} : n
-                );
-                
-                await updateDoc(userRef, {
-                  notifications: updatedNotifications
-                });
-                
-                notificationItem.classList.remove('unread');
-                loadNotifications(userId);
-              }
+          if (diffMins < 1) timeDisplay = "Just now";
+          else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+          else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+          else timeDisplay = `${diffDays}d ago`;
+        }
+        
+        // Add icon based on notification type
+        let icon = '🔔';
+        if (notification.type === 'enrollment') icon = '📚';
+        else if (notification.type === 'course_update') icon = '📝';
+        else if (notification.type === 'message') icon = '💬';
+        else if (notification.type === 'achievement') icon = '🏆';
+        
+        notificationItem.innerHTML = `
+          <div class="notification-title">${icon} ${notification.title}</div>
+          <div class="notification-message">${notification.message}</div>
+          <div class="notification-time">${timeDisplay}</div>
+        `;
+        
+        notificationItem.addEventListener('click', async () => {
+          if (!notification.read) {
+            // Mark as read in studentNotifications collection
+            const notificationRef = doc(db, "studentNotifications", notification.id);
+            await updateDoc(notificationRef, {
+              read: true
             });
             
-            notificationList.appendChild(notificationItem);
-          });
-        } else {
-          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-          if (notificationBadge) {
-            notificationBadge.textContent = '0';
-            notificationBadge.style.display = 'none';
+            notificationItem.classList.remove('unread');
+            loadNotifications(userId);
           }
-        }
-      } catch (error) {
-        console.error("Error loading notifications:", error);
-        if (notificationList) {
-          notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
-        }
+          
+          // Navigate based on notification type
+          if (notification.courseId) {
+            window.location.href = `coursedetails.html?id=${notification.courseId}`;
+          }
+        });
+        
+        notificationList.appendChild(notificationItem);
+      });
+    } else {
+      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+      if (notificationBadge) {
+        notificationBadge.textContent = '0';
+        notificationBadge.style.display = 'none';
       }
     }
+  } catch (error) {
+    console.error("Error loading notifications:", error);
+    if (notificationList) {
+      notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+    }
+  }
+}
 
-    // Clear all notifications
-    async function clearAllNotifications() {
-      try {
-        if (!currentUser) return;
-        
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists() && userSnap.data().notifications) {
-          const notifications = userSnap.data().notifications.map(notification => ({
-            ...notification,
-            read: true
-          }));
-          
-          await updateDoc(userRef, {
-            notifications: notifications
-          });
-          
-          loadNotifications(currentUser.uid);
-        }
-      } catch (error) {
-        console.error("Error clearing notifications:", error);
-      }
+// Clear all notifications - UPDATED to work with studentNotifications collection
+async function clearAllNotifications() {
+  try {
+    if (!currentUser) return;
+    
+    // Query all unread notifications for this student
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", currentUser.uid),
+      where("read", "==", false)
+    );
+    
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
+    // Batch update all notifications to read
+    const updatePromises = [];
+    notificationsSnap.forEach(docSnap => {
+      const notificationRef = doc(db, "studentNotifications", docSnap.id);
+      updatePromises.push(updateDoc(notificationRef, { read: true }));
+    });
+    
+    await Promise.all(updatePromises);
+    
+    showMessage("✅ All notifications marked as read");
+    loadNotifications(currentUser.uid);
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    showMessage("❌ Error clearing notifications");
+  }
+}
+// Show success/error messages
+function showMessage(message, type = "success") {
+  const messageElement = document.createElement('div');
+  messageElement.style.cssText = `
+    position: fixed;
+    top: 100px;
+    right: 30px;
+    padding: 15px 25px;
+    border-radius: 10px;
+    z-index: 3000;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s ease;
+    max-width: 400px;
+    word-wrap: break-word;
+    background: ${type === "error" ? "linear-gradient(45deg, #ff4757, #ff3742)" : "linear-gradient(45deg, #28a745, #20c997)"};
+    color: white;
+  `;
+  messageElement.textContent = message;
+  
+  document.body.appendChild(messageElement);
+  
+  setTimeout(() => {
+    if (messageElement.parentNode) {
+      messageElement.remove();
     }
+  }, 4000);
+}
 
     // Initialize UI animations and effects
     function initUIAnimations() {

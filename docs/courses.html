@@ -505,7 +505,20 @@
       position: relative;
       z-index: 2;
     }
+    /* Profile picture styling */
+.avatar img {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
+/* Hide the rotating background when image is present */
+.avatar.has-image::before {
+  display: none;
+}
     /* Welcome Section */
     .welcome {
       padding: 40px 30px;
@@ -1580,25 +1593,32 @@
 <script type="module">
     // Firebase SDK imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { 
-      getFirestore, 
-      collection, 
-      getDocs, 
-      doc, 
-      getDoc, 
-      updateDoc,
-      arrayUnion,
-      setDoc,
-      query,
-      where,
-      onSnapshot
-    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  doc, 
+  getDoc, 
+  updateDoc,
+  arrayUnion,
+  setDoc,
+  query,
+  where,
+  onSnapshot,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { 
       getAuth, 
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-
+    import { 
+  getStorage, 
+  ref, 
+  uploadBytes, 
+  getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
@@ -1610,16 +1630,17 @@
       measurementId: "G-FWBKTSQDS9"
     };
 
-    // Initialize Firebase with error handling
-    let app, db, auth;
-    try {
-      app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      auth = getAuth(app);
-      console.log("Firebase initialized successfully");
-    } catch (error) {
-      console.error("Firebase initialization error:", error);
-    }
+// Initialize Firebase with error handling
+let app, db, auth, storage;
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+  storage = getStorage(app);
+  console.log("Firebase initialized successfully");
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+}
 
     // DOM elements
     const loadingContainer = document.getElementById('loadingContainer');
@@ -1830,49 +1851,132 @@
       });
     }
 
-    // Set up real-time listeners for updates
-    function setupRealtimeListeners(userId) {
-      // Listen for user data changes
-      const userRef = doc(db, "users", userId);
-      onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          fetchCourses();
-          loadNotifications(userId);
-        }
-      });
+// Set up real-time listeners for updates
+function setupRealtimeListeners(userId) {
+  // Listen for user data changes
+  const userRef = doc(db, "users", userId);
+  onSnapshot(userRef, (doc) => {
+    if (doc.exists()) {
+      fetchCourses();
     }
+  });
+  
+  // Listen for new student notifications
+  const notificationsQuery = query(
+    collection(db, "studentNotifications"),
+    where("studentId", "==", userId),
+    where("read", "==", false)
+  );
+  
+  onSnapshot(notificationsQuery, (snapshot) => {
+    console.log("Notifications updated");
+    loadNotifications(userId);
+    
+    // Show toast notification for new notifications
+    snapshot.docChanges().forEach(change => {
+      if (change.type === "added") {
+        const notification = change.doc.data();
+        showToastNotification(notification);
+      }
+    });
+  });
+}
+// Show toast notification for real-time updates
+function showToastNotification(notification) {
+  // Don't show if page just loaded (to avoid showing all existing notifications)
+  if (Date.now() - pageLoadTime < 3000) return;
+  
+  let icon = '🔔';
+  if (notification.type === 'enrollment') icon = '📚';
+  else if (notification.type === 'course_update') icon = '📝';
+  else if (notification.type === 'message') icon = '💬';
+  else if (notification.type === 'achievement') icon = '🏆';
+  
+  const toast = document.createElement('div');
+  toast.className = 'message-toast success';
+  toast.style.cssText += `
+    display: flex;
+    align-items: start;
+    gap: 10px;
+  `;
+  
+  toast.innerHTML = `
+    <div style="font-size: 24px;">${icon}</div>
+    <div style="flex: 1;">
+      <div style="font-weight: 600; margin-bottom: 5px;">${notification.title}</div>
+      <div style="font-size: 14px;">${notification.message}</div>
+    </div>
+  `;
+  
+  toast.addEventListener('click', () => {
+    if (notification.courseId) {
+      window.location.href = `coursedetails.html?id=${notification.courseId}`;
+    }
+  });
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.remove();
+    }
+  }, 5000);
+}
 
-    // Setup user information
-    async function setupUserInfo(user) {
-      try {
-        const displayName = user.displayName || user.email.split('@')[0];
-        if (userDisplayName) userDisplayName.textContent = displayName;
+// Track page load time to avoid showing old notifications as new
+const pageLoadTime = Date.now();
+
+// Setup user information - UPDATED with profile picture support
+async function setupUserInfo(user) {
+  try {
+    const displayName = user.displayName || user.email.split('@')[0];
+    if (userDisplayName) userDisplayName.textContent = displayName;
+    
+    // Handle profile picture or initials
+    const photoURL = user.photoURL;
+    const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+    
+    if (userInitials) {
+      if (photoURL) {
+        // Display profile picture
+        userInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
         
-        if (userInitials) {
-          const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
-          userInitials.textContent = initials;
+        // Add has-image class to show image properly
+        const avatarContainer = userInitials.parentElement;
+        if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+          avatarContainer.classList.add('has-image');
         }
+      } else {
+        // Display initials
+        userInitials.textContent = initials;
         
-        // Update welcome subtitle based on user data
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          let subtitle = "Discover new skills and advance your career with our comprehensive course library";
-          
-          if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
-            const enrolledCount = Object.keys(userData.enrollments).length;
-            subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Explore more to continue your learning journey!`;
-          }
-          
-          if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+        // Remove has-image class
+        const avatarContainer = userInitials.parentElement;
+        if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+          avatarContainer.classList.remove('has-image');
         }
-      } catch (error) {
-        console.error("Error setting up user info:", error);
       }
     }
-
+    
+    // Update welcome subtitle based on user data
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      let subtitle = "Discover new skills and advance your career with our comprehensive course library";
+      
+      if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
+        const enrolledCount = Object.keys(userData.enrollments).length;
+        subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Explore more to continue your learning journey!`;
+      }
+      
+      if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+    }
+  } catch (error) {
+    console.error("Error setting up user info:", error);
+  }
+}
     // Handle logout
     function handleLogout() {
       signOut(auth).then(() => {
@@ -1903,124 +2007,151 @@
       }
     }
 
-    // Load notifications from Firebase
-    async function loadNotifications(userId) {
-      try {
-        if (!notificationList) return;
+// Load notifications from Firebase - UPDATED to use studentNotifications collection
+async function loadNotifications(userId) {
+  try {
+    if (!notificationList) return;
 
-        const userRef = doc(db, "users", userId);
-        const userSnap = await getDoc(userRef);
+    // Add orderBy import at the top if not already present
+    const { orderBy } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
 
-        notificationList.innerHTML = "";
+    // Query studentNotifications collection for this user
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", userId),
+      orderBy("timestamp", "desc")
+    );
+    
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
+    notificationList.innerHTML = "";
 
-        if (userSnap.exists() && userSnap.data().notifications) {
-          const notifications = userSnap.data().notifications;
+    if (!notificationsSnap.empty) {
+      const notifications = [];
+      notificationsSnap.forEach(doc => {
+        notifications.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+
+      const notificationsToShow = notifications.slice(0, 5);
+
+      if (notificationsToShow.length === 0) {
+        notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+        if (notificationBadge) {
+          notificationBadge.textContent = '0';
+          notificationBadge.style.display = 'none';
+        }
+        return;
+      }
+
+      const unreadCount = notifications.filter(n => !n.read).length;
+      if (notificationBadge) {
+        notificationBadge.textContent = unreadCount;
+        notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+      }
+
+      notificationsToShow.forEach(notification => {
+        const notificationItem = document.createElement("div");
+        notificationItem.classList.add("notification-item");
+        if (!notification.read) {
+          notificationItem.classList.add("unread");
+        }
+        
+        let timeDisplay = "Recently";
+        if (notification.timestamp) {
+          const now = new Date();
+          const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
+          const diffMs = now - notificationTime;
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
           
-          notifications.sort((a, b) => {
-            const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
-            const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
-            return timeB - timeA;
-          });
-
-          const notificationsToShow = notifications.slice(0, 5);
-
-          if (notificationsToShow.length === 0) {
-            notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-            if (notificationBadge) {
-              notificationBadge.textContent = '0';
-              notificationBadge.style.display = 'none';
-            }
-            return;
-          }
-
-          const unreadCount = notifications.filter(n => !n.read).length;
-          if (notificationBadge) {
-            notificationBadge.textContent = unreadCount;
-            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
-          }
-
-          notificationsToShow.forEach(notification => {
-            const notificationItem = document.createElement("div");
-            notificationItem.classList.add("notification-item");
-            if (!notification.read) {
-              notificationItem.classList.add("unread");
-            }
-            
-            let timeDisplay = "Recently";
-            if (notification.timestamp) {
-              const now = new Date();
-              const notificationTime = notification.timestamp.toDate();
-              const diffMs = now - notificationTime;
-              const diffMins = Math.floor(diffMs / 60000);
-              const diffHours = Math.floor(diffMs / 3600000);
-              const diffDays = Math.floor(diffMs / 86400000);
-              
-              if (diffMins < 1) timeDisplay = "Just now";
-              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
-              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
-              else timeDisplay = `${diffDays}d ago`;
-            }
-            
-            notificationItem.innerHTML = `
-              <div class="notification-title">${notification.title}</div>
-              <div class="notification-message">${notification.message}</div>
-              <div class="notification-time">${timeDisplay}</div>
-            `;
-            
-            notificationItem.addEventListener('click', async () => {
-              if (!notification.read) {
-                notification.read = true;
-                await updateDoc(userRef, {
-                  notifications: notifications.map(n => 
-                    n.id === notification.id ? {...n, read: true} : n
-                  )
-                });
-                notificationItem.classList.remove('unread');
-                loadNotifications(userId);
-              }
+          if (diffMins < 1) timeDisplay = "Just now";
+          else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+          else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+          else timeDisplay = `${diffDays}d ago`;
+        }
+        
+        // Add icon based on notification type
+        let icon = '🔔';
+        if (notification.type === 'enrollment') icon = '📚';
+        else if (notification.type === 'course_update') icon = '📝';
+        else if (notification.type === 'message') icon = '💬';
+        else if (notification.type === 'achievement') icon = '🏆';
+        
+        notificationItem.innerHTML = `
+          <div class="notification-title">${icon} ${notification.title}</div>
+          <div class="notification-message">${notification.message}</div>
+          <div class="notification-time">${timeDisplay}</div>
+        `;
+        
+        notificationItem.addEventListener('click', async () => {
+          if (!notification.read) {
+            // Mark as read in studentNotifications collection
+            const notificationRef = doc(db, "studentNotifications", notification.id);
+            await updateDoc(notificationRef, {
+              read: true
             });
             
-            notificationList.appendChild(notificationItem);
-          });
-        } else {
-          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-          if (notificationBadge) {
-            notificationBadge.textContent = '0';
-            notificationBadge.style.display = 'none';
+            notificationItem.classList.remove('unread');
+            loadNotifications(userId);
           }
-        }
-      } catch (error) {
-        console.error("Error loading notifications:", error);
-        if (notificationList) {
-          notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
-        }
+          
+          // Navigate based on notification type
+          if (notification.courseId) {
+            window.location.href = `coursedetails.html?id=${notification.courseId}`;
+          }
+        });
+        
+        notificationList.appendChild(notificationItem);
+      });
+    } else {
+      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+      if (notificationBadge) {
+        notificationBadge.textContent = '0';
+        notificationBadge.style.display = 'none';
       }
     }
+  } catch (error) {
+    console.error("Error loading notifications:", error);
+    if (notificationList) {
+      notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+    }
+  }
+}
 
-    // Clear all notifications
-    async function clearAllNotifications() {
-      try {
-        if (!currentUser) return;
-        
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists() && userSnap.data().notifications) {
-          const notifications = userSnap.data().notifications.map(notification => ({
-            ...notification,
-            read: true
-          }));
-          
-          await updateDoc(userRef, {
-            notifications: notifications
-          });
-          
-          loadNotifications(currentUser.uid);
-        }
-      } catch (error) {
-        console.error("Error clearing notifications:", error);
-      }
-    }
+// Clear all notifications - UPDATED to work with studentNotifications collection
+async function clearAllNotifications() {
+  try {
+    if (!currentUser) return;
+    
+    // Query all unread notifications for this student
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", currentUser.uid),
+      where("read", "==", false)
+    );
+    
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
+    // Batch update all notifications to read
+    const updatePromises = [];
+    notificationsSnap.forEach(docSnap => {
+      const notificationRef = doc(db, "studentNotifications", docSnap.id);
+      updatePromises.push(updateDoc(notificationRef, { read: true }));
+    });
+    
+    await Promise.all(updatePromises);
+    
+    showMessage("✅ All notifications marked as read");
+    loadNotifications(currentUser.uid);
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    showMessage("❌ Error clearing notifications", "error");
+  }
+}
 
     // Fetch courses from Firestore and check enrollment status
     async function fetchCourses() {
@@ -2413,106 +2544,124 @@
       successModal.classList.add('active');
     }
 
-    // Complete enrollment with assigned teacher - UPDATED to match your Firestore structure
-    async function completeEnrollment(teacher) {
-      try {
-        console.log("Completing enrollment with teacher:", teacher);
-        
-        if (!db) {
-          throw new Error("Firestore not available");
-        }
-
-        const userRef = doc(db, "users", currentUser.uid);
-        const courseRef = doc(db, "courses", currentCourseToEnroll.id);
-
-        // Check if user exists, create if not
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          console.log("User document doesn't exist, creating...");
-          await setDoc(userRef, {
-            name: currentUser.displayName || "Student",
-            email: currentUser.email,
-            createdAt: new Date(),
-            enrollments: {},
-            profileComplete: false,
-            role: "student"
-          });
-        }
-
-        // Check if already enrolled
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        if (userData.enrollments && userData.enrollments[currentCourseToEnroll.id]) {
-          console.log("User already enrolled in this course");
-          return true;
-        }
-
-        // Get course data
-        const courseSnap = await getDoc(courseRef);
-        if (!courseSnap.exists()) {
-          throw new Error("Course not found");
-        }
-
-        const courseData = courseSnap.data();
-        const courseName = courseData.name || courseData.title || "Unknown Course";
-
-        console.log("Course data:", courseData);
-
-        // Create enrollment data - MATCHING YOUR EXACT FIRESTORE STRUCTURE
-        const enrollmentData = {
-          progress: 0,
-          completedLessons: [],
-          courseName: courseName,
-          enrolledAt: new Date(),
-          hasPassedTest: false,
-          lastAccessed: new Date(),
-          lectureProgress: 0,
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          testProgress: 0,
-          assignmentProgress: 0
-        };
-
-        console.log("Enrollment data to save:", enrollmentData);
-
-        // Update user document with enrollment
-        await updateDoc(userRef, {
-          [`enrollments.${currentCourseToEnroll.id}`]: enrollmentData
-        });
-
-        console.log("Enrollment saved to user document");
-
-        // Create notification - MATCHING YOUR FIRESTORE STRUCTURE
-        const notification = {
-          id: `enroll-${Date.now()}`,
-          title: "Course Enrolled Successfully!",
-          message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
-          timestamp: new Date(),
-          type: "enrollment",
-          courseId: currentCourseToEnroll.id,
-          teacherId: teacher.id,
-          read: false
-        };
-
-        // Add notification to user's notifications array
-        await updateDoc(userRef, {
-          notifications: arrayUnion(notification)
-        });
-
-        console.log("Notification created");
-
-        console.log(`Course ${currentCourseToEnroll.id} enrolled successfully with teacher ${teacher.id}`);
-        return true;
-
-      } catch (error) {
-        console.error("Error in enrollCourse:", error);
-        console.error("Error details:", {
-          message: error.message,
-          code: error.code,
-          stack: error.stack
-        });
-        return false;
-      }
+// Complete enrollment with assigned teacher - UPDATED with proper notification system
+async function completeEnrollment(teacher) {
+  try {
+    console.log("Completing enrollment with teacher:", teacher);
+    
+    if (!db) {
+      throw new Error("Firestore not available");
     }
+
+    const userRef = doc(db, "users", currentUser.uid);
+    const courseRef = doc(db, "courses", currentCourseToEnroll.id);
+
+    // Check if user exists, create if not
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      console.log("User document doesn't exist, creating...");
+      await setDoc(userRef, {
+        name: currentUser.displayName || "Student",
+        email: currentUser.email,
+        createdAt: new Date(),
+        enrollments: {},
+        profileComplete: false,
+        role: "student"
+      });
+    }
+
+    // Check if already enrolled
+    const userData = userSnap.exists() ? userSnap.data() : {};
+    if (userData.enrollments && userData.enrollments[currentCourseToEnroll.id]) {
+      console.log("User already enrolled in this course");
+      return true;
+    }
+
+    // Get course data
+    const courseSnap = await getDoc(courseRef);
+    if (!courseSnap.exists()) {
+      throw new Error("Course not found");
+    }
+
+    const courseData = courseSnap.data();
+    const courseName = courseData.name || courseData.title || "Unknown Course";
+
+    console.log("Course data:", courseData);
+
+    // Create enrollment data - MATCHING YOUR EXACT FIRESTORE STRUCTURE
+    const enrollmentData = {
+      progress: 0,
+      completedLessons: [],
+      courseName: courseName,
+      enrolledAt: new Date(),
+      hasPassedTest: false,
+      lastAccessed: new Date(),
+      lectureProgress: 0,
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      testProgress: 0,
+      assignmentProgress: 0
+    };
+
+    console.log("Enrollment data to save:", enrollmentData);
+
+    // Update user document with enrollment
+    await updateDoc(userRef, {
+      [`enrollments.${currentCourseToEnroll.id}`]: enrollmentData
+    });
+
+    console.log("Enrollment saved to user document");
+
+    // Import serverTimestamp
+    const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
+
+    // Create notification in studentNotifications collection
+    const studentNotificationRef = doc(collection(db, "studentNotifications"));
+    await setDoc(studentNotificationRef, {
+      studentId: currentUser.uid,
+      studentName: currentUser.displayName || "Student",
+      studentEmail: currentUser.email,
+      title: "Course Enrolled Successfully!",
+      message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
+      timestamp: serverTimestamp(),
+      type: "enrollment",
+      courseId: currentCourseToEnroll.id,
+      courseName: courseName,
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      read: false
+    });
+
+    // Create notification for teacher in teacherNotifications collection
+    const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
+    await setDoc(teacherNotificationRef, {
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      title: "New Student Enrolled",
+      message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
+      timestamp: serverTimestamp(),
+      type: "enrollment",
+      courseId: currentCourseToEnroll.id,
+      courseName: courseName,
+      studentId: currentUser.uid,
+      studentName: currentUser.displayName || "Student",
+      studentEmail: currentUser.email,
+      read: false
+    });
+
+    console.log("Enrollment and notifications created successfully");
+    return true;
+
+  } catch (error) {
+    console.error("Error in enrollCourse:", error);
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    return false;
+  }
+}
 
     // Handle search
     function handleSearch(e) {
