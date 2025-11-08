@@ -977,8 +977,15 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const courseId = urlParams.get("courseId") || "course1";
+const urlParams = new URLSearchParams(window.location.search);
+const courseId = urlParams.get("courseId") || "course1";
+
+// *** DEBUG: Log the courseId immediately ***
+console.log("==============================================");
+console.log("TEST PAGE LOADED");
+console.log("Course ID from URL:", courseId);
+console.log("Full URL:", window.location.href);
+console.log("==============================================");
 
     let currentUser = null;
     let courseData = null;
@@ -1030,66 +1037,327 @@
       `;
     }
 
-    async function initTestPage() {
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          currentUser = user;
-          await loadCourseData();
-          await loadTestQuestions();
-          await loadUserTestAttempts();
-        } else {
-          window.location.href = "signin.html";
-        }
-      });
+// UTILITY FUNCTIONS (Define these FIRST)
+// ============================================
 
-      elements.prevQuestionButton.addEventListener('click', showPreviousQuestion);
-      elements.nextQuestionButton.addEventListener('click', showNextQuestion);
-      elements.submitTestButton.addEventListener('click', submitTest);
-      elements.testWarningStay.addEventListener('click', () => elements.testWarningModal.classList.remove('active'));
-      elements.startTestBtn.addEventListener('click', startTestWithUserGesture);
-      elements.closeSuccessModal.addEventListener('click', closeTestWindow);
-      elements.goToCourseBtn.addEventListener('click', closeTestWindow);
-    }
+function closeTestWindow() {
+  // Send message to parent window if opened from another window
+  if (window.opener) {
+    window.opener.postMessage({ 
+      type: 'TEST_SUBMITTED', 
+      courseId: courseId,
+      studentId: currentUser.uid,
+      timestamp: Date.now()
+    }, '*');
+  }
+  
+  // Close the current window
+  window.close();
+  
+  // Fallback in case window.close() doesn't work
+  setTimeout(() => {
+    window.location.href = 'about:blank';
+  }, 1000);
+}
 
-    function closeTestWindow() {
-      // Send message to parent window if opened from another window
-      if (window.opener) {
-        window.opener.postMessage({ 
-          type: 'TEST_SUBMITTED', 
-          courseId: courseId,
-          studentId: currentUser.uid,
-          timestamp: Date.now()
-        }, '*');
-      }
-      
-      // Close the current window
-      window.close();
-      
-      // Fallback in case window.close() doesn't work
+function startTestWithUserGesture() {
+  if (testQuestions.length === 0) {
+    alert("No test questions available. Please contact your instructor.");
+    return;
+  }
+
+  elements.testStartContainer.style.display = 'none';
+  elements.testQuestionsContainer.style.display = 'block';
+  elements.testNavigation.style.display = 'flex';
+  elements.testTimerElement.style.display = 'block';
+  
+  setupTestRestrictions();
+  startTest();
+}
+
+function setupTestRestrictions() {
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  document.addEventListener('contextmenu', handleContextMenu);
+  document.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('blur', handleBlur);
+  
+  document.body.style.userSelect = 'none';
+  
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(err => {
+      console.log("Fullscreen not supported:", err);
+    });
+  }
+}
+
+function handleVisibilityChange() {
+  if (document.hidden && testStarted) {
+    tabChangeCount++;
+    handleLeaveAttempt();
+    
+    if (tabChangeCount >= MAX_TAB_CHANGES) {
+      showNotification(`You have exceeded the maximum allowed tab changes (${MAX_TAB_CHANGES}). Submitting test automatically.`, 'warning');
       setTimeout(() => {
-        window.location.href = 'about:blank';
-      }, 1000);
+        submitTest();
+      }, 2000);
     }
+  }
+}
 
-    async function loadCourseData() {
-      try {
-        const docRef = doc(db, "courses", courseId);
-        const docSnap = await getDoc(docRef);
+function handleBeforeUnload(e) {
+  if (testStarted) {
+    e.preventDefault();
+    e.returnValue = 'Test in progress. Leaving will count as an attempt.';
+    return e.returnValue;
+  }
+}
 
-        if (docSnap.exists()) {
-          courseData = { id: docSnap.id, ...docSnap.data() };
-          elements.testTitle.textContent = `${courseData.name || 'Course'} - Final Test`;
-          elements.testSubtitle.textContent = courseData.name || 'Final Test';
-        } else {
-          elements.testSubtitle.textContent = "Course not found";
-          console.error("Course not found");
-        }
-      } catch (err) {
-        console.error("Error loading course:", err);
-        elements.testSubtitle.textContent = "Error loading course";
+function handleContextMenu(e) {
+  if (testStarted) {
+    e.preventDefault();
+    showNotification('Right-click is disabled during the test', 'warning');
+  }
+}
+
+function handleKeyDown(e) {
+  if (testStarted) {
+    if (e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) ||
+        (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
+      e.preventDefault();
+      handleLeaveAttempt();
+    }
+  }
+}
+
+function handleBlur() {
+  if (testStarted) {
+    handleLeaveAttempt();
+  }
+}
+
+function removeTestRestrictions() {
+  testStarted = false;
+  
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+  document.removeEventListener('contextmenu', handleContextMenu);
+  document.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('blur', handleBlur);
+  
+  document.body.style.userSelect = '';
+  
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(err => {
+      console.log("Error exiting fullscreen:", err);
+    });
+  }
+}
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${type === 'warning' ? 'rgba(220, 53, 69, 0.9)' : 'rgba(255, 107, 107, 0.9)'};
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    z-index: 1001;
+    font-weight: 500;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+function handleLeaveAttempt() {
+  const remainingAttempts = MAX_TAB_CHANGES - tabChangeCount;
+  elements.testWarningMessage.textContent = `Warning! Leaving the test may cause loss of unsaved progress.`;
+  elements.remainingAttempts.textContent = `You have ${remainingAttempts} ${remainingAttempts === 1 ? 'attempt' : 'attempts'} remaining before automatic submission.`;
+  elements.testWarningModal.classList.add('active');
+}
+
+function startTest() {
+  testStarted = true;
+  tabChangeCount = 0;
+  testTimeRemaining = 3600;
+  
+  startTestTimer();
+  showQuestion(0);
+}
+
+function startTestTimer() {
+  testTimer = setInterval(() => {
+    testTimeRemaining--;
+    
+    elements.timeDisplay.textContent = formatTime(testTimeRemaining);
+    
+    if (testTimeRemaining <= 300) {
+      elements.testTimerElement.classList.add('critical');
+      elements.testTimerElement.classList.remove('warning');
+    } else if (testTimeRemaining <= 900) {
+      elements.testTimerElement.classList.add('warning');
+      elements.testTimerElement.classList.remove('critical');
+    } else {
+      elements.testTimerElement.classList.remove('warning', 'critical');
+    }
+    
+    if (testTimeRemaining <= 0) {
+      clearInterval(testTimer);
+      autoSubmitTest();
+    }
+  }, 1000);
+}
+
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+// ============================================
+// INITIALIZATION FUNCTION (Define AFTER utility functions)
+// ============================================
+
+async function initTestPage() {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      console.log("User logged in:", user.email);
+      
+      // **CRITICAL: Load in correct order**
+      await loadCourseData();          // 1. Load course first
+      await loadUserTestAttempts();    // 2. Then load teacher info from enrollment
+      await loadTestQuestions();       // 3. Finally load questions
+      
+      console.log("All data loaded. Teacher info:", {
+        teacherId: courseData?.teacherId,
+        teacherName: courseData?.teacherName
+      });
+    } else {
+      window.location.href = "signin.html";
+    }
+  });
+
+  elements.prevQuestionButton.addEventListener('click', showPreviousQuestion);
+  elements.nextQuestionButton.addEventListener('click', showNextQuestion);
+  elements.submitTestButton.addEventListener('click', submitTest);
+  elements.testWarningStay.addEventListener('click', () => elements.testWarningModal.classList.remove('active'));
+  elements.startTestBtn.addEventListener('click', startTestWithUserGesture);
+  elements.closeSuccessModal.addEventListener('click', closeTestWindow);
+  elements.goToCourseBtn.addEventListener('click', closeTestWindow);
+}
+
+// ============================================
+// DATA LOADING FUNCTIONS
+// ============================================
+
+async function loadCourseData() {
+  try {
+    const docRef = doc(db, "courses", courseId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      courseData = { id: docSnap.id, ...docSnap.data() };
+      console.log("Course data loaded:", courseData);
+      
+      // NOTE: Teacher info will be loaded from enrollment, not from course
+      console.log("Waiting for teacher info from enrollment data...");
+    } else {
+      console.error("Course not found in Firestore");
+      courseData = {};
+    }
+  } catch (err) {
+    console.error("Error loading course:", err);
+    courseData = {};
+  }
+}
+
+async function loadUserTestAttempts() {
+  if (!currentUser || !courseId) return;
+
+  try {
+    // *** Check if teacher data was passed from parent window ***
+    if (window.opener && window.opener.courseData) {
+      const passedData = window.opener.courseData;
+      console.log("=== DATA RECEIVED FROM PARENT WINDOW ===");
+      console.log("Passed courseId:", passedData.courseId);
+      console.log("Passed teacherId:", passedData.teacherId);
+      console.log("Passed teacherName:", passedData.teacherName);
+      
+      // Verify courseId matches
+      if (passedData.courseId === courseId && passedData.teacherId) {
+        if (!courseData) courseData = {};
+        courseData.teacherId = passedData.teacherId;
+        courseData.teacherName = passedData.teacherName;
+        
+        console.log("✓ Using teacher info from parent window");
       }
     }
+    
+    const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
 
+    if (userSnap.exists() && userSnap.data().enrollments) {
+      const enrollmentData = userSnap.data().enrollments[courseId];
+      if (enrollmentData) {
+        console.log("=== ENROLLMENT DATA FROM FIRESTORE ===");
+        console.log("Enrollment courseId:", courseId);
+        console.log("Enrollment teacherId:", enrollmentData.teacherId);
+        console.log("Enrollment teacherName:", enrollmentData.teacherName);
+        
+        // **CRITICAL: Teacher is randomly assigned during enrollment**
+        if (enrollmentData.teacherId && enrollmentData.teacherName) {
+          if (!courseData) {
+            courseData = {};
+          }
+          
+          courseData.teacherId = enrollmentData.teacherId;
+          courseData.teacherName = enrollmentData.teacherName;
+          
+          console.log("✓ Teacher info loaded from enrollment:", {
+            teacherId: courseData.teacherId,
+            teacherName: courseData.teacherName
+          });
+        } else {
+          console.error("❌ CRITICAL: No teacher assigned in enrollment data!");
+          alert("Error: No teacher assigned to this course. Please contact support.");
+          return;
+        }
+        
+        if (enrollmentData.lastTestAttempt) {
+          currentTestAttempt = enrollmentData.lastTestAttempt + 1;
+        }
+      } else {
+        console.error("❌ No enrollment data found for course:", courseId);
+        alert("Error: You are not enrolled in this course.");
+        return;
+      }
+    } else {
+      console.error("❌ User document not found or has no enrollments");
+      alert("Error: User data not found. Please sign in again.");
+      return;
+    }
+
+    elements.attemptNumber.textContent = currentTestAttempt;
+    elements.maxAttempts.textContent = maxTestAttempts;
+    
+    console.log("=== FINAL TEACHER INFO CHECK ===");
+    console.log("Course ID:", courseId);
+    console.log("Teacher ID:", courseData?.teacherId);
+    console.log("Teacher Name:", courseData?.teacherName);
+  } catch (error) {
+    console.error("Error loading user test attempts:", error);
+  }
+}
     async function loadTestQuestions() {
       showLoading("Loading test questions...");
       
@@ -1133,205 +1401,15 @@
       }
     }
 
-    async function loadUserTestAttempts() {
-      if (!currentUser || !courseId) return;
 
-      try {
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
 
-        if (userSnap.exists() && userSnap.data().enrollments) {
-          const enrollmentData = userSnap.data().enrollments[courseId];
-          if (enrollmentData) {
-            // Get teacher info from enrollment data
-            if (enrollmentData.teacherId) {
-              courseData = {
-                ...courseData,
-                teacherId: enrollmentData.teacherId,
-                teacherName: enrollmentData.teacherName || "Unknown Teacher"
-              };
-              console.log("Loaded teacher info:", courseData.teacherId, courseData.teacherName);
-            }
-            
-            if (enrollmentData.lastTestAttempt) {
-              currentTestAttempt = enrollmentData.lastTestAttempt + 1;
-            }
-          }
-        }
 
-        elements.attemptNumber.textContent = currentTestAttempt;
-        elements.maxAttempts.textContent = maxTestAttempts;
-      } catch (error) {
-        console.error("Error loading user test attempts:", error);
-      }
-    }
 
-    function startTestWithUserGesture() {
-      if (testQuestions.length === 0) {
-        alert("No test questions available. Please contact your instructor.");
-        return;
-      }
 
-      elements.testStartContainer.style.display = 'none';
-      elements.testQuestionsContainer.style.display = 'block';
-      elements.testNavigation.style.display = 'flex';
-      elements.testTimerElement.style.display = 'block';
-      
-      setupTestRestrictions();
-      startTest();
-    }
 
-    function setupTestRestrictions() {
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      document.addEventListener('contextmenu', handleContextMenu);
-      document.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('blur', handleBlur);
-      
-      document.body.style.userSelect = 'none';
-      
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.log("Fullscreen not supported:", err);
-        });
-      }
-      
-      // Removed restriction indicator display
-    }
 
-    function handleVisibilityChange() {
-      if (document.hidden && testStarted) {
-        tabChangeCount++;
-        handleLeaveAttempt();
-        
-        if (tabChangeCount >= MAX_TAB_CHANGES) {
-          showNotification(`You have exceeded the maximum allowed tab changes (${MAX_TAB_CHANGES}). Submitting test automatically.`, 'warning');
-          setTimeout(() => {
-            submitTest();
-          }, 2000);
-        }
-      }
-    }
 
-    function handleBeforeUnload(e) {
-      if (testStarted) {
-        e.preventDefault();
-        e.returnValue = 'Test in progress. Leaving will count as an attempt.';
-        return e.returnValue;
-      }
-    }
 
-    function handleContextMenu(e) {
-      if (testStarted) {
-        e.preventDefault();
-        showNotification('Right-click is disabled during the test', 'warning');
-      }
-    }
-
-    function handleKeyDown(e) {
-      if (testStarted) {
-        if (e.key === 'F12' || 
-            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) ||
-            (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
-          e.preventDefault();
-          handleLeaveAttempt();
-        }
-      }
-    }
-
-    function handleBlur() {
-      if (testStarted) {
-        handleLeaveAttempt();
-      }
-    }
-
-    function removeTestRestrictions() {
-      testStarted = false;
-      
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('blur', handleBlur);
-      
-      document.body.style.userSelect = '';
-      
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(err => {
-          console.log("Error exiting fullscreen:", err);
-        });
-      }
-      
-      // Removed restriction indicator display
-    }
-
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: ${type === 'warning' ? 'rgba(220, 53, 69, 0.9)' : 'rgba(255, 107, 107, 0.9)'};
-        color: white;
-        padding: 15px 25px;
-        border-radius: 10px;
-        z-index: 1001;
-        font-weight: 500;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      `;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
-    }
-
-    function handleLeaveAttempt() {
-      const remainingAttempts = MAX_TAB_CHANGES - tabChangeCount;
-      elements.testWarningMessage.textContent = `Warning! Leaving the test may cause loss of unsaved progress.`;
-      elements.remainingAttempts.textContent = `You have ${remainingAttempts} ${remainingAttempts === 1 ? 'attempt' : 'attempts'} remaining before automatic submission.`;
-      elements.testWarningModal.classList.add('active');
-    }
-
-    function startTest() {
-      testStarted = true;
-      tabChangeCount = 0; // Reset counter
-      testTimeRemaining = 3600;
-      
-      startTestTimer();
-      showQuestion(0);
-    }
-
-    function startTestTimer() {
-      testTimer = setInterval(() => {
-        testTimeRemaining--;
-        
-        elements.timeDisplay.textContent = formatTime(testTimeRemaining);
-        
-        if (testTimeRemaining <= 300) {
-          elements.testTimerElement.classList.add('critical');
-          elements.testTimerElement.classList.remove('warning');
-        } else if (testTimeRemaining <= 900) {
-          elements.testTimerElement.classList.add('warning');
-          elements.testTimerElement.classList.remove('critical');
-        } else {
-          elements.testTimerElement.classList.remove('warning', 'critical');
-        }
-        
-        if (testTimeRemaining <= 0) {
-          clearInterval(testTimer);
-          autoSubmitTest();
-        }
-      }, 1000);
-    }
-
-    function formatTime(seconds) {
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = seconds % 60;
-      return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
 
     function showQuestion(index) {
       if (index < 0 || index >= testQuestions.length) return;
@@ -1783,109 +1861,147 @@
       }
     }
 
-    async function saveTestSubmission() {
+async function saveTestSubmission() {
+  try {
+    // **CRITICAL: Get teacher info with proper fallback from enrollment**
+    let teacherId = courseData?.teacherId;
+    let teacherName = courseData?.teacherName;
+    
+    console.log("=== SUBMITTING TEST ===");
+    console.log("Initial teacher info from courseData:", {
+      teacherId: teacherId,
+      teacherName: teacherName
+    });
+    
+    // If no teacher info found, reload from Firestore enrollment
+    if (!teacherId || teacherId === "default-teacher") {
+      console.warn("⚠️ No teacher ID in courseData, reloading from Firestore...");
+      
       try {
-        const teacherId = courseData?.teacherId || "default-teacher";
-        const teacherName = courseData?.teacherName || "Unknown Teacher";
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
         
-        // Transform answers to match your desired format
-        const formattedAnswers = userTestAnswers.map((answer, index) => {
-          if (!answer) return null;
-          
-          const question = testQuestions[index];
-          
-          // Create the answer object in your specified format
-          const formattedAnswer = {
-            answer: answer.answer !== undefined ? answer.answer : "",
-            points: question.points || 20,
-            questionId: answer.questionId || question.id || `question${index + 1}`,
-            questionText: question.question || "",
-            questionType: question.type || "text_answer"
-          };
-          
-          return formattedAnswer;
-        }).filter(a => a !== null);
-        
-        // Create submission data in your exact format
-        const testSubmissionData = {
-          answers: formattedAnswers,
-          testId: "final-test", // You might want to make this dynamic
-          testTitle: "Final Test",
-          courseId: courseId || "",
-          courseName: courseData?.name || "HTML Basics",
-          evaluated: false,
-          feedback: "",
-          teacherId: teacherId,
-          teacherName: teacherName, // Add teacher name here
-          score: 0,
-          status: "pending_evaluation",
-          studentEmail: currentUser.email || "",
-          studentId: currentUser.uid || "",
-          studentName: currentUser.displayName || currentUser.email || "Unknown Student",
-          submittedAt: Timestamp.now(),
-          totalPoints: testQuestions.reduce((sum, q) => sum + (q.points || 20), 0),
-          timeSpent: 3600 - testTimeRemaining,
-          attemptNumber: currentTestAttempt,
-          maxAttempts: maxTestAttempts
-        };
-        
-        // Use a unique submission ID instead of just teacherId to avoid overwriting
-        const submissionId = `${teacherId}_${courseId}_${currentUser.uid}_${Date.now()}`;
-        
-        // Save to the "testSubmissions" collection
-        const testSubmissionRef = doc(db, "testSubmissions", submissionId);
-        await setDoc(testSubmissionRef, testSubmissionData);
-        
-        console.log("Test submitted successfully with teacher:", teacherName);
-        
-        // Also save to teacher's personal test submissions collection
-        try {
-          const teacherSubmissionRef = doc(db, "teachers", teacherId, "testSubmissions", `${courseId}_${currentUser.uid}`);
-          await setDoc(teacherSubmissionRef, testSubmissionData);
-          
-          console.log("Test submission saved to teacher's personal collection");
-        } catch (teacherError) {
-          console.error("Error saving to teacher's collection:", teacherError);
-          // Continue even if this fails
-        }
-        
-        // Send notification to teacher
-        try {
-          const teacherRef = doc(db, "teachers", teacherId);
-          const teacherSnap = await getDoc(teacherRef);
-          
-          if (teacherSnap.exists()) {
-            const notificationData = {
-              id: `${courseId}_${currentUser.uid}`,
-              type: "test_submission",
-              title: "New Test Submission",
-              message: `${currentUser.displayName || currentUser.email} submitted the final test for ${courseData?.name || 'a course'}`,
-              courseId: courseId,
-              studentId: currentUser.uid,
-              studentName: currentUser.displayName || currentUser.email,
-              submissionId: submissionId,
-              timestamp: Timestamp.now(),
-              read: false
-            };
-            
-            await updateDoc(teacherRef, {
-              notifications: arrayUnion(notificationData)
-            });
-            
-            console.log("Notification sent to teacher:", teacherName);
+        if (userSnap.exists()) {
+          const enrollmentData = userSnap.data().enrollments?.[courseId];
+          if (enrollmentData && enrollmentData.teacherId) {
+            teacherId = enrollmentData.teacherId;
+            teacherName = enrollmentData.teacherName || "Unknown Teacher";
+            console.log("✓ Teacher info reloaded from enrollment:", { teacherId, teacherName });
           } else {
-            console.warn("Teacher document not found:", teacherId);
+            console.error("❌ No teacher in enrollment data");
           }
-        } catch (notifError) {
-          console.error("Error sending notification to teacher:", notifError);
-          // Don't throw - submission was successful even if notification failed
         }
-        
-      } catch (error) {
-        console.error("Error saving test submission:", error);
-        throw error;
+      } catch (reloadError) {
+        console.error("Error reloading teacher info:", reloadError);
       }
     }
+    
+    // Final validation - MUST have teacher ID
+    if (!teacherId || teacherId === "default-teacher") {
+      console.error("❌ CRITICAL ERROR: No teacher ID available!");
+      alert("Error: Cannot submit test - no teacher assigned. Please contact support.");
+      return;
+    }
+    
+    console.log("=== FINAL SUBMISSION DATA ===");
+    console.log("Teacher ID:", teacherId);
+    console.log("Teacher Name:", teacherName);
+    
+    // Transform answers to match your desired format
+    const formattedAnswers = userTestAnswers.map((answer, index) => {
+      if (!answer) return null;
+      
+      const question = testQuestions[index];
+      
+      return {
+        answer: answer.answer !== undefined ? answer.answer : "",
+        points: question.points || 20,
+        questionId: answer.questionId || question.id || `question${index + 1}`,
+        questionText: question.question || "",
+        questionType: question.type || "text_answer"
+      };
+    }).filter(a => a !== null);
+    
+    // Create submission data
+    const testSubmissionData = {
+      answers: formattedAnswers,
+      testId: "final-test",
+      testTitle: "Final Test",
+      courseId: courseId || "",
+      courseName: courseData?.name || "Course",
+      evaluated: false,
+      feedback: "",
+      teacherId: teacherId,  // ← This now comes from enrollment
+      teacherName: teacherName, // ← This now comes from enrollment
+      score: 0,
+      status: "pending_evaluation",
+      studentEmail: currentUser.email || "",
+      studentId: currentUser.uid || "",
+      studentName: currentUser.displayName || currentUser.email || "Unknown Student",
+      submittedAt: Timestamp.now(),
+      totalPoints: testQuestions.reduce((sum, q) => sum + (q.points || 20), 0),
+      timeSpent: 3600 - testTimeRemaining,
+      attemptNumber: currentTestAttempt,
+      maxAttempts: maxTestAttempts
+    };
+    
+    console.log("=== SUBMISSION DATA ===", testSubmissionData);
+    
+    // Use a unique submission ID
+    const submissionId = `${teacherId}_${courseId}_${currentUser.uid}_${Date.now()}`;
+    
+    // Save to the "testSubmissions" collection
+    const testSubmissionRef = doc(db, "testSubmissions", submissionId);
+    await setDoc(testSubmissionRef, testSubmissionData);
+    
+    console.log("✓ Test submitted successfully to teacher:", teacherName, "(", teacherId, ")");
+    
+    // Save to teacher's personal test submissions collection
+    try {
+      const teacherSubmissionRef = doc(db, "teachers", teacherId, "testSubmissions", `${courseId}_${currentUser.uid}_${Date.now()}`);
+      await setDoc(teacherSubmissionRef, testSubmissionData);
+      
+      console.log("✓ Test submission saved to teacher's personal collection");
+    } catch (teacherError) {
+      console.error("Error saving to teacher's collection:", teacherError);
+    }
+    
+    // Send notification to teacher
+    try {
+      const teacherRef = doc(db, "teachers", teacherId);
+      const teacherSnap = await getDoc(teacherRef);
+      
+      if (teacherSnap.exists()) {
+        const notificationData = {
+          id: `test_${courseId}_${currentUser.uid}_${Date.now()}`,
+          type: "test_submission",
+          title: "New Test Submission",
+          message: `${currentUser.displayName || currentUser.email} submitted the final test for ${courseData?.name || 'a course'}`,
+          courseId: courseId,
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || currentUser.email,
+          submissionId: submissionId,
+          timestamp: Timestamp.now(),
+          read: false
+        };
+        
+        await updateDoc(teacherRef, {
+          notifications: arrayUnion(notificationData)
+        });
+        
+        console.log("✓ Notification sent to teacher:", teacherName);
+      } else {
+        console.warn("⚠️ Teacher document not found:", teacherId);
+      }
+    } catch (notifError) {
+      console.error("Error sending notification to teacher:", notifError);
+    }
+    
+  } catch (error) {
+    console.error("Error saving test submission:", error);
+    throw error;
+  }
+}
 
     initTestPage();
   </script>

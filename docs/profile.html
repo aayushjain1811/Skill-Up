@@ -592,6 +592,19 @@
       flex-direction: column;
       gap: 0.8rem;
     }
+    .profile-avatar-large img,
+.avatar img {
+  position: relative;
+  z-index: 2;
+}
+
+.avatar::before {
+  display: none;
+}
+
+.avatar.has-image::before {
+  display: block;
+}
 
     /* Form Sections */
     .form-section {
@@ -949,6 +962,49 @@
       font-weight: bold;
       margin-right: 0.5rem;
     }
+    /* Password Validation Styling */
+.requirement-list li {
+  transition: all 0.3s ease;
+}
+
+.requirement-list li.valid {
+  color: var(--success);
+}
+
+.requirement-list li.valid::before {
+  content: '✓';
+  color: var(--success);
+}
+
+.requirement-list li.invalid {
+  color: #ff4757;
+}
+
+.requirement-list li.invalid::before {
+  content: '✗';
+  color: #ff4757;
+}
+
+.password-match-indicator {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.password-match-indicator.match {
+  background: rgba(46, 213, 115, 0.1);
+  color: var(--success);
+  border: 1px solid rgba(46, 213, 115, 0.3);
+}
+
+.password-match-indicator.no-match {
+  background: rgba(255, 71, 87, 0.1);
+  color: #ff4757;
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
 
     /* Mobile Menu Button */
     .mobile-menu-btn {
@@ -1296,21 +1352,25 @@
           <input type="password" class="form-input" id="newPassword" name="newPassword" required>
         </div>
         
-        <div class="form-group">
-          <label class="form-label" for="confirmPassword">Confirm New Password</label>
-          <input type="password" class="form-input" id="confirmPassword" name="confirmPassword" required>
-        </div>
+                <div class="form-group">
+  <label class="form-label" for="confirmPassword">Confirm New Password</label>
+  <input type="password" class="form-input" id="confirmPassword" name="confirmPassword" required>
+  <div id="passwordMatchIndicator" class="password-match-indicator" style="display: none;">
+  </div>
+</div>
+
         
-        <div class="password-requirements">
-          <h4>Password Requirements:</h4>
-          <ul class="requirement-list">
-            <li>At least 8 characters long</li>
-            <li>Contains at least one uppercase letter</li>
-            <li>Contains at least one lowercase letter</li>
-            <li>Contains at least one number</li>
-            <li>Contains at least one special character</li>
-          </ul>
-        </div>
+<div class="password-requirements">
+  <h4>Password Requirements:</h4>
+  <ul class="requirement-list">
+    <li id="req-length">At least 8 characters long</li>
+    <li id="req-uppercase">Contains at least one uppercase letter</li>
+    <li id="req-lowercase">Contains at least one lowercase letter</li>
+    <li id="req-number">Contains at least one number</li>
+    <li id="req-special">Contains at least one special character</li>
+  </ul>
+</div>
+
         
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
           <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('changePasswordModal')">
@@ -1394,6 +1454,14 @@
       onSnapshot
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+    import { 
+  getStorage, 
+  ref, 
+  uploadBytes, 
+  getDownloadURL,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
     // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
@@ -1409,6 +1477,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     // DOM Elements
     const loadingContainer = document.getElementById('loadingContainer');
@@ -1544,6 +1613,69 @@
         }
       });
     }
+    // Real-time Password Validation
+function validatePasswordRequirements(password) {
+  const requirements = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  };
+  
+  return requirements;
+}
+
+function updatePasswordRequirements(password) {
+  const requirements = validatePasswordRequirements(password);
+  
+  // Update each requirement indicator
+  document.getElementById('req-length').className = requirements.length ? 'valid' : 'invalid';
+  document.getElementById('req-uppercase').className = requirements.uppercase ? 'valid' : 'invalid';
+  document.getElementById('req-lowercase').className = requirements.lowercase ? 'valid' : 'invalid';
+  document.getElementById('req-number').className = requirements.number ? 'valid' : 'invalid';
+  document.getElementById('req-special').className = requirements.special ? 'valid' : 'invalid';
+  
+  // Return true if all requirements are met
+  return Object.values(requirements).every(req => req === true);
+}
+
+function checkPasswordMatch() {
+  const newPass = newPassword.value;
+  const confirmPass = confirmPassword.value;
+  const indicator = document.getElementById('passwordMatchIndicator');
+  
+  if (confirmPass.length === 0) {
+    indicator.style.display = 'none';
+    return false;
+  }
+  
+  indicator.style.display = 'block';
+  
+  if (newPass === confirmPass) {
+    indicator.className = 'password-match-indicator match';
+    indicator.textContent = '✓ Passwords match';
+    return true;
+  } else {
+    indicator.className = 'password-match-indicator no-match';
+    indicator.textContent = '✗ Passwords do not match';
+    return false;
+  }
+}
+
+// Add event listeners for real-time validation
+if (newPassword) {
+  newPassword.addEventListener('input', () => {
+    updatePasswordRequirements(newPassword.value);
+    if (confirmPassword.value.length > 0) {
+      checkPasswordMatch();
+    }
+  });
+}
+
+if (confirmPassword) {
+  confirmPassword.addEventListener('input', checkPasswordMatch);
+}
 
     // Set up real-time listeners for updates
     function setupRealtimeListeners(userId) {
@@ -1598,10 +1730,20 @@
         userEmail.textContent = email;
         userBio.textContent = bio;
         
-        const displayNameForInitials = userName.textContent;
-        const initials = displayNameForInitials.split(" ").map(n => n[0]).join("").toUpperCase();
-        avatarInitials.textContent = initials;
-        userAvatar.textContent = initials;
+// Handle profile picture or initials
+const photoURL = user.photoURL;
+const displayNameForInitials = userName.textContent;
+const initials = displayNameForInitials.split(" ").map(n => n[0]).join("").toUpperCase();
+
+if (photoURL) {
+  // Display profile picture
+  avatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+} else {
+  // Display initials
+  avatarInitials.textContent = initials;
+  userAvatar.textContent = initials;
+}
 
         // Set form values
         editName.value = userName.textContent;
@@ -1939,50 +2081,65 @@
     });
 
     // Change Password Form Submission
-    passwordForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      
-      if (newPassword.value !== confirmPassword.value) {
-        showNotification("❌ New passwords do not match", "error");
-        return;
-      }
-      
-      if (newPassword.value.length < 8) {
-        showNotification("❌ Password must be at least 8 characters", "error");
-        return;
-      }
+// Change Password Form Submission
+passwordForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  // Check if passwords match
+  if (newPassword.value !== confirmPassword.value) {
+    showNotification("❌ New passwords do not match", "error");
+    return;
+  }
+  
+  // Validate password requirements
+  const isValid = updatePasswordRequirements(newPassword.value);
+  if (!isValid) {
+    showNotification("❌ Password does not meet all requirements", "error");
+    return;
+  }
 
-      try {
-        const user = auth.currentUser;
-        
-        // Reauthenticate user
-        const credential = EmailAuthProvider.credential(user.email, currentPassword.value);
-        await reauthenticateWithCredential(user, credential);
-        
-        // Update password
-        await updatePassword(user, newPassword.value);
-        
-        // Clear form
-        passwordForm.reset();
-        
-        closeModal('changePasswordModal');
-        showNotification("✅ Password updated successfully!");
-      } catch (error) {
-        console.error("Error updating password:", error);
-        if (error.code === 'auth/wrong-password') {
-          showNotification("❌ Current password is incorrect", "error");
-        } else if (error.code === 'auth/weak-password') {
-          showNotification("❌ Password is too weak", "error");
-        } else {
-          showNotification("❌ Error updating password: " + error.message, "error");
-        }
-      }
+  // Show loading state
+  const submitBtn = passwordForm.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<span class="spinner"></span> Updating...';
+  submitBtn.disabled = true;
+
+  try {
+    const user = auth.currentUser;
+    
+    // Reauthenticate user
+    const credential = EmailAuthProvider.credential(user.email, currentPassword.value);
+    await reauthenticateWithCredential(user, credential);
+    
+    // Update password
+    await updatePassword(user, newPassword.value);
+    
+    // Clear form
+    passwordForm.reset();
+    
+    // Reset requirement indicators
+    document.querySelectorAll('.requirement-list li').forEach(li => {
+      li.className = '';
     });
-
-    // Delete Account Confirmation
-    window.confirmDeleteAccount = () => {
-      openModal('deleteAccountModal');
-    };
+    document.getElementById('passwordMatchIndicator').style.display = 'none';
+    
+    closeModal('changePasswordModal');
+    showNotification("✅ Password updated successfully!");
+  } catch (error) {
+    console.error("Error updating password:", error);
+    if (error.code === 'auth/wrong-password') {
+      showNotification("❌ Current password is incorrect", "error");
+    } else if (error.code === 'auth/weak-password') {
+      showNotification("❌ Password is too weak", "error");
+    } else {
+      showNotification("❌ Error updating password: " + error.message, "error");
+    }
+  } finally {
+    // Restore button state
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }
+});
 
     // Delete Account Function - UPDATED to match your Firestore structure
     window.deleteAccount = async () => {
@@ -2037,10 +2194,102 @@
       }
     };
 
-    // Upload avatar (placeholder)
-    window.uploadAvatar = () => {
-      showNotification("🔄 Avatar upload functionality coming soon!");
-    };
+// Upload avatar function
+window.uploadAvatar = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification("❌ Image size should be less than 5MB", "error");
+      return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showNotification("❌ Please select an image file", "error");
+      return;
+    }
+    
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      // Show loading
+      const avatarElement = document.getElementById('profileAvatar');
+      const originalContent = avatarElement.innerHTML;
+      avatarElement.innerHTML = '<span class="spinner"></span>';
+      
+      // Create storage reference
+      const storageRef = ref(storage, `profile-pictures/${user.uid}/${Date.now()}_${file.name}`);
+      
+      // Upload file
+      await uploadBytes(storageRef, file);
+      
+      // Get download URL
+      const photoURL = await getDownloadURL(storageRef);
+      
+      // Update user profile in Auth
+      await updateProfile(user, { photoURL });
+      
+      // Update Firestore
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, { 
+        photoURL: photoURL 
+      }, { merge: true });
+      
+      // Update UI
+      await loadUserProfile(user);
+      
+      showNotification("✅ Profile picture updated successfully!");
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      showNotification("❌ Error uploading image: " + error.message, "error");
+      
+      // Restore original content on error
+      const avatarElement = document.getElementById('profileAvatar');
+      avatarElement.innerHTML = originalContent;
+    }
+  };
+  
+  input.click();
+};
+// Delete profile picture
+window.deleteProfilePicture = async () => {
+  if (!confirm('Are you sure you want to remove your profile picture?')) {
+    return;
+  }
+  
+  try {
+    const user = auth.currentUser;
+    if (!user || !user.photoURL) {
+      showNotification("❌ No profile picture to remove", "error");
+      return;
+    }
+    
+    // Update user profile in Auth
+    await updateProfile(user, { photoURL: null });
+    
+    // Update Firestore
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, { 
+      photoURL: null 
+    });
+    
+    // Reload profile
+    await loadUserProfile(user);
+    
+    showNotification("✅ Profile picture removed successfully!");
+  } catch (error) {
+    console.error("Error removing profile picture:", error);
+    showNotification("❌ Error removing picture: " + error.message, "error");
+  }
+};
 
     // Show notification
     function showNotification(message, type = "success") {

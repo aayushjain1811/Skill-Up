@@ -4138,6 +4138,7 @@ body::before {
         <section class="course-header">
           <h1 class="course-name" id="courseName">Loading course...</h1>
           
+          
           <!-- Course Provider and Instructor -->
           <div class="course-providers">
             <div class="provider-card">
@@ -4853,136 +4854,105 @@ function toggleFullscreen(element) {
 }
 
 // Mark lecture as complete
+// After line 1063, replace the updateProgressInFirestore call:
 async function markLectureComplete(lectureId) {
   console.log(`=== MARKING LECTURE AS COMPLETE ===`);
   console.log(`Lecture ID: ${lectureId}`);
-  console.log(`Current User: ${currentUser?.uid}`);
-  console.log(`Course ID: ${courseId}`);
   
   if (!currentUser || !courseId || !lectureId) {
-    console.error('Missing required data:', { currentUser: !!currentUser, courseId: !!courseId, lectureId: !!lectureId });
+    console.error('Missing required data');
     return;
   }
 
   try {
     const userRef = doc(db, "users", currentUser.uid);
     
-    // Check if lecture is already completed to avoid duplicates
     const isAlreadyCompleted = userEnrollmentData?.completedLessons?.includes(lectureId);
-    console.log(`Is already completed: ${isAlreadyCompleted}`);
     
     if (!isAlreadyCompleted) {
       console.log(`Updating Firestore...`);
       
-      // Update Firestore - FIXED: Changed updateDoc to updateDoc
       await updateDoc(userRef, {
         [`enrollments.${courseId}.completedLessons`]: arrayUnion(lectureId),
         [`enrollments.${courseId}.lastAccessed`]: new Date()
       });
 
-      console.log('Firestore updated successfully');
-
-      // Update local data
       if (!userEnrollmentData.completedLessons) {
         userEnrollmentData.completedLessons = [];
       }
       userEnrollmentData.completedLessons.push(lectureId);
       
-      console.log(`Lecture ${lectureId} marked as complete. Total completed: ${userEnrollmentData.completedLessons.length}/${allLectures.length}`);
+      // **CRITICAL FIX: Force immediate progress recalculation**
+      await calculateAndUpdateProgress();
       
-      // Update UI
       updateLectureUI(lectureId, true);
-      
-      // Force progress update
-      await updateProgressInFirestore();
-      updateProgressDisplay();
-      checkAssignmentUnlock();
-      
-      // Show on-screen animation instead of notification
       showLectureCompletionAnimation();
       
       console.log(`Lecture ${lectureId} marked as complete successfully`);
-    } else {
-      console.log(`Lecture ${lectureId} already completed`);
     }
   } catch (error) {
     console.error("Error marking lecture as complete:", error);
-    addNotification({
-      title: "Error",
-      message: "Failed to mark lecture as complete. Please try again.",
-      type: "error",
-      courseId: courseId,
-      read: false
-    });
   }
 }
-
-// Update progress calculation to equal distribution
-async function updateProgressInFirestore() {
-  console.log("=== UPDATING PROGRESS IN FIRESTORE ===");
+// NEW: Centralized progress calculation
+async function calculateAndUpdateProgress() {
+  console.log("=== CALCULATING AND UPDATING PROGRESS ===");
   
   if (!currentUser || !courseId || !userEnrollmentData) {
-    console.error("Missing required data for progress update");
+    console.error("Missing required data for progress calculation");
     return;
   }
 
   try {
-    // First, reload user data to ensure we have the latest grades
+    // Reload latest user data first
     const userRef = doc(db, "users", currentUser.uid);
     const userSnap = await getDoc(userRef);
     
     if (userSnap.exists()) {
       const userData = userSnap.data();
       const courseEnrollment = userData.enrollments?.[courseId];
-      
       if (courseEnrollment) {
-        // Update local data with latest from Firestore
         userEnrollmentData = { ...userEnrollmentData, ...courseEnrollment };
       }
     }
     
-    // Count total components (lectures + assignments + final test)
+    // Count components
     const totalLectures = allLectures.length || 0;
     const totalAssignments = courseAssignments.length || 0;
-    const hasFinalTest = 1; // Final test counts as 1 component
-    
+    const hasFinalTest = 1;
     const totalComponents = totalLectures + totalAssignments + hasFinalTest;
     
     if (totalComponents === 0) {
-      console.log("No components found for progress calculation");
+      console.log("No components found");
       return;
     }
     
-    // Calculate value per component (100% divided by total components)
     const valuePerComponent = 100 / totalComponents;
     
     // Calculate lecture progress
     const completedLectures = userEnrollmentData.completedLessons?.length || 0;
     const lectureProgress = completedLectures * valuePerComponent;
 
-    // Calculate assignment progress - Only count passed assignments
+    // Calculate assignment progress - only passed assignments
     const passedAssignments = getPassedAssignmentsCount();
     const assignmentProgress = passedAssignments * valuePerComponent;
 
-    // Calculate test progress - only if test is evaluated and passed
+    // Calculate test progress
     let testProgress = 0;
     if (userEnrollmentData.testEvaluated && userEnrollmentData.testGrade >= 70) {
       testProgress = hasFinalTest * valuePerComponent;
     }
     
-    // Overall progress: Sum of all components
+    // Overall progress
     const overallProgress = Math.min(Math.round(lectureProgress + assignmentProgress + testProgress), 100);
     
-    console.log(`Progress Calculation (Equal Distribution):`);
-    console.log(`- Total Components: ${totalComponents} (${totalLectures} lectures + ${totalAssignments} assignments + 1 test)`);
-    console.log(`- Value per component: ${valuePerComponent.toFixed(2)}%`);
-    console.log(`- Lectures: ${completedLectures}/${totalLectures} × ${valuePerComponent.toFixed(2)}% = ${lectureProgress.toFixed(2)}%`);
-    console.log(`- Passed Assignments: ${passedAssignments}/${totalAssignments} × ${valuePerComponent.toFixed(2)}% = ${assignmentProgress.toFixed(2)}%`);
-    console.log(`- Assignment Grades:`, userEnrollmentData.assignmentGrades);
-    console.log(`- Test: ${userEnrollmentData.testEvaluated ? (userEnrollmentData.testGrade >= 70 ? `${valuePerComponent.toFixed(2)}%` : '0%') : '0%'}`);
-    console.log(`- Overall Progress: ${overallProgress}%`);
+    console.log(`Progress Calculation:`);
+    console.log(`- Lectures: ${completedLectures}/${totalLectures} = ${lectureProgress.toFixed(2)}%`);
+    console.log(`- Assignments: ${passedAssignments}/${totalAssignments} = ${assignmentProgress.toFixed(2)}%`);
+    console.log(`- Test: ${testProgress.toFixed(2)}%`);
+    console.log(`- Overall: ${overallProgress}%`);
     
-    // Update Firestore with detailed progress breakdown
+    // **CRITICAL: Update Firestore with new progress**
     await updateDoc(userRef, {
       [`enrollments.${courseId}.progress`]: overallProgress,
       [`enrollments.${courseId}.lectureProgress`]: Math.round(lectureProgress * 10) / 10,
@@ -4997,11 +4967,21 @@ async function updateProgressInFirestore() {
     userEnrollmentData.assignmentProgress = Math.round(assignmentProgress * 10) / 10;
     userEnrollmentData.testProgress = testProgress;
     
-    console.log(`✓ Progress updated in Firestore: ${overallProgress}%`);
+    // Update UI
+    updateProgressDisplay();
+    checkAssignmentUnlock();
+    
+    console.log(`✓ Progress updated to ${overallProgress}%`);
     
   } catch (error) {
-    console.error("Error updating progress in Firestore:", error);
+    console.error("Error calculating progress:", error);
   }
+}
+
+// Update progress calculation to equal distribution
+// Update progress calculation to use centralized function
+async function updateProgressInFirestore() {
+  await calculateAndUpdateProgress();
 }
 
 // NEW: Show lecture completion animation
@@ -5081,54 +5061,17 @@ function updateLectureUI(lectureId, isCompleted) {
 function updateProgressDisplay() {
   console.log("=== UPDATING PROGRESS DISPLAY ===");
   
-  if (!userEnrollmentData || allLectures.length === 0) {
-    console.log("Missing enrollment data or lectures");
+  if (!userEnrollmentData) {
+    console.log("Missing enrollment data");
     return;
   }
 
-  // Count total components (lectures + assignments + final test)
-  const totalLectures = allLectures.length;
-  const totalAssignments = courseAssignments.length;
-  const hasFinalTest = 1; // Final test counts as 1 component
+  // Use the progress value from userEnrollmentData (which is updated from Firestore)
+  const overallProgressValue = userEnrollmentData.progress || 0;
   
-  const totalComponents = totalLectures + totalAssignments + hasFinalTest;
+  console.log(`Displaying progress: ${overallProgressValue}%`);
   
-  if (totalComponents === 0) {
-    console.log("No components found for progress calculation");
-    return;
-  }
-  
-  // Calculate value per component (100% divided by total components)
-  const valuePerComponent = 100 / totalComponents;
-  
-  // Calculate lecture progress
-  const completedLectures = userEnrollmentData.completedLessons 
-    ? userEnrollmentData.completedLessons.length 
-    : 0;
-  const lectureProgress = completedLectures * valuePerComponent;
-
-  // Calculate assignment progress - Only count passed assignments
-  const passedAssignments = getPassedAssignmentsCount();
-  const assignmentProgress = passedAssignments * valuePerComponent;
-
-  // Calculate test progress - only if test is evaluated and passed
-  let testProgress = 0;
-  if (userEnrollmentData.testEvaluated && userEnrollmentData.testGrade >= 70) {
-    testProgress = hasFinalTest * valuePerComponent;
-  }
-  
-  // Overall progress: Sum of all components
-  const overallProgressValue = Math.min(Math.round(lectureProgress + assignmentProgress + testProgress), 100);
-  
-  console.log(`Progress Display Update (Equal Distribution):`);
-  console.log(`- Total Components: ${totalComponents}`);
-  console.log(`- Value per component: ${valuePerComponent.toFixed(2)}%`);
-  console.log(`- Lectures: ${completedLectures}/${totalLectures} = ${lectureProgress.toFixed(1)}%`);
-  console.log(`- Assignments: ${passedAssignments}/${totalAssignments} = ${assignmentProgress.toFixed(1)}%`);
-  console.log(`- Test: ${testProgress.toFixed(1)}%`);
-  console.log(`- Overall: ${overallProgressValue}%`);
-  
-  // Update the DOM elements
+  // Update the DOM
   const overallProgressElement = document.getElementById('overallProgress');
   const overallProgressFillElement = document.getElementById('overallProgressFill');
   
@@ -5139,16 +5082,14 @@ function updateProgressDisplay() {
     overallProgressFillElement.style.width = `${overallProgressValue}%`;
   }
 
-  // Update the assignments progress
   updateAssignmentsProgress();
   
-  // Check if course is completed (100% progress)
+  // Check for course completion
   if (overallProgressValue === 100 && !userEnrollmentData.certificateAwarded) {
     console.log("Course completed! Awarding certificate...");
     awardCertificate();
   }
   
-  // Check if test should be unlocked
   checkAssignmentUnlock();
 }
 
@@ -5363,8 +5304,7 @@ async function buildCurriculum() {
     
     console.log("Curriculum built successfully");
     
-    updateProgressDisplay();
-    checkAssignmentUnlock();
+await calculateAndUpdateProgress();
 
   } catch (err) {
     console.error("Error building curriculum:", err);
@@ -5455,6 +5395,16 @@ async function loadUserEnrollmentData() {
     if (userSnap.exists() && userSnap.data().enrollments) {
       userEnrollmentData = userSnap.data().enrollments[courseId] || null;
       console.log("Enrollment data loaded:", userEnrollmentData);
+      
+      // **NEW: Log the randomly assigned teacher info**
+      if (userEnrollmentData?.teacherId) {
+        console.log("✓ Randomly assigned teacher:", {
+          teacherId: userEnrollmentData.teacherId,
+          teacherName: userEnrollmentData.teacherName
+        });
+      } else {
+        console.warn("⚠️ No teacher assigned in enrollment data");
+      }
       
       if (!userEnrollmentData) {
         console.log("User not enrolled, enrolling...");
@@ -6278,6 +6228,14 @@ function updateTestSectionUI() {
 function openTestWindow() {
   console.log("=== OPENING TEST WINDOW ===");
   
+  // *** CRITICAL: Verify we have the correct courseId ***
+  console.log("Current courseId:", courseId);
+  console.log("User enrollment data:", userEnrollmentData);
+  console.log("Teacher info:", {
+    teacherId: userEnrollmentData?.teacherId,
+    teacherName: userEnrollmentData?.teacherName
+  });
+  
   // Check if user has exceeded maximum attempts
   if (currentTestAttempt >= maxTestAttempts) {
     addNotification({
@@ -6304,20 +6262,30 @@ function openTestWindow() {
 
   console.log(`Opening test window - Attempt ${currentTestAttempt + 1} of ${maxTestAttempts}`);
 
-  // Open test.html in a new window
-  const testWindow = window.open('test.html', 'TestWindow', 'width=1200,height=800,resizable=yes,scrollbars=yes');
+  // *** CRITICAL FIX: Pass courseId in URL ***
+  const testUrl = `test.html?courseId=${courseId}`;
+  console.log("Opening test URL:", testUrl);
   
-  if (testWindow) {
-    // Pass course and user data to the test window
+  // Open test.html in a new window with courseId parameter
+  const testWindow = window.open(testUrl, 'TestWindow', 'width=1200,height=800,resizable=yes,scrollbars=yes');
+  
+if (testWindow) {
+    // *** Pass complete course and teacher data to the test window ***
     testWindow.courseData = {
       courseId: courseId,
       courseName: courseData?.name || 'Unknown Course',
+      teacherId: userEnrollmentData?.teacherId,
+      teacherName: userEnrollmentData?.teacherName,
       userId: currentUser.uid,
       userName: currentUser.displayName || currentUser.email,
       attemptNumber: currentTestAttempt + 1,
       maxAttempts: maxTestAttempts
     };
-    console.log("Test window opened with data:", testWindow.courseData);
+    console.log("=== TEST WINDOW DATA ===");
+    console.log("Course ID:", testWindow.courseData.courseId);
+    console.log("Teacher ID:", testWindow.courseData.teacherId);
+    console.log("Teacher Name:", testWindow.courseData.teacherName);
+    console.log("Full data:", testWindow.courseData);
   } else {
     addNotification({
       title: "Popup Blocked",

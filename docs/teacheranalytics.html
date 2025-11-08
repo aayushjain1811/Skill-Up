@@ -1917,176 +1917,166 @@
   }
 
   // Get student assignment data from Firebase
-  async function getStudentAssignmentData(studentId, courseId) {
+async function getStudentAssignmentData(studentId, courseId) {
+  try {
+    const submissionsQuery = query(
+      collection(db, "submissions"),
+      where("studentId", "==", studentId),
+      where("courseId", "==", courseId)
+    );
+    
+    const submissionsSnapshot = await getDocs(submissionsQuery);
+    const assignments = [];
+    let completedAssignments = 0;
+    
+    // Get total assignments from course
+    let totalAssignments = 0;
     try {
-      // Query submissions for this student and course
-      const submissionsQuery = query(
-        collection(db, "submissions"),
-        where("studentId", "==", studentId),
+      const assignmentsRef = collection(db, "courses", courseId, "assignments");
+      const assignmentsSnapshot = await getDocs(assignmentsRef);
+      totalAssignments = assignmentsSnapshot.size;
+    } catch (error) {
+      // Fallback to main assignments collection
+      const assignmentsQuery = query(
+        collection(db, "assignments"),
         where("courseId", "==", courseId)
       );
-      
-      const submissionsSnapshot = await getDocs(submissionsQuery);
-      const assignments = [];
-      let completedAssignments = 0;
-      
-      // Get all assignments for this course from the assignments subcollection
-      let totalAssignments = 0;
-      try {
-        // Query assignments from the assignments subcollection in the course document
-        const assignmentsRef = collection(db, "courses", courseId, "assignments");
-        const assignmentsSnapshot = await getDocs(assignmentsRef);
-        totalAssignments = assignmentsSnapshot.size;
-        console.log(`Found ${totalAssignments} assignments for course ${courseId}`);
-      } catch (error) {
-        console.warn("Could not fetch assignments from subcollection:", error);
-        // Fallback: try the main assignments collection
-        try {
-          const assignmentsQuery = query(
-            collection(db, "assignments"),
-            where("courseId", "==", courseId)
-          );
-          const assignmentsSnapshot = await getDocs(assignmentsQuery);
-          totalAssignments = assignmentsSnapshot.size;
-          console.log(`Found ${totalAssignments} assignments for course ${courseId} from main collection`);
-        } catch (error2) {
-          console.warn("Could not fetch assignments from main collection:", error2);
-          // Final fallback: estimate based on submissions
-          totalAssignments = Math.max(submissionsSnapshot.size, 1); // Ensure at least 1
-          console.log(`Using fallback count: ${totalAssignments} assignments`);
-        }
-      }
-      
-      // Process submissions to find completed assignments
-      submissionsSnapshot.forEach(doc => {
-        const submission = doc.data();
-        // Check if submission is marked as completed or submitted
-        if (submission.status === 'completed' || submission.submitted === true || submission.grade !== undefined) {
-          completedAssignments++;
-        }
-        
-        assignments.push({
-          id: doc.id,
-          ...submission,
-          assignmentTitle: submission.assignmentTitle || "Unknown Assignment",
-          submittedAt: submission.submittedAt ? submission.submittedAt.toDate() : null,
-          grade: submission.grade || 0,
-          maxScore: submission.maxScore || 100
-        });
-      });
-      
-      // Ensure we don't show completed/total as 1/0
-      if (totalAssignments === 0) {
-        totalAssignments = 1; // Prevent division by zero
-      }
-      
-      return {
-        totalAssignments,
-        completedAssignments: Math.min(completedAssignments, totalAssignments),
-        assignments
-      };
-      
-    } catch (error) {
-      console.error("Error getting assignment data:", error);
-      // Return default values instead of failing completely
-      return {
-        totalAssignments: 1,
-        completedAssignments: 0,
-        assignments: []
-      };
+      const assignmentsSnapshot = await getDocs(assignmentsQuery);
+      totalAssignments = assignmentsSnapshot.size;
     }
-  }
-
-  // Generate weekly progress data from actual submission history
-  async function generateWeeklyProgress(studentId, courseId, enrollment) {
-    try {
-      const enrolledDate = enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date();
-      const currentDate = new Date();
+    
+    // Ensure we have at least 1 assignment to prevent division by zero
+    totalAssignments = Math.max(totalAssignments, 1);
+    
+    // Process submissions
+    submissionsSnapshot.forEach(doc => {
+      const submission = doc.data();
       
-      // Get all submissions for this student in this course, ordered by date
-      const submissionsQuery = query(
-        collection(db, "submissions"),
-        where("studentId", "==", studentId),
-        where("courseId", "==", courseId),
-        orderBy("submittedAt", "asc")
+      // Count as completed if: status is completed, submitted is true, OR has a grade
+      const isCompleted = (
+        submission.status === 'completed' || 
+        submission.status === 'graded' ||
+        submission.submitted === true || 
+        (submission.grade !== undefined && submission.grade !== null)
       );
       
-      const submissionsSnapshot = await getDocs(submissionsQuery);
-      const submissions = [];
+      if (isCompleted) {
+        completedAssignments++;
+      }
       
-      submissionsSnapshot.forEach(doc => {
-        const submission = doc.data();
+      assignments.push({
+        id: doc.id,
+        ...submission,
+        assignmentTitle: submission.assignmentTitle || submission.title || "Assignment",
+        submittedAt: submission.submittedAt ? submission.submittedAt.toDate() : null,
+        grade: submission.grade || 0,
+        maxScore: submission.maxScore || 100,
+        isCompleted: isCompleted
+      });
+    });
+    
+    return {
+      totalAssignments,
+      completedAssignments: Math.min(completedAssignments, totalAssignments),
+      assignments
+    };
+    
+  } catch (error) {
+    console.error("Error getting assignment data:", error);
+    return {
+      totalAssignments: 1,
+      completedAssignments: 0,
+      assignments: []
+    };
+  }
+}
+
+  // Generate weekly progress data from actual submission history
+async function generateWeeklyProgress(studentId, courseId, enrollment) {
+  try {
+    const enrolledDate = enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date();
+    const currentDate = new Date();
+    
+    const submissionsQuery = query(
+      collection(db, "submissions"),
+      where("studentId", "==", studentId),
+      where("courseId", "==", courseId),
+      orderBy("submittedAt", "asc")
+    );
+    
+    const submissionsSnapshot = await getDocs(submissionsQuery);
+    const submissions = [];
+    
+    submissionsSnapshot.forEach(doc => {
+      const submission = doc.data();
+      if (submission.submittedAt) {
         submissions.push({
-          submittedAt: submission.submittedAt ? submission.submittedAt.toDate() : null,
+          submittedAt: submission.submittedAt.toDate(),
           grade: submission.grade || 0,
           maxScore: submission.maxScore || 100
         });
-      });
-      
-      const weeklyData = [];
-      let currentWeek = 1;
-      let totalProgress = 0;
-      
-      // Calculate progress for each week (max 30 days)
-      const maxWeeks = 4; // 30 days max
-      for (let weekStart = new Date(enrolledDate); weekStart <= currentDate && currentWeek <= maxWeeks; weekStart.setDate(weekStart.getDate() + 7)) {
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
-        
-        // Find submissions in this week
-        const weekSubmissions = submissions.filter(sub => 
-          sub.submittedAt && sub.submittedAt >= weekStart && sub.submittedAt <= weekEnd
-        );
-        
-        // Calculate progress for this week
-        if (weekSubmissions.length > 0) {
-          const weekAverage = weekSubmissions.reduce((sum, sub) => sum + (sub.grade / sub.maxScore * 100), 0) / weekSubmissions.length;
-          totalProgress = Math.max(totalProgress, weekAverage);
-        }
-        
-        // Get total assignments for progress calculation
-        let totalAssignments = 0;
-        try {
-          // Try to get assignments from course subcollection first
-          const assignmentsRef = collection(db, "courses", courseId, "assignments");
-          const assignmentsSnapshot = await getDocs(assignmentsRef);
-          totalAssignments = assignmentsSnapshot.size;
-        } catch (error) {
-          console.warn("Could not fetch assignments from subcollection:", error);
-          // Fallback to main assignments collection
-          try {
-            const assignmentsQuery = query(
-              collection(db, "assignments"),
-              where("courseId", "==", courseId)
-            );
-            const assignmentsSnapshot = await getDocs(assignmentsQuery);
-            totalAssignments = assignmentsSnapshot.size;
-          } catch (error2) {
-            console.warn("Could not fetch assignments from main collection:", error2);
-            totalAssignments = 10; // Default estimate
-          }
-        }
-        
-        const completedThisWeek = weekSubmissions.length;
-        
-        weeklyData.push({
-          week: currentWeek,
-          progress: Math.round(totalProgress),
-          assignmentsCompleted: completedThisWeek,
-          totalAssignments: totalAssignments
-        });
-        
-        currentWeek++;
       }
-      
-      return weeklyData;
-      
+    });
+    
+    // Get total assignments for accurate progress calculation
+    let totalAssignments = 10; // Default
+    try {
+      const assignmentsRef = collection(db, "courses", courseId, "assignments");
+      const assignmentsSnapshot = await getDocs(assignmentsRef);
+      totalAssignments = Math.max(assignmentsSnapshot.size, 1);
     } catch (error) {
-      console.error("Error generating weekly progress:", error);
-      // Fallback to calculated progress based on enrollment
-      return generateFallbackWeeklyProgress(enrollment);
+      console.warn("Using default assignment count");
     }
+    
+    const weeklyData = [];
+    let cumulativeCompleted = 0;
+    
+    // Calculate for each week since enrollment (max 12 weeks)
+    const maxWeeks = 12;
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    
+    for (let week = 1; week <= maxWeeks; week++) {
+      const weekStart = new Date(enrolledDate.getTime() + (week - 1) * msPerWeek);
+      const weekEnd = new Date(weekStart.getTime() + msPerWeek);
+      
+      if (weekStart > currentDate) break;
+      
+      // Count submissions completed up to this week
+      const submissionsUpToWeek = submissions.filter(sub => 
+        sub.submittedAt <= weekEnd
+      );
+      
+      cumulativeCompleted = submissionsUpToWeek.length;
+      const progressPercentage = Math.min(
+        Math.round((cumulativeCompleted / totalAssignments) * 100),
+        100
+      );
+      
+      weeklyData.push({
+        week: week,
+        progress: progressPercentage,
+        assignmentsCompleted: cumulativeCompleted,
+        totalAssignments: totalAssignments
+      });
+    }
+    
+    // If no data, return current progress
+    if (weeklyData.length === 0) {
+      weeklyData.push({
+        week: 1,
+        progress: enrollment.progress || 0,
+        assignmentsCompleted: 0,
+        totalAssignments: totalAssignments
+      });
+    }
+    
+    return weeklyData;
+    
+  } catch (error) {
+    console.error("Error generating weekly progress:", error);
+    return generateFallbackWeeklyProgress(enrollment);
   }
+}
 
   // Fallback weekly progress calculation
   function generateFallbackWeeklyProgress(enrollment) {
@@ -2130,43 +2120,45 @@
   }
 
   // Update statistics - UPDATED FOR MULTIPLE COURSES
-  function updateStats() {
-    if (allStudents.length === 0) {
-      totalStudents.textContent = "0";
-      totalCourses.textContent = "0";
-      avgProgress.textContent = "0%";
-      completionRate.textContent = "0%";
-      studentCount.textContent = "0 students";
-      return;
-    }
-    
-    // Total students - count unique students, not enrollments
-    const uniqueStudentIds = [...new Set(allStudents.map(student => student.id))];
-    totalStudents.textContent = uniqueStudentIds.length;
-    studentCount.textContent = `${uniqueStudentIds.length} students`;
-    
-    // Count unique courses
-    const uniqueCourses = new Set(allStudents.map(student => student.courseId));
-    totalCourses.textContent = uniqueCourses.size;
-    
-    // Average progress - average of all enrollments
-    const totalProgress = allStudents.reduce((sum, student) => sum + student.progress, 0);
-    const averageProgress = Math.round(totalProgress / allStudents.length);
-    avgProgress.textContent = `${averageProgress}%`;
-    
-    // Completion rate (students with progress >= 90%) - count unique students
-    const studentsNeedingAttention = new Set();
-    const completedStudents = new Set();
-    
-    allStudents.forEach(student => {
-      if (student.progress >= 90) {
-        completedStudents.add(student.id);
-      }
-    });
-    
-    const completionRateValue = Math.round((completedStudents.size / uniqueStudentIds.length) * 100);
-    completionRate.textContent = `${completionRateValue}%`;
+function updateStats() {
+  if (allStudents.length === 0) {
+    totalStudents.textContent = "0";
+    totalCourses.textContent = "0";
+    avgProgress.textContent = "0%";
+    completionRate.textContent = "0%";
+    studentCount.textContent = "0 students";
+    return;
   }
+  
+  // Count unique students (not enrollments)
+  const uniqueStudentIds = [...new Set(allStudents.map(s => s.id))];
+  const uniqueStudentCount = uniqueStudentIds.length;
+  
+  totalStudents.textContent = uniqueStudentCount;
+  studentCount.textContent = `${uniqueStudentCount} student${uniqueStudentCount !== 1 ? 's' : ''}`;
+  
+  // Count unique courses
+  const uniqueCourses = new Set(allStudents.map(s => s.courseId));
+  totalCourses.textContent = uniqueCourses.size;
+  
+  // Average progress across ALL enrollments
+  const totalProgress = allStudents.reduce((sum, s) => sum + (s.progress || 0), 0);
+  const averageProgress = Math.round(totalProgress / allStudents.length);
+  avgProgress.textContent = `${averageProgress}%`;
+  
+  // Completion rate: percentage of unique students with at least one course >= 90%
+  const studentsWithCompletion = new Set();
+  allStudents.forEach(student => {
+    if ((student.progress || 0) >= 90) {
+      studentsWithCompletion.add(student.id);
+    }
+  });
+  
+  const completionRateValue = uniqueStudentCount > 0 
+    ? Math.round((studentsWithCompletion.size / uniqueStudentCount) * 100)
+    : 0;
+  completionRate.textContent = `${completionRateValue}%`;
+}
 
   // Initialize charts with real data
   function initializeCharts() {
@@ -2299,45 +2291,44 @@
   }
 
   // Calculate real progress data based on student enrollment dates
-  function calculateProgressData() {
-    if (allStudents.length === 0) {
-      return { labels: [], values: [] };
-    }
-    
-    // Get the current date
-    const now = new Date();
-    
-    // Calculate the last 6 months for the chart
-    const labels = [];
-    const values = [];
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
-      labels.push(`${monthName} ${date.getFullYear()}`);
-      
-      // Calculate average progress for this month
-      const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-      const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      
-      // Filter students enrolled before or during this month
-      const studentsInMonth = allStudents.filter(student => 
-        student.enrolledDate <= monthEnd
-      );
-      
-      if (studentsInMonth.length > 0) {
-        const totalProgress = studentsInMonth.reduce((sum, student) => {
-          return sum + student.progress;
-        }, 0);
-        
-        values.push(Math.round(totalProgress / studentsInMonth.length));
-      } else {
-        values.push(0);
-      }
-    }
-    
-    return { labels, values };
+function calculateProgressData() {
+  if (allStudents.length === 0) {
+    return { labels: [], values: [] };
   }
+  
+  const now = new Date();
+  const labels = [];
+  const values = [];
+  
+  // Calculate for last 6 months
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
+    labels.push(`${monthName}`);
+    
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+    
+    // Get students enrolled before this month ended
+    const enrolledStudents = allStudents.filter(student => 
+      student.enrolledDate <= monthEnd
+    );
+    
+    if (enrolledStudents.length > 0) {
+      // Calculate average progress for students at this point in time
+      const totalProgress = enrolledStudents.reduce((sum, student) => {
+        // Use the progress they would have had at this month
+        // For simplicity, use current progress if enrolled before month end
+        return sum + (student.progress || 0);
+      }, 0);
+      
+      values.push(Math.round(totalProgress / enrolledStudents.length));
+    } else {
+      values.push(0);
+    }
+  }
+  
+  return { labels, values };
+}
 
   // Render students analytics - UPDATED FOR MULTIPLE COURSES
   function renderStudents() {
@@ -2647,32 +2638,43 @@
   }
 
   // Calculate engagement score based on submission frequency
-  function calculateEngagementScore(student) {
-    if (!student.weeklyProgress || student.weeklyProgress.length === 0) return 50;
+function calculateEngagementScore(student) {
+  if (!student.weeklyProgress || student.weeklyProgress.length === 0) return 50;
+  
+  // Consider last 4 weeks or all available weeks
+  const recentWeeks = student.weeklyProgress.slice(-4);
+  
+  // Count weeks with activity (assignments completed or progress made)
+  const activeWeeks = recentWeeks.filter((week, index) => {
+    if (index === 0) return week.assignmentsCompleted > 0;
     
-    const recentWeeks = student.weeklyProgress.slice(-4); // Last 4 weeks
-    const activeWeeks = recentWeeks.filter(week => week.assignmentsCompleted > 0).length;
-    return (activeWeeks / 4) * 100;
-  }
+    // Check if progress increased from previous week
+    const prevWeek = recentWeeks[index - 1];
+    return week.progress > prevWeek.progress || week.assignmentsCompleted > prevWeek.assignmentsCompleted;
+  }).length;
+  
+  return Math.round((activeWeeks / recentWeeks.length) * 100);
+}
 
   // Calculate consistency score based on progress pattern
-  function calculateConsistencyScore(student) {
-    if (!student.weeklyProgress || student.weeklyProgress.length < 2) return 50;
+function calculateConsistencyScore(student) {
+  if (!student.weeklyProgress || student.weeklyProgress.length < 2) return 50;
+  
+  let progressIncreases = 0;
+  const weeks = student.weeklyProgress;
+  
+  for (let i = 1; i < weeks.length; i++) {
+    const prevProgress = weeks[i - 1].progress || 0;
+    const currentProgress = weeks[i].progress || 0;
     
-    let consistentWeeks = 0;
-    for (let i = 1; i < student.weeklyProgress.length; i++) {
-      const prevProgress = student.weeklyProgress[i-1].progress;
-      const currentProgress = student.weeklyProgress[i].progress;
-      
-      // Consider consistent if progress increases or stays the same
-      if (currentProgress >= prevProgress) {
-        consistentWeeks++;
-      }
+    // Award points for maintaining or increasing progress
+    if (currentProgress >= prevProgress) {
+      progressIncreases++;
     }
-    
-    return (consistentWeeks / (student.weeklyProgress.length - 1)) * 100;
   }
-
+  
+  return Math.round((progressIncreases / (weeks.length - 1)) * 100);
+}
   // Helper function to get performance score
   function getPerformanceScore(performance) {
     switch(performance) {

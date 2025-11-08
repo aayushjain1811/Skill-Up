@@ -815,6 +815,67 @@
       font-weight: bold;
       margin-right: 0.5rem;
     }
+    /* Password Validation Styling */
+.requirement-list li {
+  transition: all 0.3s ease;
+}
+
+.requirement-list li.valid {
+  color: #10b981;
+}
+
+.requirement-list li.valid::before {
+  content: '✓';
+  color: #10b981;
+}
+
+.requirement-list li.invalid {
+  color: var(--primary-red);
+}
+
+.requirement-list li.invalid::before {
+  content: '✗';
+  color: var(--primary-red);
+}
+
+.password-match-indicator {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.password-match-indicator.match {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.password-match-indicator.no-match {
+  background: rgba(255, 71, 87, 0.1);
+  color: var(--primary-red);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+/* Loading State */
+.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+  vertical-align: middle;
+}
     
     /* Modal Styles */
     .modal {
@@ -1348,6 +1409,11 @@
               <label class="form-label" for="newPassword">New Password</label>
               <input type="password" class="form-input" id="newPassword" name="newPassword" required>
             </div>
+            <div class="form-group">
+  <label class="form-label" for="confirmPassword">Confirm New Password</label>
+  <input type="password" class="form-input" id="confirmPassword" name="confirmPassword" required>
+  <div id="passwordMatchIndicator" class="password-match-indicator" style="display: none;"></div>
+</div>
             
             <div class="form-group">
               <label class="form-label" for="confirmPassword">Confirm New Password</label>
@@ -1355,18 +1421,16 @@
             </div>
           </div>
           
-          <div class="password-requirements">
-            <h4>Password Requirements:</h4>
-            <ul class="requirement-list">
-              <li>At least 8 characters long</li>
-              <li>Contains at least one uppercase letter</li>
-              <li>Contains at least one lowercase letter</li>
-              <li>Contains at least one number</li>
-              <li>Contains at least one special character</li>
-            </ul>
-          </div>
-          
-          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+<div class="password-requirements">
+  <h4>Password Requirements:</h4>
+  <ul class="requirement-list">
+    <li id="req-length">At least 8 characters long</li>
+    <li id="req-uppercase">Contains at least one uppercase letter</li>
+    <li id="req-lowercase">Contains at least one lowercase letter</li>
+    <li id="req-number">Contains at least one number</li>
+    <li id="req-special">Contains at least one special character</li>
+  </ul>
+</div>          <div style="display: flex; gap: 1rem; margin-top: 2rem;">
             <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('changePasswordModal')">
               Cancel
             </button>
@@ -1551,6 +1615,80 @@
       document.getElementById('courseUpdates').checked = teacher.courseUpdates !== false;
       document.getElementById('publicProfile').checked = teacher.publicProfile !== false;
     }
+    // Real-time Password Validation
+function validatePasswordRequirements(password) {
+  const requirements = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  };
+  
+  return requirements;
+}
+
+function updatePasswordRequirements(password) {
+  const requirements = validatePasswordRequirements(password);
+  
+  // Update each requirement indicator
+  const reqLength = document.getElementById('req-length');
+  const reqUppercase = document.getElementById('req-uppercase');
+  const reqLowercase = document.getElementById('req-lowercase');
+  const reqNumber = document.getElementById('req-number');
+  const reqSpecial = document.getElementById('req-special');
+  
+  if (reqLength) reqLength.className = requirements.length ? 'valid' : 'invalid';
+  if (reqUppercase) reqUppercase.className = requirements.uppercase ? 'valid' : 'invalid';
+  if (reqLowercase) reqLowercase.className = requirements.lowercase ? 'valid' : 'invalid';
+  if (reqNumber) reqNumber.className = requirements.number ? 'valid' : 'invalid';
+  if (reqSpecial) reqSpecial.className = requirements.special ? 'valid' : 'invalid';
+  
+  // Return true if all requirements are met
+  return Object.values(requirements).every(req => req === true);
+}
+
+function checkPasswordMatch() {
+  const newPass = document.getElementById('newPassword').value;
+  const confirmPass = document.getElementById('confirmPassword').value;
+  const indicator = document.getElementById('passwordMatchIndicator');
+  
+  if (!indicator) return false;
+  
+  if (confirmPass.length === 0) {
+    indicator.style.display = 'none';
+    return false;
+  }
+  
+  indicator.style.display = 'block';
+  
+  if (newPass === confirmPass) {
+    indicator.className = 'password-match-indicator match';
+    indicator.textContent = '✓ Passwords match';
+    return true;
+  } else {
+    indicator.className = 'password-match-indicator no-match';
+    indicator.textContent = '✗ Passwords do not match';
+    return false;
+  }
+}
+
+// Add event listeners for real-time validation
+const newPasswordInput = document.getElementById('newPassword');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+
+if (newPasswordInput) {
+  newPasswordInput.addEventListener('input', () => {
+    updatePasswordRequirements(newPasswordInput.value);
+    if (confirmPasswordInput && confirmPasswordInput.value.length > 0) {
+      checkPasswordMatch();
+    }
+  });
+}
+
+if (confirmPasswordInput) {
+  confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+}
 
     // Handle personal info form submission
     personalInfoForm.addEventListener('submit', async (e) => {
@@ -1594,62 +1732,84 @@
     });
 
     // Handle password form submission
-    passwordForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const currentPassword = document.getElementById('currentPassword').value;
-      const newPassword = document.getElementById('newPassword').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-      
-      // Validate passwords
-      if (newPassword !== confirmPassword) {
-        showAlert(passwordAlert, 'New passwords do not match.', 'error');
-        return;
-      }
-      
-      if (newPassword.length < 8) {
-        showAlert(passwordAlert, 'Password must be at least 8 characters long.', 'error');
-        return;
-      }
-      
-      try {
-        passwordForm.classList.add('loading');
-        
-        // Reauthenticate user
-        const credential = EmailAuthProvider.credential(
-          auth.currentUser.email,
-          currentPassword
-        );
-        
-        await reauthenticateWithCredential(auth.currentUser, credential);
-        
-        // Update password
-        await updatePassword(auth.currentUser, newPassword);
-        
-        // Clear form
-        passwordForm.reset();
-        
-        showAlert(passwordAlert, 'Password updated successfully!', 'success');
-        
-        // Close modal after 2 seconds
-        setTimeout(() => {
-          closeModal('changePasswordModal');
-        }, 2000);
-        
-      } catch (error) {
-        console.error("Error updating password:", error);
-        
-        if (error.code === 'auth/wrong-password') {
-          showAlert(passwordAlert, 'Current password is incorrect.', 'error');
-        } else if (error.code === 'auth/weak-password') {
-          showAlert(passwordAlert, 'New password is too weak.', 'error');
-        } else {
-          showAlert(passwordAlert, 'Error updating password. Please try again.', 'error');
-        }
-      } finally {
-        passwordForm.classList.remove('loading');
-      }
+// Handle password form submission
+passwordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  
+  // Validate passwords match
+  if (newPassword !== confirmPassword) {
+    showAlert(passwordAlert, 'New passwords do not match.', 'error');
+    return;
+  }
+  
+  // Validate password requirements
+  const isValid = updatePasswordRequirements(newPassword);
+  if (!isValid) {
+    showAlert(passwordAlert, 'Password does not meet all requirements.', 'error');
+    return;
+  }
+  
+  // Show loading state
+  const submitBtn = passwordForm.querySelector('button[type="submit"]');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = '<span class="spinner"></span> Updating...';
+  submitBtn.disabled = true;
+  
+  try {
+    passwordForm.classList.add('loading');
+    
+    // Reauthenticate user
+    const credential = EmailAuthProvider.credential(
+      auth.currentUser.email,
+      currentPassword
+    );
+    
+    await reauthenticateWithCredential(auth.currentUser, credential);
+    
+    // Update password
+    await updatePassword(auth.currentUser, newPassword);
+    
+    // Clear form
+    passwordForm.reset();
+    
+    // Reset requirement indicators
+    const requirementItems = document.querySelectorAll('.requirement-list li');
+    requirementItems.forEach(li => {
+      li.className = '';
     });
+    
+    const matchIndicator = document.getElementById('passwordMatchIndicator');
+    if (matchIndicator) {
+      matchIndicator.style.display = 'none';
+    }
+    
+    showAlert(passwordAlert, 'Password updated successfully!', 'success');
+    
+    // Close modal after 2 seconds
+    setTimeout(() => {
+      closeModal('changePasswordModal');
+    }, 2000);
+    
+  } catch (error) {
+    console.error("Error updating password:", error);
+    
+    if (error.code === 'auth/wrong-password') {
+      showAlert(passwordAlert, 'Current password is incorrect.', 'error');
+    } else if (error.code === 'auth/weak-password') {
+      showAlert(passwordAlert, 'New password is too weak.', 'error');
+    } else {
+      showAlert(passwordAlert, 'Error updating password. Please try again.', 'error');
+    }
+  } finally {
+    passwordForm.classList.remove('loading');
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+  }
+});
 
     // Show alert messages
     function showAlert(container, message, type) {
@@ -1694,15 +1854,35 @@
       document.getElementById(modalId).style.display = 'flex';
     };
 
-    window.closeModal = (modalId) => {
-      document.getElementById(modalId).style.display = 'none';
-      // Clear any alerts when closing the modal
-      if (modalId === 'editProfileModal') {
-        personalInfoAlert.innerHTML = '';
-      } else if (modalId === 'changePasswordModal') {
-        passwordAlert.innerHTML = '';
-      }
-    };
+// Modal functions
+window.closeModal = (modalId) => {
+  document.getElementById(modalId).style.display = 'none';
+  
+  // Clear any alerts when closing the modal
+  if (modalId === 'editProfileModal') {
+    personalInfoAlert.innerHTML = '';
+  } else if (modalId === 'changePasswordModal') {
+    passwordAlert.innerHTML = '';
+    
+    // Reset password form and indicators
+    const passwordFormElement = document.getElementById('passwordForm');
+    if (passwordFormElement) {
+      passwordFormElement.reset();
+    }
+    
+    // Reset requirement indicators
+    const requirementItems = document.querySelectorAll('.requirement-list li');
+    requirementItems.forEach(li => {
+      li.className = '';
+    });
+    
+    // Hide match indicator
+    const matchIndicator = document.getElementById('passwordMatchIndicator');
+    if (matchIndicator) {
+      matchIndicator.style.display = 'none';
+    }
+  }
+};
 
     // Close modal when clicking outside the modal content
     window.onclick = function(event) {

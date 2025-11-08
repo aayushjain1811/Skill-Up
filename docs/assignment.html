@@ -976,9 +976,7 @@
     </div>
   </div>
 
-  <div class="restriction-indicator" id="restrictionIndicator">
-    <i class="fas fa-shield-alt"></i> Assignment Mode Active
-  </div>
+
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -1036,7 +1034,6 @@
       successModal: document.getElementById('successModal'),
       successMessage: document.getElementById('successMessage'),
       closeSuccessModal: document.getElementById('closeSuccessModal'),
-      restrictionIndicator: document.getElementById('restrictionIndicator'),
       assignmentStartContainer: document.getElementById('assignmentStartContainer'),
       startAssignmentBtn: document.getElementById('startAssignmentBtn'),
       assignmentNavigation: document.getElementById('assignmentNavigation'),
@@ -1099,16 +1096,17 @@
       }
     }
 
-    async function loadAssignmentData() {
-      try {
-        const docRef = doc(db, "courses", courseId, "assignments", assignmentId);
-        const docSnap = await getDoc(docRef);
+async function loadAssignmentData() {
+  try {
+    const docRef = doc(db, "courses", courseId, "assignments", assignmentId);
+    const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          assignmentData = { id: docSnap.id, ...docSnap.data() };
-          elements.assignmentTitle.textContent = assignmentData.title || 'Assignment';
-          elements.assignmentSubtitle.textContent = assignmentData.description || 'Assignment';
-          
+    if (docSnap.exists()) {
+      assignmentData = { id: docSnap.id, ...docSnap.data() };
+      const assignmentNumber = assignmentId.replace(/\D/g, '') || '1';
+const titleText = assignmentData.title ? `Assignment ${assignmentNumber}: ${assignmentData.title}` : `Assignment ${assignmentNumber}`;
+elements.assignmentTitle.textContent = titleText;
+      elements.assignmentSubtitle.textContent = assignmentData.description || 'Assignment';          
           // Set up deadline timer
           if (assignmentData.deadline) {
             const deadline = assignmentData.deadline.toDate();
@@ -1234,15 +1232,11 @@
           console.log("Fullscreen not supported:", err);
         });
       }
-      
-      elements.restrictionIndicator.style.display = 'flex';
-      updateRestrictionIndicator();
     }
 
     function handleVisibilityChange() {
       if (document.hidden && assignmentStarted) {
         tabChangeCount++;
-        updateRestrictionIndicator();
         handleLeaveAttempt();
         
         if (tabChangeCount >= MAX_TAB_CHANGES) {
@@ -1286,12 +1280,6 @@
       }
     }
 
-    function updateRestrictionIndicator() {
-      const remaining = MAX_TAB_CHANGES - tabChangeCount;
-      elements.restrictionIndicator.innerHTML = `
-        <i class="fas fa-shield-alt"></i> Assignment Mode Active - ${remaining} tab ${remaining === 1 ? 'change' : 'changes'} remaining
-      `;
-    }
 
     function removeAssignmentRestrictions() {
       assignmentStarted = false;
@@ -1309,8 +1297,7 @@
           console.log("Error exiting fullscreen:", err);
         });
       }
-      
-      elements.restrictionIndicator.style.display = 'none';
+    
     }
 
     function showNotification(message, type = 'info') {
@@ -1346,7 +1333,6 @@
     function startAssignment() {
       assignmentStarted = true;
       tabChangeCount = 0; // Reset counter
-      updateRestrictionIndicator();
       showQuestion(0);
     }
 

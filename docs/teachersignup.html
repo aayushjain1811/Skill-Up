@@ -419,6 +419,61 @@
       width: 100%;
     }
 
+.password-requirements {
+  margin-top: 0.5rem;
+  padding: 0.8rem;
+  background: rgba(230, 57, 70, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(230, 57, 70, 0.2);
+  display: none; /* Hidden by default */
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.requirement {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  color: #adb5bd;
+  transition: all 0.3s ease;
+}
+
+.requirement:last-child {
+  margin-bottom: 0;
+}
+
+.requirement i {
+  margin-right: 0.5rem;
+  width: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.requirement.met {
+  color: #4CAF50;
+}
+
+.requirement.met i {
+  color: #4CAF50;
+}
+
+.requirement.unmet {
+  color: #ff4757;
+}
+
+.requirement.unmet i {
+  color: #ff4757;
+}
     /* Loading Spinner */
     .spinner {
       display: inline-block;
@@ -559,17 +614,37 @@
           <input type="email" id="email" name="email" placeholder="Enter your email address" required>
         </div>
         
-        <div class="form-group password-toggle">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="Create a strong password" required>
-          <button type="button" class="toggle-password" id="togglePassword">
-            <i class="fas fa-eye"></i>
-          </button>
-          <div class="password-strength" id="passwordStrength">
-            <i class="fas fa-info-circle"></i>
-            <span>Password strength: </span>
-          </div>
-        </div>
+<div class="form-group">
+  <label for="password">Password</label>
+  <div class="password-toggle">
+    <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+    <button type="button" class="toggle-password" id="togglePassword">
+      <i class="fas fa-eye"></i>
+    </button>
+  </div>
+  <div class="password-requirements" id="passwordRequirements">
+    <div class="requirement" id="req-length">
+      <i class="fas fa-circle"></i>
+      <span>At least 8 characters</span>
+    </div>
+    <div class="requirement" id="req-uppercase">
+      <i class="fas fa-circle"></i>
+      <span>One uppercase letter</span>
+    </div>
+    <div class="requirement" id="req-lowercase">
+      <i class="fas fa-circle"></i>
+      <span>One lowercase letter</span>
+    </div>
+    <div class="requirement" id="req-number">
+      <i class="fas fa-circle"></i>
+      <span>One number</span>
+    </div>
+    <div class="requirement" id="req-special">
+      <i class="fas fa-circle"></i>
+      <span>One special character (!@#$%^&*)</span>
+    </div>
+  </div>
+</div>
         
         <div class="form-group password-toggle">
           <label for="confirmPassword">Confirm Password</label>
@@ -687,29 +762,40 @@ function createParticles() {
 }
 
 // Password strength checker
+// Enhanced password strength checker with requirements
 function checkPasswordStrength(password) {
-  let strength = 0;
-  const strengthText = document.getElementById('passwordStrength');
+  const requirements = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /\d/.test(password),
+    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+  };
   
-  if (password.length >= 8) strength++;
-  if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++;
-  if (password.match(/\d/)) strength++;
-  if (password.match(/[^a-zA-Z\d]/)) strength++;
+  // Update each requirement indicator
+  updateRequirement('req-length', requirements.length);
+  updateRequirement('req-uppercase', requirements.uppercase);
+  updateRequirement('req-lowercase', requirements.lowercase);
+  updateRequirement('req-number', requirements.number);
+  updateRequirement('req-special', requirements.special);
   
-  switch(strength) {
-    case 0:
-    case 1:
-      strengthText.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #ff4757;"></i> <span>Password strength: Weak</span>';
-      break;
-    case 2:
-      strengthText.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #ff9800;"></i> <span>Password strength: Fair</span>';
-      break;
-    case 3:
-      strengthText.innerHTML = '<i class="fas fa-check-circle" style="color: #4CAF50;"></i> <span>Password strength: Good</span>';
-      break;
-    case 4:
-      strengthText.innerHTML = '<i class="fas fa-shield-alt" style="color: #4CAF50;"></i> <span>Password strength: Strong</span>';
-      break;
+  return requirements;
+}
+
+function updateRequirement(elementId, isMet) {
+  const element = document.getElementById(elementId);
+  const icon = element.querySelector('i');
+  
+  if (isMet) {
+    element.classList.remove('unmet');
+    element.classList.add('met');
+    icon.classList.remove('fa-circle', 'fa-times-circle');
+    icon.classList.add('fa-check-circle');
+  } else {
+    element.classList.remove('met');
+    element.classList.add('unmet');
+    icon.classList.remove('fa-circle', 'fa-check-circle');
+    icon.classList.add('fa-times-circle');
   }
 }
 
@@ -766,10 +852,33 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Real-time password strength checking
-  passwordInput.addEventListener('input', function() {
+// Show/hide password requirements on focus/blur
+const passwordRequirements = document.getElementById('passwordRequirements');
+
+passwordInput.addEventListener('focus', function() {
+  passwordRequirements.style.display = 'block';
+  if (this.value) {
     checkPasswordStrength(this.value);
-    checkPasswordMatch();
-  });
+  }
+});
+
+passwordInput.addEventListener('blur', function() {
+  // Only hide if all requirements are met or field is empty
+  const passwordReqs = checkPasswordStrength(this.value);
+  const allRequirementsMet = Object.values(passwordReqs).every(req => req === true);
+  
+  setTimeout(() => {
+    if (allRequirementsMet || this.value === '') {
+      passwordRequirements.style.display = 'none';
+    }
+  }, 200);
+});
+
+// Real-time password strength checking
+passwordInput.addEventListener('input', function() {
+  checkPasswordStrength(this.value);
+  checkPasswordMatch();
+});
 
   // Real-time password matching
   confirmPasswordInput.addEventListener('input', checkPasswordMatch);
