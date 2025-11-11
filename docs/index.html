@@ -1647,39 +1647,10 @@
           
           // Try different possible image paths and names
           const possiblePaths = [
-            `coursepic/course${cleanCourseId}/course${cleanCourseId}.jpg`,
-            `coursepic/course${cleanCourseId}/course${cleanCourseId}.png`,
-            `coursepic/course${cleanCourseId}/course${cleanCourseId}.jpeg`,
-            `coursepic/course${cleanCourseId}/course${cleanCourseId}.webp`,
-            `coursepic/course${cleanCourseId}/image.jpg`,
-            `coursepic/course${cleanCourseId}/image.png`,
-            `coursepic/course${cleanCourseId}/image.jpeg`,
-            `coursepic/course${cleanCourseId}/image.webp`,
-            `coursepic/course${cleanCourseId}/thumbnail.jpg`,
-            `coursepic/course${cleanCourseId}/thumbnail.png`,
-            `coursepic/course${cleanCourseId}/thumbnail.jpeg`,
-            `coursepic/course${cleanCourseId}/thumbnail.webp`,
-            `coursepic/course${cleanCourseId}/cover.jpg`,
-            `coursepic/course${cleanCourseId}/cover.png`,
-            `coursepic/course${cleanCourseId}/cover.jpeg`,
-            `coursepic/course${cleanCourseId}/cover.webp`,
-            `coursepic/${cleanCourseId}.jpg`,
-            `coursepic/${cleanCourseId}.png`,
-            `coursepic/${cleanCourseId}.jpeg`,
-            `coursepic/${cleanCourseId}.webp`,
-            // Also try with the original courseId in case it's already clean
-            `coursepic/course${courseId}/course${courseId}.jpg`,
-            `coursepic/course${courseId}/course${courseId}.png`,
-            `coursepic/course${courseId}/course${courseId}.jpeg`,
-            `coursepic/course${courseId}/course${courseId}.webp`,
-            `coursepic/course${courseId}/image.jpg`,
-            `coursepic/course${courseId}/image.png`,
-            `coursepic/course${courseId}/image.jpeg`,
-            `coursepic/course${courseId}/image.webp`,
-            `coursepic/${courseId}.jpg`,
-            `coursepic/${courseId}.png`,
-            `coursepic/${courseId}.jpeg`,
-            `coursepic/${courseId}.webp`
+          `coursepic/${courseId}/${courseId}.jpg`,
+          `coursepic/${courseId}/${courseId}.png`,
+          `coursepic/${courseId}/image.jpg`,
+          `coursepic/${courseId}/image.png`,
           ];
           
           console.log(`Looking for course image for ID: ${courseId} (cleaned: ${cleanCourseId})`);
