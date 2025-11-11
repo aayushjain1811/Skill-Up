@@ -696,6 +696,25 @@
       box-shadow: 0 25px 50px rgba(67, 97, 238, 0.3);
     }
 
+    .course-image {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
     .course-content {
       padding: 25px;
       position: relative;
@@ -1658,6 +1677,7 @@
       getFirestore, collection, query, limit, getDocs, doc, getDoc, updateDoc, arrayUnion, setDoc,
       where, orderBy, arrayRemove, onSnapshot, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
     // Firebase Config
     const firebaseConfig = {
@@ -1674,6 +1694,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     // DOM elements with null checks
     function getElement(id) {
@@ -2009,6 +2030,7 @@ function setupRealtimeListeners(userId) {
     });
   });
 }
+
 // Show toast notification for real-time updates
 function showToastNotification(notification) {
   // Don't show if page just loaded (to avoid showing all existing notifications)
@@ -2359,10 +2381,17 @@ const pageLoadTime = Date.now();
                 const displayProgress = hasPassedTest ? 100 : progress;
                 const isCompleted = hasPassedTest || progress === 100;
                 
+                // Get course image URL
+                const imageUrl = await getCourseImageUrl(courseId);
+                
                 const card = document.createElement("div");
                 card.classList.add("course-card");
                 card.innerHTML = `
                   ${isCompleted ? '<span class="completed-badge">✓ Completed</span>' : ''}
+                  <div class="course-image">
+                    ${imageUrl ? `<img src="${imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
+                      `<i class="fas fa-book"></i>`}
+                  </div>
                   <div class="course-content">
                     <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
                     <p class="course-description">${course.description || 'No description available'}</p>
@@ -2405,56 +2434,97 @@ const pageLoadTime = Date.now();
         isLoadingCourses = false;
       }
     }
-    // Function to update student's online status
-async function updateStudentOnlineStatus(isOnline) {
-  try {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    
-    if (user) {
-      const db = getFirestore();
-      const statusRef = doc(db, "onlineStatus", user.uid);
-      
-      // Get student data
-      const studentDoc = await getDoc(doc(db, "users", user.uid));
-      if (studentDoc.exists()) {
-        const studentData = studentDoc.data();
+
+    // Function to get course image URL from Firebase Storage
+    async function getCourseImageUrl(courseId) {
+      try {
+        // Try different possible image paths and names
+        const possiblePaths = [
+          `coursepic/course${courseId}/course${courseId}.jpg`,
+          `coursepic/course${courseId}/course${courseId}.png`,
+          `coursepic/course${courseId}/image.jpg`,
+          `coursepic/course${courseId}/image.png`,
+          `coursepic/course${courseId}/thumbnail.jpg`,
+          `coursepic/course${courseId}/thumbnail.png`,
+          `coursepic/course${courseId}/cover.jpg`,
+          `coursepic/course${courseId}/cover.png`,
+          `coursepic/${courseId}.jpg`,
+          `coursepic/${courseId}.png`,
+          `courses/${courseId}/image.jpg`,
+          `courses/${courseId}/image.png`,
+          `courses/${courseId}/thumbnail.jpg`,
+          `courses/${courseId}/thumbnail.png`
+        ];
         
-        await setDoc(statusRef, {
-          isOnline: isOnline,
-          lastSeen: serverTimestamp(),
-          userId: user.uid,
-          userType: "student",
-          name: `${studentData.firstName} ${studentData.lastName}`
-        }, { merge: true });
+        for (const path of possiblePaths) {
+          try {
+            const imageRef = ref(storage, path);
+            const url = await getDownloadURL(imageRef);
+            return url;
+          } catch (error) {
+            // Continue to next path if this one fails
+            continue;
+          }
+        }
+        
+        // If no image found, return null
+        return null;
+      } catch (error) {
+        console.error(`Error getting course image for ${courseId}:`, error);
+        return null;
       }
     }
-  } catch (error) {
-    console.error("Error updating student online status:", error);
-  }
-}
 
-// Call this when student signs in
-updateStudentOnlineStatus(true);
+    // Function to update student's online status
+    async function updateStudentOnlineStatus(isOnline) {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        
+        if (user) {
+          const db = getFirestore();
+          const statusRef = doc(db, "onlineStatus", user.uid);
+          
+          // Get student data
+          const studentDoc = await getDoc(doc(db, "users", user.uid));
+          if (studentDoc.exists()) {
+            const studentData = studentDoc.data();
+            
+            await setDoc(statusRef, {
+              isOnline: isOnline,
+              lastSeen: serverTimestamp(),
+              userId: user.uid,
+              userType: "student",
+              name: `${studentData.firstName} ${studentData.lastName}`
+            }, { merge: true });
+          }
+        }
+      } catch (error) {
+        console.error("Error updating student online status:", error);
+      }
+    }
 
-// Update status when student is active
-document.addEventListener('visibilitychange', function() {
-  if (!document.hidden) {
+    // Call this when student signs in
     updateStudentOnlineStatus(true);
-  }
-});
 
-// Update status periodically
-setInterval(() => {
-  if (document.visibilityState === 'visible') {
-    updateStudentOnlineStatus(true);
-  }
-}, 30000); // Every 30 seconds
+    // Update status when student is active
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        updateStudentOnlineStatus(true);
+      }
+    });
 
-// Set offline when leaving
-window.addEventListener('beforeunload', () => {
-  updateStudentOnlineStatus(false);
-});
+    // Update status periodically
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        updateStudentOnlineStatus(true);
+      }
+    }, 30000); // Every 30 seconds
+
+    // Set offline when leaving
+    window.addEventListener('beforeunload', () => {
+      updateStudentOnlineStatus(false);
+    });
 
     // Fetch recommended courses - Updated enrollment check
     async function loadRecommendedCourses(userId) {
@@ -2479,13 +2549,20 @@ window.addEventListener('beforeunload', () => {
           return;
         }
 
-        querySnapshot.forEach((docSnap) => {
+        querySnapshot.forEach(async (docSnap) => {
           const course = docSnap.data();
           const isEnrolled = enrolledCourseIds.includes(docSnap.id);
+          
+          // Get course image URL
+          const imageUrl = await getCourseImageUrl(docSnap.id);
           
           const card = document.createElement("div");
           card.classList.add("course-card");
           card.innerHTML = `
+            <div class="course-image">
+              ${imageUrl ? `<img src="${imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
+                `<i class="fas fa-book"></i>`}
+            </div>
             <div class="course-content">
               <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
               <p class="course-description">${course.description || 'No description available'}</p>
@@ -2501,7 +2578,7 @@ window.addEventListener('beforeunload', () => {
           `;
           recommendedCoursesList.appendChild(card);
 
-                   const enrollBtn = card.querySelector(".enroll-btn");
+          const enrollBtn = card.querySelector(".enroll-btn");
           if (!isEnrolled) {
             enrollBtn.addEventListener("click", async () => {
               // Disable the button to prevent multiple clicks
@@ -2704,6 +2781,7 @@ async function enrollCourse(userId, courseId, teacher) {
     return false;
   }
 }
+
 // Load notifications - UPDATED to use studentNotifications collection
 async function loadNotifications(userId) {
   try {
