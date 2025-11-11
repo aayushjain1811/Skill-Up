@@ -753,6 +753,49 @@
       color: var(--primary);
       font-weight: 500;
     }
+    /* Enhanced course action buttons */
+.enroll-now-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.view-details-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+  background: linear-gradient(45deg, rgba(67, 97, 238, 0.8), rgba(0, 245, 255, 0.8)) !important;
+}
+
+.enroll-now-btn:hover {
+  background: linear-gradient(45deg, #20c997, #28a745) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+}
+
+.view-details-btn:hover {
+  background: linear-gradient(45deg, var(--light), var(--success)) !important;
+  transform: translateY(-3px);
+}
+
+/* Responsive buttons */
+@media (max-width: 480px) {
+  .course-actions {
+    flex-direction: column !important;
+  }
+  
+  .enroll-now-btn,
+  .view-details-btn {
+    width: 100%;
+    flex: none !important;
+  }
+}
 
     /* Course Actions */
     .course-actions {
@@ -2790,15 +2833,18 @@ function renderCourses(coursesToRender) {
             </div>
           ` : ''}
           
-          <div class="course-actions">
+          <div class="course-actions" style="display: flex; gap: 10px;">
             ${course.isEnrolled ? 
-              `<div class="enrolled-badge">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
-               <button class="continue-learning-btn" data-course-id="${course.id}">
+              `<div class="enrolled-badge" style="flex: 1;">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
+               <button class="continue-learning-btn" data-course-id="${course.id}" style="flex: 1;">
                 ${isCompleted ? 'Review' : 'Continue'} →
                </button>` 
               : 
-              `<button class="course-button" data-course-id="${course.id}">
-                View Details
+              `<button class="course-button enroll-now-btn" data-course-id="${course.id}" style="flex: 1; background: linear-gradient(45deg, #28a745, #20c997);">
+                <i class="fas fa-shopping-cart"></i> Enroll Now
+               </button>
+               <button class="course-button view-details-btn" data-course-id="${course.id}" style="flex: 1;">
+                <i class="fas fa-info-circle"></i> View Details
                </button>`
             }
           </div>
@@ -2811,42 +2857,82 @@ function renderCourses(coursesToRender) {
   attachCourseButtonListeners();
 }
 
-    // Attach event listeners to course buttons
-    function attachCourseButtonListeners() {
-      // Start Learning buttons
-      document.querySelectorAll(".course-button").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation(); // Prevent event bubbling
-          const courseId = e.currentTarget.dataset.courseId;
-          enrollInCourse(courseId);
-        });
-      });
+// Attach event listeners to course buttons
+function attachCourseButtonListeners() {
+  // Enroll Now buttons - Direct enrollment with teacher selection
+  document.querySelectorAll(".enroll-now-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const courseId = e.currentTarget.dataset.courseId;
+      // Skip course details modal and go directly to teacher selection
+      const course = courses.find(c => c.id === courseId);
+      if (course) {
+        currentCourseToEnroll = {
+          id: courseId,
+          name: course.name || course.title || "Course",
+          price: course.price || 0
+        };
+        showTeacherModal();
+      }
+    });
+  });
 
-      // Continue Learning buttons
-      document.querySelectorAll(".continue-learning-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation(); // Prevent event bubbling
-          const courseId = e.currentTarget.dataset.courseId;
-          window.location.href = `coursedetails.html?id=${courseId}`;
-        });
-      });
+  // View Details buttons - Show course details modal
+  document.querySelectorAll(".view-details-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const courseId = e.currentTarget.dataset.courseId;
+      const course = courses.find(c => c.id === courseId);
+      if (course) {
+        currentCourseToEnroll = {
+          id: courseId,
+          name: course.name || course.title || "Course",
+          price: course.price || 0
+        };
+        showCourseDetailsModal(course);
+      }
+    });
+  });
 
-      // Course card click (optional)
-      document.querySelectorAll(".course-card").forEach((card) => {
-        card.addEventListener("click", (e) => {
-          // Only trigger if the click wasn't on a button
-          if (!e.target.closest('.course-button') && !e.target.closest('.continue-learning-btn')) {
-            const courseId = card.querySelector('[data-course-id]')?.dataset.courseId;
-            if (courseId) {
-              const course = courses.find(c => c.id === courseId);
-              if (course && course.isEnrolled) {
-                window.location.href = `coursedetails.html?id=${courseId}`;
-              }
+  // Continue Learning buttons
+  document.querySelectorAll(".continue-learning-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const courseId = e.currentTarget.dataset.courseId;
+      window.location.href = `coursedetails.html?id=${courseId}`;
+    });
+  });
+
+  // Course card click (optional) - Show details for non-enrolled courses
+  document.querySelectorAll(".course-card").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      // Only trigger if the click wasn't on a button
+      if (!e.target.closest('.course-button') && 
+          !e.target.closest('.continue-learning-btn') &&
+          !e.target.closest('.enroll-now-btn') &&
+          !e.target.closest('.view-details-btn')) {
+        const courseId = card.querySelector('[data-course-id]')?.dataset.courseId;
+        if (courseId) {
+          const course = courses.find(c => c.id === courseId);
+          if (course) {
+            if (course.isEnrolled) {
+              // If enrolled, go to course details page
+              window.location.href = `coursedetails.html?id=${courseId}`;
+            } else {
+              // If not enrolled, show course details modal
+              currentCourseToEnroll = {
+                id: courseId,
+                name: course.name || course.title || "Course",
+                price: course.price || 0
+              };
+              showCourseDetailsModal(course);
             }
           }
-        });
-      });
-    }
+        }
+      }
+    });
+  });
+}
 
 // Show course details modal before enrollment
 function enrollInCourse(courseId) {
