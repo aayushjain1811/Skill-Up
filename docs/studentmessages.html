@@ -3163,42 +3163,8 @@ document.addEventListener('visibilitychange', async () => {
       await updateStudentOnlineStatus(true);
     }
   }
-  if (clearNotificationsBtn) {
-  clearNotificationsBtn.addEventListener('click', async () => {
-    try {
-      if (!currentUser) return;
-      
-      // Get all unread notifications for this student
-      const unreadQuery = await db.collection('studentNotifications')
-        .where('studentId', '==', currentUser.id)
-        .where('read', '==', false)
-        .get();
-      
-      if (unreadQuery.empty) {
-        showMessage("No notifications to clear");
-        return;
-      }
-      
-      // Batch update all notifications to read
-      const batch = db.batch();
-      unreadQuery.forEach(doc => {
-        batch.update(doc.ref, { read: true });
-      });
-      
-      await batch.commit();
-      
-      // Show success message
-      showMessage("✅ All notifications marked as read");
-      
-      // Reload notifications
-      loadNotifications();
-    } catch (error) {
-      console.error("Error clearing notifications:", error);
-      showMessage("❌ Error clearing notifications", "error");
-    }
+
   });
-}
-});
 
     // Initialize floating particles
     function initParticles() {
