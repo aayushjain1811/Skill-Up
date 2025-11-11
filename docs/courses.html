@@ -639,7 +639,7 @@
     .course-card {
       background: var(--bg-secondary);
       border-radius: 20px;
-      padding: 25px;
+      overflow: hidden;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       color: var(--primary);
       transition: all 0.3s ease;
@@ -674,6 +674,31 @@
       box-shadow: 0 20px 40px rgba(67, 97, 238, 0.2);
     }
 
+    /* Course Image Section */
+    .course-image {
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .course-card:hover .course-image img {
+      transform: scale(1.05);
+    }
+
     .course-category {
       display: inline-block;
       background: linear-gradient(135deg, var(--light), var(--success));
@@ -685,6 +710,10 @@
       margin-bottom: 15px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    .course-content {
+      padding: 25px;
     }
 
     .course-title {
@@ -2153,6 +2182,43 @@ async function clearAllNotifications() {
   }
 }
 
+// Function to get course image URL from Firebase Storage - CORRECTED
+async function getCourseImageUrl(courseId) {
+  try {
+    // Clean the courseId to remove any "course" prefix if it exists
+    const cleanCourseId = courseId.replace(/^course/, '');
+    
+    // Try different possible image paths and names
+    const possiblePaths = [
+          `coursepic/${courseId}/${courseId}.jpg`,
+          `coursepic/${courseId}/${courseId}.png`,
+          `coursepic/${courseId}/image.jpg`,
+          `coursepic/${courseId}/image.png`,
+    ];
+    
+    console.log(`Looking for course image for ID: ${courseId} (cleaned: ${cleanCourseId})`);
+    
+    for (const path of possiblePaths) {
+      try {
+        const imageRef = ref(storage, path);
+        const url = await getDownloadURL(imageRef);
+        console.log(`Found course image at: ${path}`);
+        return url;
+      } catch (error) {
+        // Continue to next path if this one fails
+        continue;
+      }
+    }
+    
+    // If no image found, return null
+    console.log(`No course image found for ID: ${courseId}`);
+    return null;
+  } catch (error) {
+    console.error(`Error getting course image for ${courseId}:`, error);
+    return null;
+  }
+}
+
     // Fetch courses from Firestore and check enrollment status
     async function fetchCourses() {
       try {
@@ -2190,6 +2256,11 @@ async function clearAllNotifications() {
           }
         }
 
+        // Load course images for all courses
+        for (let course of courses) {
+          course.imageUrl = await getCourseImageUrl(course.id);
+        }
+
         filteredCourses = [...courses];
         if (loading) loading.style.display = "none";
         renderCourses(filteredCourses);
@@ -2203,7 +2274,7 @@ async function clearAllNotifications() {
       }
     }
 
-    // Render courses with proper enrollment status
+    // Render courses with proper enrollment status and images
     function renderCourses(coursesToRender) {
       if (!coursesGrid) return;
       
@@ -2222,35 +2293,43 @@ async function clearAllNotifications() {
           
           return `
           <div class="course-card" style="animation-delay: ${index * 0.1}s">
-            <div class="course-category">${course.category || "General"}</div>
-            <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
-            <p class="course-description">${course.description || "No description available"}</p>
-            <div class="course-meta">
-              <div class="course-duration">
-                <span>⏱️</span>
-                <span>${course.duration || "Self-paced"}</span>
-              </div>
-              <div class="course-level">${course.level || "All Levels"}</div>
-            </div>
-            ${course.isEnrolled ? `
-              <div class="course-progress" style="margin-bottom: 15px;">
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: ${progress}%"></div>
-                </div>
-                <div class="progress-text">${progress}% Complete${isCompleted ? ' ✅' : ''}</div>
-              </div>
-            ` : ''}
-            <div class="course-actions">
-              ${course.isEnrolled ? 
-                `<div class="enrolled-badge">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
-                 <button class="continue-learning-btn" data-course-id="${course.id}">
-                  ${isCompleted ? 'Review Course' : 'Continue Learning'} →
-                 </button>` 
-                : 
-                `<button class="course-button" data-course-id="${course.id}">
-                  Start Learning
-                 </button>`
+            <div class="course-image">
+              ${course.imageUrl ? 
+                `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
+                `<i class="fas fa-book"></i><span>${course.name || course.title || 'Course'}</span>`
               }
+            </div>
+            <div class="course-content">
+              <div class="course-category">${course.category || "General"}</div>
+              <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
+              <p class="course-description">${course.description || "No description available"}</p>
+              <div class="course-meta">
+                <div class="course-duration">
+                  <span>⏱️</span>
+                  <span>${course.duration || "Self-paced"}</span>
+                </div>
+                <div class="course-level">${course.level || "All Levels"}</div>
+              </div>
+              ${course.isEnrolled ? `
+                <div class="course-progress" style="margin-bottom: 15px;">
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progress}%"></div>
+                  </div>
+                  <div class="progress-text">${progress}% Complete${isCompleted ? ' ✅' : ''}</div>
+                </div>
+              ` : ''}
+              <div class="course-actions">
+                ${course.isEnrolled ? 
+                  `<div class="enrolled-badge">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
+                   <button class="continue-learning-btn" data-course-id="${course.id}">
+                    ${isCompleted ? 'Review Course' : 'Continue Learning'} →
+                   </button>` 
+                  : 
+                  `<button class="course-button" data-course-id="${course.id}">
+                    Start Learning
+                   </button>`
+                }
+              </div>
             </div>
           </div>
         `})
