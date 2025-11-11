@@ -444,6 +444,62 @@
       position: relative;
       z-index: 2;
     }
+    /* Profile picture styling */
+.avatar img,
+.conversation-avatar img,
+.chat-avatar img {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Hide the rotating background when image is present */
+.avatar.has-image::before {
+  display: none;
+}
+
+.conversation-avatar,
+.chat-avatar {
+  position: relative;
+}
+
+/* Toast notification styles */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+
+.message-toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(67, 97, 238, 0.3);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  z-index: 3000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  max-width: 350px;
+  cursor: pointer;
+}
+
+.message-toast.success {
+  background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.message-toast.error {
+  background: linear-gradient(45deg, #ff4757, #ff3742);
+}
 
     /* Messages Page Specific Styles */
     .messages-page {
@@ -1205,6 +1261,21 @@
         right: -50px;
       }
     }
+    .notification-clear,
+.mark-all-read {
+  background: transparent;
+  border: none;
+  color: var(--success);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.notification-clear:hover,
+.mark-all-read:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
   </style>
 </head>
 <body>
@@ -1255,15 +1326,16 @@
               <span class="notification-badge">0</span>
             </button>
             <!-- Notification Dropdown -->
-            <div class="notification-dropdown" id="notificationDropdown">
-              <div class="notification-header">
-                <h3>Notifications</h3>
-                <button class="mark-all-read" id="markAllRead">Mark all as read</button>
-              </div>
-              <div class="notification-list" id="notificationList">
-                <!-- Notifications will be added here -->
-              </div>
-            </div>
+<!-- Notification Dropdown -->
+<div class="notification-dropdown" id="notificationDropdown">
+  <div class="notification-header">
+    <h3>Notifications</h3>
+    <button class="mark-all-read" id="clearNotifications">Clear All</button>
+  </div>
+  <div class="notification-list" id="notificationList">
+    <!-- Notifications will be added here -->
+  </div>
+</div>
           </div>
           <span id="userDisplayName">Loading...</span>
           <div class="avatar">
@@ -1443,7 +1515,7 @@
     const notificationIcon = document.getElementById('notificationIcon');
     const notificationDropdown = document.getElementById('notificationDropdown');
     const notificationList = document.getElementById('notificationList');
-    const markAllReadBtn = document.getElementById('markAllRead');
+    const clearNotificationsBtn = document.getElementById('clearNotifications');
     const logoutModal = document.getElementById('logoutModal');
     const closeLogoutModal = document.getElementById('closeLogoutModal');
     const cancelLogout = document.getElementById('cancelLogout');
@@ -1454,45 +1526,81 @@
     const closeAuthModal = document.getElementById('closeAuthModal');
     const goToSignIn = document.getElementById('goToSignIn');
 
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', () => {
-      initSidebar();
-      initNewChatModal();
-      initNotifications();
-      initLogoutModal();
-      initAuthModal();
-      checkAuthState();
-      initParticles();
-      updateNotificationBadge(0);
-    });
-
-    // Check authentication state
-    function checkAuthState() {
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          // User is signed in
-          currentUser = {
-            id: user.uid,
-            name: user.displayName || "Student",
-            email: user.email,
-            avatar: user.displayName ? user.displayName.charAt(0).toUpperCase() : "S"
-          };
-          
-          userDisplayName.textContent = currentUser.name;
-          userAvatar.textContent = currentUser.avatar;
-          
-          // Load user data from Firestore
-          loadUserData();
-        } else {
-          // User is signed out
-          showAuthRequired("Please sign in to access messages.");
-        }
-      }, (error) => {
-        console.error("Auth state error:", error);
-        showAuthRequired("Authentication error. Please sign in again.");
-      });
+// Initialize the page
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar();
+  initNewChatModal();
+  initNotifications();
+  initLogoutModal();
+  initAuthModal();
+  checkAuthState();
+  initParticles();
+  updateNotificationBadge(0);
+  
+  // Set up real-time notification listener after user is loaded
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      setTimeout(() => {
+        setupNotificationListener();
+        loadNotifications();
+      }, 1000);
     }
+  });
+});
 
+// Check authentication state
+function checkAuthState() {
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      // User is signed in
+      currentUser = {
+        id: user.uid,
+        name: user.displayName || "Student",
+        email: user.email,
+        avatar: user.displayName ? user.displayName.charAt(0).toUpperCase() : "S",
+        photoURL: user.photoURL || null
+      };
+      
+      // Update UI with profile picture or initials
+      updateUserAvatar(currentUser);
+      
+      userDisplayName.textContent = currentUser.name;
+      
+      // Load user data from Firestore
+      loadUserData();
+    } else {
+      // User is signed out
+      showAuthRequired("Please sign in to access messages.");
+    }
+  }, (error) => {
+    console.error("Auth state error:", error);
+    showAuthRequired("Authentication error. Please sign in again.");
+  });
+}
+// Update user avatar with profile picture or initials
+function updateUserAvatar(user) {
+  const avatarElement = document.getElementById('userAvatar');
+  
+  if (user.photoURL) {
+    // Display profile picture
+    avatarElement.innerHTML = `<img src="${user.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    
+    // Add has-image class to show image properly
+    const avatarContainer = avatarElement.parentElement;
+    if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+      avatarContainer.classList.add('has-image');
+    }
+  } else {
+    // Display initials
+    avatarElement.textContent = user.avatar;
+    
+    // Remove has-image class
+    const avatarContainer = avatarElement.parentElement;
+    if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+      avatarContainer.classList.remove('has-image');
+    }
+  }
+}
     // Show authentication required message
     function showAuthRequired(message) {
       const authMessage = document.querySelector('#authRequiredModal .auth-required p');
@@ -1543,29 +1651,214 @@
       });
     }
 
-    // Load user data from Firestore
-    async function loadUserData() {
-      try {
-        const userDoc = await db.collection('users').doc(currentUser.id).get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          currentUser.name = userData.displayName || userData.firstName + ' ' + userData.lastName || currentUser.name;
-          currentUser.avatar = (userData.firstName ? userData.firstName.charAt(0) : "S") + (userData.lastName ? userData.lastName.charAt(0) : "") || currentUser.avatar;
-          currentUser.role = userData.role || "student";
-          
-          userDisplayName.textContent = currentUser.name;
-          userAvatar.textContent = currentUser.avatar;
+// Load user data from Firestore
+async function loadUserData() {
+  try {
+    const userDoc = await db.collection('users').doc(currentUser.id).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      currentUser.name = userData.displayName || userData.firstName + ' ' + userData.lastName || currentUser.name;
+      currentUser.avatar = (userData.firstName ? userData.firstName.charAt(0) : "S") + (userData.lastName ? userData.lastName.charAt(0) : "") || currentUser.avatar;
+      currentUser.role = userData.role || "student";
+      
+      // Get photoURL from auth user (more reliable)
+      const authUser = firebase.auth().currentUser;
+      if (authUser && authUser.photoURL) {
+        currentUser.photoURL = authUser.photoURL;
+      }
+      
+      userDisplayName.textContent = currentUser.name;
+      updateUserAvatar(currentUser);
+    }
+    
+    // Load enrolled teachers
+    loadEnrolledTeachers();
+  } catch (error) {
+    console.error("Error loading user data:", error);
+    // Continue with basic user data
+    loadEnrolledTeachers();
+  }
+}
+// Load notifications - UPDATED to use studentNotifications collection
+async function loadNotifications() {
+  if (!currentUser) return;
+  
+  try {
+    // Only get unread notifications (to match other pages)
+    const notificationsQuery = await db.collection('studentNotifications')
+      .where('studentId', '==', currentUser.id)
+      .where('read', '==', false)  // Only unread
+      .orderBy('timestamp', 'desc')
+      .limit(10)
+      .get();
+    
+    notificationList.innerHTML = '';
+    
+    if (notificationsQuery.empty) {
+      notificationList.innerHTML = '<div class="no-notifications">No unread notifications</div>';
+      updateNotificationBadge(0);
+      return;
+    }
+    
+    const notifications = [];
+    let unreadCount = 0;
+    
+    notificationsQuery.forEach(doc => {
+      const notification = {
+        id: doc.id,
+        ...doc.data()
+      };
+      notifications.push(notification);
+      
+      if (!notification.read) {
+        unreadCount++;
+      }
+    });
+    
+    updateNotificationBadge(unreadCount);
+    
+    notifications.forEach(notification => {
+      const notificationEl = document.createElement('div');
+      notificationEl.classList.add('notification-item');
+      if (!notification.read) {
+        notificationEl.classList.add('unread');
+      }
+      
+      let timeDisplay = 'Recently';
+      if (notification.timestamp) {
+        const notificationTime = notification.timestamp.toDate();
+        const diffMs = new Date() - notificationTime;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) timeDisplay = 'Just now';
+        else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+        else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+        else timeDisplay = `${diffDays}d ago`;
+      }
+      
+      // Add icon based on notification type
+      let icon = '🔔';
+      if (notification.type === 'enrollment') icon = '📚';
+      else if (notification.type === 'course_update') icon = '📝';
+      else if (notification.type === 'message') icon = '💬';
+      else if (notification.type === 'achievement') icon = '🏆';
+      
+      notificationEl.innerHTML = `
+        <div class="notification-title">${icon} ${notification.title}</div>
+        <div class="notification-message">${notification.message}</div>
+        <div class="notification-time">${timeDisplay}</div>
+      `;
+      
+      notificationEl.addEventListener('click', async () => {
+        if (!notification.read) {
+          await db.collection('studentNotifications').doc(notification.id).update({
+            read: true
+          });
+          notificationEl.classList.remove('unread');
+          loadNotifications();
         }
         
-        // Load enrolled teachers
-        loadEnrolledTeachers();
-      } catch (error) {
-        console.error("Error loading user data:", error);
-        // Continue with basic user data
-        loadEnrolledTeachers();
-      }
-    }
+        // Navigate based on notification type
+        if (notification.courseId) {
+          window.location.href = `coursedetails.html?id=${notification.courseId}`;
+        }
+      });
+      
+      notificationList.appendChild(notificationEl);
+    });
+    
+  } catch (error) {
+    console.error("Error loading notifications:", error);
+    notificationList.innerHTML = '<div class="no-notifications">Error loading notifications</div>';
+  }
+}
+// Set up real-time notification listener
+function setupNotificationListener() {
+  if (!currentUser) return;
+  
+  // Track page load time to avoid showing old notifications as new
+  const pageLoadTime = Date.now();
+  
+  db.collection('studentNotifications')
+    .where('studentId', '==', currentUser.id)
+    .where('read', '==', false)
+    .onSnapshot((snapshot) => {
+      console.log("Notifications updated");
+      
+      // Show toast for new notifications
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added") {
+          const notification = change.doc.data();
+          
+          // Only show toast for notifications created after page load
+          if (Date.now() - pageLoadTime > 3000) {
+            showToastNotification(notification);
+          }
+        }
+      });
+      
+      // Reload notification list
+      loadNotifications();
+    }, (error) => {
+      console.error("Error listening to notifications:", error);
+    });
+}
 
+// Show toast notification for real-time updates
+function showToastNotification(notification) {
+  let icon = '🔔';
+  if (notification.type === 'enrollment') icon = '📚';
+  else if (notification.type === 'course_update') icon = '📝';
+  else if (notification.type === 'message') icon = '💬';
+  else if (notification.type === 'achievement') icon = '🏆';
+  
+  const toast = document.createElement('div');
+  toast.className = 'message-toast success';
+  toast.innerHTML = `
+    <div style="display: flex; align-items: start; gap: 15px;">
+      <div style="font-size: 24px;">${icon}</div>
+      <div style="flex: 1;">
+        <div style="font-weight: 600; margin-bottom: 5px;">${notification.title}</div>
+        <div style="font-size: 14px;">${notification.message}</div>
+      </div>
+    </div>
+  `;
+  
+  toast.addEventListener('click', () => {
+    if (notification.courseId) {
+      window.location.href = `coursedetails.html?id=${notification.courseId}`;
+    } else {
+      toast.remove();
+    }
+  });
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = "slideOut 0.3s ease";
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.remove();
+      }
+    }, 300);
+  }, 5000);
+}
+// Show success/error messages
+function showMessage(message, type = "success") {
+  const messageElement = document.createElement('div');
+  messageElement.className = `message-toast ${type}`;
+  messageElement.textContent = message;
+  
+  document.body.appendChild(messageElement);
+  
+  setTimeout(() => {
+    if (messageElement.parentNode) {
+      messageElement.remove();
+    }
+  }, 4000);
+}
     // Load enrolled teachers from Firebase
     async function loadEnrolledTeachers() {
       try {
@@ -1592,6 +1885,15 @@
                   const teacherDoc = await db.collection('teachers').doc(teacherId).get();
                   if (teacherDoc.exists) {
                     const teacher = teacherDoc.data();
+                    let photoURL = null;
+                    try {
+                      const authUser = await firebase.auth().getUser(teacherId);
+                      if (authUser && authUser.photoURL) {
+                        photoURL = authUser.photoURL;
+                      }
+                    } catch (error) {
+                      console.log("Could not fetch auth photo for teacher");
+                    }
                     enrolledTeachers.push({
                       id: teacherId,
                       name: teacher.displayName || teacher.firstName + ' ' + teacher.lastName || "Teacher",
@@ -1599,7 +1901,8 @@
                       avatar: getInitials(teacher.firstName, teacher.lastName) || "T",
                       course: enrollment.courseName || "Course",
                       email: teacher.email,
-                      expertise: teacher.expertise || "General"
+                      expertise: teacher.expertise || "General",
+                      photoURL: photoURL || teacher.photoURL || null
                     });
                     console.log("Loaded teacher:", teacher.displayName || teacher.firstName + ' ' + teacher.lastName);
                   } else {
@@ -2147,63 +2450,71 @@ function updateChatStatus(teacherId) {
       }
     }
 
-    // Render conversations list
-    function renderConversationsList() {
-      if (!conversationsList) return;
-      
-      conversationsList.innerHTML = '';
-      
-      if (conversations.length === 0) {
-        conversationsList.innerHTML = `
-          <div class="empty-chat">
-            <i class="fas fa-comments"></i>
-            <p>No conversations yet. Start a new chat with your teachers.</p>
-          </div>
-        `;
-        return;
-      }
-      
-      conversations.forEach(conversation => {
-        // Find teacher details
-        const teacher = enrolledTeachers.find(t => t.id === conversation.teacherId);
-        
-        if (!teacher) {
-          return; // Skip if teacher not found in enrolled list
-        }
-        
-        const item = document.createElement('div');
-        item.classList.add('conversation-item');
-        if (currentConversation && currentConversation.id === conversation.id) {
-          item.classList.add('active');
-        }
-        item.dataset.conversationId = conversation.id;
-        
-        // Format time
-        const time = formatTime(conversation.lastMessageTime);
-        
-        item.innerHTML = `
-          <div class="conversation-avatar">${teacher.avatar}</div>
-          <div class="conversation-info">
-            <div class="conversation-top">
-              <div class="conversation-name">${teacher.name}</div>
-              <div class="conversation-time">${time}</div>
-            </div>
-            <div class="conversation-preview">${conversation.lastMessage || 'Start a conversation...'}</div>
-            <div class="conversation-status">Loading status...</div>
-          </div>
-          ${conversation.unreadCount > 0 ? `<div class="unread-count">${conversation.unreadCount}</div>` : ''}
-        `;
-        
-        // Update status immediately
-        updateConversationStatus(conversation.teacherId, item);
-        
-        item.addEventListener('click', () => {
-          selectConversation(conversation, teacher);
-        });
-        
-        conversationsList.appendChild(item);
-      });
+// Render conversations list
+function renderConversationsList() {
+  if (!conversationsList) return;
+  
+  conversationsList.innerHTML = '';
+  
+  if (conversations.length === 0) {
+    conversationsList.innerHTML = `
+      <div class="empty-chat">
+        <i class="fas fa-comments"></i>
+        <p>No conversations yet. Start a new chat with your teachers.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  conversations.forEach(conversation => {
+    // Find teacher details
+    const teacher = enrolledTeachers.find(t => t.id === conversation.teacherId);
+    
+    if (!teacher) {
+      return; // Skip if teacher not found in enrolled list
     }
+    
+    const item = document.createElement('div');
+    item.classList.add('conversation-item');
+    if (currentConversation && currentConversation.id === conversation.id) {
+      item.classList.add('active');
+    }
+    item.dataset.conversationId = conversation.id;
+    
+    // Format time
+    const time = formatTime(conversation.lastMessageTime);
+    
+    // Create avatar HTML with profile picture or initials
+    let avatarHTML;
+    if (teacher.photoURL) {
+      avatarHTML = `<div class="conversation-avatar"><img src="${teacher.photoURL}" alt="${teacher.name}"></div>`;
+    } else {
+      avatarHTML = `<div class="conversation-avatar">${teacher.avatar}</div>`;
+    }
+    
+    item.innerHTML = `
+      ${avatarHTML}
+      <div class="conversation-info">
+        <div class="conversation-top">
+          <div class="conversation-name">${teacher.name}</div>
+          <div class="conversation-time">${time}</div>
+        </div>
+        <div class="conversation-preview">${conversation.lastMessage || 'Start a conversation...'}</div>
+        <div class="conversation-status">Loading status...</div>
+      </div>
+      ${conversation.unreadCount > 0 ? `<div class="unread-count">${conversation.unreadCount}</div>` : ''}
+    `;
+    
+    // Update status immediately
+    updateConversationStatus(conversation.teacherId, item);
+    
+    item.addEventListener('click', () => {
+      selectConversation(conversation, teacher);
+    });
+    
+    conversationsList.appendChild(item);
+  });
+}
 
     // Select conversation function
     function selectConversation(conversation, teacher) {
@@ -2258,19 +2569,26 @@ function updateChatStatus(teacherId) {
       return dateObj.toLocaleDateString();
     }
 
-    // Load chat messages
-    function loadChat(conversation, teacher) {
-      if (!chatMessages || !currentChatName) return;
-      
-      currentConversation = conversation;
-      
-      // Update chat header
-      currentChatName.textContent = teacher.name;
-      currentChatRole.textContent = `${teacher.role} - ${teacher.expertise}`;
-      currentChatAvatar.textContent = teacher.avatar;
-      
-      // Update chat status
-      updateChatStatus(conversation.teacherId);
+// Load chat messages
+function loadChat(conversation, teacher) {
+  if (!chatMessages || !currentChatName) return;
+  
+  currentConversation = conversation;
+  
+  // Update chat header with profile picture or initials
+  currentChatName.textContent = teacher.name;
+  currentChatRole.textContent = `${teacher.role} - ${teacher.expertise}`;
+  
+  if (teacher.photoURL) {
+    currentChatAvatar.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.name}">`;
+  } else {
+    currentChatAvatar.textContent = teacher.avatar;
+    currentChatAvatar.innerHTML = teacher.avatar;
+  }
+  
+  // Update chat status
+  updateChatStatus(conversation.teacherId);
+
       
       // Enable input
       const messageInput = document.getElementById('messageInput');
@@ -2714,29 +3032,77 @@ if (confirmLogout) {
       });
     }
 
-    // Initialize notifications
-    function initNotifications() {
-      if (!notificationIcon || !notificationDropdown) return;
+// Initialize notifications
+function initNotifications() {
+  if (!notificationIcon || !notificationDropdown) return;
 
-      notificationIcon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notificationDropdown.classList.toggle('active');
-      });
-
-      if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', () => {
-          updateNotificationBadge(0);
-        });
-      }
-
-      document.addEventListener('click', () => {
-        notificationDropdown.classList.remove('active');
-      });
-
-      notificationDropdown.addEventListener('click', (e) => {
-        e.stopPropagation();
-      });
+  notificationIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    notificationDropdown.classList.toggle('active');
+    
+    // Load notifications when dropdown opens
+    if (notificationDropdown.classList.contains('active')) {
+      loadNotifications();
     }
+  });
+
+  if (clearNotificationsBtn) {
+    clearNotificationsBtn.addEventListener('click', async () => {
+      await clearAllNotifications();
+    });
+  }
+
+  document.addEventListener('click', () => {
+    notificationDropdown.classList.remove('active');
+  });
+
+  notificationDropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+}
+// Clear all notifications - marks them as read
+async function clearAllNotifications() {
+  try {
+    if (!currentUser) {
+      showMessage("❌ Please sign in to clear notifications", "error");
+      return;
+    }
+    
+    // Get all unread notifications for this student
+    const unreadQuery = await db.collection('studentNotifications')
+      .where('studentId', '==', currentUser.id)
+      .where('read', '==', false)
+      .get();
+    
+    if (unreadQuery.empty) {
+      showMessage("No unread notifications to clear");
+      return;
+    }
+    
+    // Batch update all notifications to read
+    const batch = db.batch();
+    unreadQuery.forEach(doc => {
+      batch.update(doc.ref, { read: true });
+    });
+    
+    await batch.commit();
+    
+    console.log(`Cleared ${unreadQuery.size} notifications`);
+    
+    // Show success message
+    showMessage("✅ All notifications cleared");
+    
+    // Update badge
+    updateNotificationBadge(0);
+    
+    // Reload notifications to update UI
+    loadNotifications();
+    
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    showMessage("❌ Error clearing notifications", "error");
+  }
+}
 
     // Show notification
     function showNotification(title, message) {
@@ -2797,6 +3163,41 @@ document.addEventListener('visibilitychange', async () => {
       await updateStudentOnlineStatus(true);
     }
   }
+  if (clearNotificationsBtn) {
+  clearNotificationsBtn.addEventListener('click', async () => {
+    try {
+      if (!currentUser) return;
+      
+      // Get all unread notifications for this student
+      const unreadQuery = await db.collection('studentNotifications')
+        .where('studentId', '==', currentUser.id)
+        .where('read', '==', false)
+        .get();
+      
+      if (unreadQuery.empty) {
+        showMessage("No notifications to clear");
+        return;
+      }
+      
+      // Batch update all notifications to read
+      const batch = db.batch();
+      unreadQuery.forEach(doc => {
+        batch.update(doc.ref, { read: true });
+      });
+      
+      await batch.commit();
+      
+      // Show success message
+      showMessage("✅ All notifications marked as read");
+      
+      // Reload notifications
+      loadNotifications();
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      showMessage("❌ Error clearing notifications", "error");
+    }
+  });
+}
 });
 
     // Initialize floating particles
