@@ -488,6 +488,20 @@ body::before {
   position: relative;
   z-index: 2;
 }
+/* Profile picture styling */
+.avatar img {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Hide the rotating background when image is present */
+.avatar.has-image::before {
+  display: none;
+}
 
 /* Notification Dropdown */
 .notification-dropdown {
@@ -4328,6 +4342,72 @@ body::before {
       </div>
     </div>
   </div>
+  <!-- Feedback Modal -->
+<div class="modal" id="feedbackModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Course Feedback</h2>
+      <button class="close-modal" id="closeFeedbackModal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div style="text-align: center; margin: 20px 0;">
+      <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
+      <h3 style="color: var(--primary); margin-bottom: 10px;">Congratulations!</h3>
+      <p style="color: var(--gray); margin-bottom: 30px;">You've completed this course. Please share your feedback to help us improve.</p>
+    </div>
+    <form id="feedbackForm">
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
+          <i class="fas fa-star"></i> Rate this course
+        </label>
+        <div class="star-rating" id="starRating" style="display: flex; gap: 10px; justify-content: center; font-size: 32px; cursor: pointer;">
+          <i class="far fa-star" data-rating="1"></i>
+          <i class="far fa-star" data-rating="2"></i>
+          <i class="far fa-star" data-rating="3"></i>
+          <i class="far fa-star" data-rating="4"></i>
+          <i class="far fa-star" data-rating="5"></i>
+        </div>
+        <input type="hidden" id="ratingValue" value="0" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="feedbackText" style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
+          <i class="fas fa-comment"></i> Your feedback
+        </label>
+        <textarea 
+          id="feedbackText" 
+          rows="5" 
+          placeholder="Tell us about your experience with this course..."
+          style="width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid rgba(67, 97, 238, 0.3); border-radius: 8px; color: var(--primary); resize: vertical;"
+          required
+        ></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
+          <i class="fas fa-lightbulb"></i> What did you like most?
+        </label>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+            <input type="checkbox" name="liked" value="content" style="cursor: pointer;"> Content Quality
+          </label>
+          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+            <input type="checkbox" name="liked" value="instructor" style="cursor: pointer;"> Instructor
+          </label>
+          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+            <input type="checkbox" name="liked" value="pace" style="cursor: pointer;"> Learning Pace
+          </label>
+          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+            <input type="checkbox" name="liked" value="assignments" style="cursor: pointer;"> Assignments
+          </label>
+        </div>
+      </div>
+      <div class="feedback-actions" style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+        <button type="button" class="btn btn-secondary" id="skipFeedback">Skip</button>
+        <button type="submit" class="btn btn-primary" id="submitFeedback">Submit Feedback</button>
+      </div>
+    </form>
+  </div>
+</div>
 
   <footer class="footer">
     <p>&copy; 2025 SkillUp Platform. All rights reserved.</p>
@@ -7263,43 +7343,61 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
   }
 }
 
-// Add notification to user's notifications
+// Track notifications already added in this session
+const notificationCache = new Set();
+
+// Add notification to user's notifications - UPDATED to prevent duplicates
 async function addNotification(notificationData) {
   if (!currentUser) return;
   
   try {
-    const userRef = doc(db, "users", currentUser.uid);
-    const userSnap = await getDoc(userRef);
+    // Create unique key for this notification
+    const notificationKey = `${notificationData.type}-${notificationData.courseId || ''}-${notificationData.assignmentId || ''}-${notificationData.message}`;
     
-    const notifications = userSnap.exists() && userSnap.data().notifications 
-      ? userSnap.data().notifications 
-      : [];
-    
-    // Check if similar notification already exists (prevent duplicates)
-    const notificationKey = `${notificationData.type}-${notificationData.courseId}-${notificationData.assignmentId || ''}-${notificationData.message}`;
-    const exists = notifications.some(n => 
-      n.type === notificationData.type && 
-      n.courseId === notificationData.courseId &&
-      n.message === notificationData.message &&
-      (Date.now() - (n.timestamp?.toMillis() || 0)) < 5000 // Within 5 seconds
-    );
-    
-    if (exists) {
-      console.log("Duplicate notification prevented:", notificationKey);
+    // Check if we already added this notification in this session
+    if (notificationCache.has(notificationKey)) {
+      console.log("Notification already added in this session:", notificationKey);
       return;
     }
     
-    const newNotification = {
-      id: `notification-${Date.now()}-${Math.random()}`,
-      ...notificationData,
-      timestamp: Timestamp.now()
-    };
+    // Check if similar notification already exists in database (within last 5 seconds)
+    const recentNotificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", currentUser.uid),
+      where("type", "==", notificationData.type),
+      orderBy("timestamp", "desc"),
+      limit(5)
+    );
     
-    await updateDoc(userRef, {
-      notifications: arrayUnion(newNotification)
+    const recentSnap = await getDocs(recentNotificationsQuery);
+    const fiveSecondsAgo = Date.now() - 5000;
+    
+    for (const docSnap of recentSnap.docs) {
+      const data = docSnap.data();
+      const timestamp = data.timestamp?.toMillis() || 0;
+      
+      if (timestamp > fiveSecondsAgo && 
+          data.message === notificationData.message &&
+          data.courseId === notificationData.courseId) {
+        console.log("Duplicate notification prevented:", notificationKey);
+        return;
+      }
+    }
+    
+    // Add to studentNotifications collection
+    const notificationRef = doc(collection(db, "studentNotifications"));
+    await setDoc(notificationRef, {
+      studentId: currentUser.uid,
+      studentName: currentUser.displayName || currentUser.email,
+      studentEmail: currentUser.email,
+      ...notificationData,
+      timestamp: serverTimestamp()
     });
     
-    console.log("Notification added:", newNotification.title);
+    // Add to cache
+    notificationCache.add(notificationKey);
+    
+    console.log("Notification added:", notificationData.title);
     
     // Reload notifications
     loadNotifications(currentUser.uid);
@@ -7308,50 +7406,60 @@ async function addNotification(notificationData) {
   }
 }
 
-// Load notifications
+// Load notifications - UPDATED to use studentNotifications collection
 async function loadNotifications(userId) {
   try {
-    const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
+    if (!notificationList) return;
 
+    // Query studentNotifications collection for this user
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", userId),
+      orderBy("timestamp", "desc"),
+      limit(10)
+    );
+    
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
     notificationList.innerHTML = "";
 
-    if (userSnap.exists() && userSnap.data().notifications) {
-      const notifications = userSnap.data().notifications;
-      
-      notifications.sort((a, b) => {
-        const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
-        const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
-        return timeB - timeA;
+    if (!notificationsSnap.empty) {
+      const notifications = [];
+      notificationsSnap.forEach(doc => {
+        notifications.push({
+          id: doc.id,
+          ...doc.data()
+        });
       });
 
       const notificationsToShow = notifications.slice(0, 5);
 
       if (notificationsToShow.length === 0) {
         notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-        const badge = document.getElementById('notificationBadge');
-        if (badge) badge.style.display = 'none';
+        if (notificationBadge) {
+          notificationBadge.textContent = '0';
+          notificationBadge.style.display = 'none';
+        }
         return;
       }
 
       const unreadCount = notifications.filter(n => !n.read).length;
-      const badge = document.getElementById('notificationBadge');
-      if (badge) {
-        badge.textContent = unreadCount;
-        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+      if (notificationBadge) {
+        notificationBadge.textContent = unreadCount;
+        notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
       }
 
       notificationsToShow.forEach(notification => {
         const notificationItem = document.createElement("div");
-        notificationItem.className = "notification-item";
+        notificationItem.classList.add("notification-item");
         if (!notification.read) {
-          notificationItem.classList.add('unread');
+          notificationItem.classList.add("unread");
         }
         
         let timeDisplay = "Recently";
         if (notification.timestamp) {
           const now = new Date();
-          const notificationTime = notification.timestamp.toDate();
+          const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
           const diffMs = now - notificationTime;
           const diffMins = Math.floor(diffMs / 60000);
           const diffHours = Math.floor(diffMs / 3600000);
@@ -7363,20 +7471,30 @@ async function loadNotifications(userId) {
           else timeDisplay = `${diffDays}d ago`;
         }
         
+        // Add icon based on notification type
+        let icon = '🔔';
+        if (notification.type === 'enrollment') icon = '📚';
+        else if (notification.type === 'course_update') icon = '📝';
+        else if (notification.type === 'message') icon = '💬';
+        else if (notification.type === 'achievement') icon = '🏆';
+        else if (notification.type === 'video_error') icon = '⚠️';
+        else if (notification.type === 'assignment_success') icon = '✅';
+        else if (notification.type === 'test_success') icon = '🎉';
+        
         notificationItem.innerHTML = `
-          <div class="notification-title">${notification.title}</div>
+          <div class="notification-title">${icon} ${notification.title}</div>
           <div class="notification-message">${notification.message}</div>
           <div class="notification-time">${timeDisplay}</div>
         `;
         
         notificationItem.addEventListener('click', async () => {
           if (!notification.read) {
-            notification.read = true;
-            await updateDoc(userRef, {
-              notifications: notifications.map(n => 
-                n.id === notification.id ? {...n, read: true} : n
-              )
+            // Mark as read in studentNotifications collection
+            const notificationRef = doc(db, "studentNotifications", notification.id);
+            await updateDoc(notificationRef, {
+              read: true
             });
+            
             notificationItem.classList.remove('unread');
             loadNotifications(userId);
           }
@@ -7386,36 +7504,46 @@ async function loadNotifications(userId) {
       });
     } else {
       notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-      const badge = document.getElementById('notificationBadge');
-      if (badge) badge.style.display = 'none';
+      if (notificationBadge) {
+        notificationBadge.textContent = '0';
+        notificationBadge.style.display = 'none';
+      }
     }
   } catch (error) {
     console.error("Error loading notifications:", error);
-    notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+    if (notificationList) {
+      notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+    }
   }
 }
 
-// Clear all notifications
+// Clear all notifications - UPDATED to delete all notifications
 async function clearAllNotifications() {
   try {
     if (!currentUser) return;
     
-    const userRef = doc(db, "users", currentUser.uid);
+    // Query all notifications for this student
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", currentUser.uid)
+    );
     
-    // Delete all notifications completely
-    await updateDoc(userRef, {
-      notifications: []
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
+    // Delete all notifications
+    const deletePromises = [];
+    notificationsSnap.forEach(docSnap => {
+      deletePromises.push(deleteDoc(doc(db, "studentNotifications", docSnap.id)));
     });
     
-    console.log("All notifications cleared");
+    await Promise.all(deletePromises);
     
-    // Reload notifications to update UI
+    console.log("All notifications cleared");
     loadNotifications(currentUser.uid);
   } catch (error) {
     console.error("Error clearing notifications:", error);
   }
 }
-
 // Award certificate when course is completed
 async function awardCertificate() {
   console.log("=== AWARDING CERTIFICATE ===");
@@ -7466,10 +7594,157 @@ async function awardCertificate() {
       shownNotifications.add(notificationKey);
     }
     
+    // *** NEW: Show feedback modal after certificate is awarded ***
+    setTimeout(() => {
+      showFeedbackModal();
+    }, 1000);
+    
   } catch (error) {
     console.error("Error awarding certificate:", error);
   }
 }
+// Show feedback modal when course is completed
+function showFeedbackModal() {
+  const feedbackModal = document.getElementById('feedbackModal');
+  if (!feedbackModal) return;
+  
+  // Check if feedback already given for this course
+  if (userEnrollmentData?.feedbackGiven) {
+    console.log("Feedback already given for this course");
+    return;
+  }
+  
+  feedbackModal.classList.add('active');
+  
+  // Star rating functionality
+  const stars = document.querySelectorAll('#starRating i');
+  const ratingValue = document.getElementById('ratingValue');
+  
+  stars.forEach(star => {
+    star.addEventListener('click', function() {
+      const rating = parseInt(this.getAttribute('data-rating'));
+      ratingValue.value = rating;
+      
+      // Update star display
+      stars.forEach((s, index) => {
+        if (index < rating) {
+          s.classList.remove('far');
+          s.classList.add('fas');
+          s.style.color = '#ffc107';
+        } else {
+          s.classList.remove('fas');
+          s.classList.add('far');
+          s.style.color = 'var(--gray)';
+        }
+      });
+    });
+    
+    // Hover effect
+    star.addEventListener('mouseenter', function() {
+      const rating = parseInt(this.getAttribute('data-rating'));
+      stars.forEach((s, index) => {
+        if (index < rating) {
+          s.style.color = '#ffc107';
+        }
+      });
+    });
+  });
+  
+  document.getElementById('starRating').addEventListener('mouseleave', function() {
+    const currentRating = parseInt(ratingValue.value);
+    stars.forEach((s, index) => {
+      if (index < currentRating) {
+        s.style.color = '#ffc107';
+      } else {
+        s.style.color = 'var(--gray)';
+      }
+    });
+  });
+}
+
+// Submit feedback
+document.addEventListener('DOMContentLoaded', function() {
+  const feedbackForm = document.getElementById('feedbackForm');
+  const closeFeedbackModal = document.getElementById('closeFeedbackModal');
+  const skipFeedback = document.getElementById('skipFeedback');
+  const feedbackModal = document.getElementById('feedbackModal');
+  
+  if (feedbackForm) {
+    feedbackForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const rating = parseInt(document.getElementById('ratingValue').value);
+      const feedback = document.getElementById('feedbackText').value;
+      const likedAspects = Array.from(document.querySelectorAll('input[name="liked"]:checked')).map(cb => cb.value);
+      
+      if (rating === 0) {
+        alert('Please select a rating');
+        return;
+      }
+      
+      try {
+        // Save feedback to Firestore
+        const feedbackRef = doc(collection(db, "courseFeedback"));
+        await setDoc(feedbackRef, {
+          courseId: courseId,
+          courseName: courseData?.name || 'Unknown Course',
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || currentUser.email,
+          rating: rating,
+          feedback: feedback,
+          likedAspects: likedAspects,
+          submittedAt: Timestamp.now()
+        });
+        
+        // Mark feedback as given in user enrollment
+        const userRef = doc(db, "users", currentUser.uid);
+        await updateDoc(userRef, {
+          [`enrollments.${courseId}.feedbackGiven`]: true,
+          [`enrollments.${courseId}.feedbackRating`]: rating
+        });
+        
+        // Update local data
+        userEnrollmentData.feedbackGiven = true;
+        userEnrollmentData.feedbackRating = rating;
+        
+        // Close modal
+        feedbackModal.classList.remove('active');
+        
+        // Show success message
+        showNotification('Thank you for your feedback!', 'success');
+        
+        console.log('Feedback submitted successfully');
+      } catch (error) {
+        console.error('Error submitting feedback:', error);
+        alert('Error submitting feedback. Please try again.');
+      }
+    });
+  }
+  
+  if (closeFeedbackModal) {
+    closeFeedbackModal.addEventListener('click', function() {
+      feedbackModal.classList.remove('active');
+    });
+  }
+  
+  if (skipFeedback) {
+    skipFeedback.addEventListener('click', async function() {
+      // Mark feedback as skipped
+      try {
+        const userRef = doc(db, "users", currentUser.uid);
+        await updateDoc(userRef, {
+          [`enrollments.${courseId}.feedbackGiven`]: true,
+          [`enrollments.${courseId}.feedbackSkipped`]: true
+        });
+        
+        userEnrollmentData.feedbackGiven = true;
+        feedbackModal.classList.remove('active');
+      } catch (error) {
+        console.error('Error skipping feedback:', error);
+      }
+    });
+  }
+});
 
 // UPDATED: Generate certificate with proper button display
 async function generateCertificate() {
