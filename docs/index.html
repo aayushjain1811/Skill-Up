@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
   
   <!-- Three.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1625,8 +1626,10 @@
 
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
+      const storage = firebase.storage();
       
-      const courseImages = {
+      // Default fallback images
+      const defaultCourseImages = {
         "Web Development": "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=350&h=200&fit=crop",
         "Programming": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=350&h=200&fit=crop",
         "Design": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=350&h=200&fit=crop",
@@ -1635,6 +1638,92 @@
         "Data Science": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=350&h=200&fit=crop",
         "default": "https://images.unsplash.com/photo-1497636577773-f1231844b336?w=350&h=200&fit=crop"
       };
+
+      // Function to get course image from Firebase Storage
+      async function getCourseImageUrl(courseId) {
+        try {
+          // Clean the courseId to remove any "course" prefix if it exists
+          const cleanCourseId = courseId.replace(/^course/, '');
+          
+          // Try different possible image paths and names
+          const possiblePaths = [
+            `coursepic/course${cleanCourseId}/course${cleanCourseId}.jpg`,
+            `coursepic/course${cleanCourseId}/course${cleanCourseId}.png`,
+            `coursepic/course${cleanCourseId}/course${cleanCourseId}.jpeg`,
+            `coursepic/course${cleanCourseId}/course${cleanCourseId}.webp`,
+            `coursepic/course${cleanCourseId}/image.jpg`,
+            `coursepic/course${cleanCourseId}/image.png`,
+            `coursepic/course${cleanCourseId}/image.jpeg`,
+            `coursepic/course${cleanCourseId}/image.webp`,
+            `coursepic/course${cleanCourseId}/thumbnail.jpg`,
+            `coursepic/course${cleanCourseId}/thumbnail.png`,
+            `coursepic/course${cleanCourseId}/thumbnail.jpeg`,
+            `coursepic/course${cleanCourseId}/thumbnail.webp`,
+            `coursepic/course${cleanCourseId}/cover.jpg`,
+            `coursepic/course${cleanCourseId}/cover.png`,
+            `coursepic/course${cleanCourseId}/cover.jpeg`,
+            `coursepic/course${cleanCourseId}/cover.webp`,
+            `coursepic/${cleanCourseId}.jpg`,
+            `coursepic/${cleanCourseId}.png`,
+            `coursepic/${cleanCourseId}.jpeg`,
+            `coursepic/${cleanCourseId}.webp`,
+            // Also try with the original courseId in case it's already clean
+            `coursepic/course${courseId}/course${courseId}.jpg`,
+            `coursepic/course${courseId}/course${courseId}.png`,
+            `coursepic/course${courseId}/course${courseId}.jpeg`,
+            `coursepic/course${courseId}/course${courseId}.webp`,
+            `coursepic/course${courseId}/image.jpg`,
+            `coursepic/course${courseId}/image.png`,
+            `coursepic/course${courseId}/image.jpeg`,
+            `coursepic/course${courseId}/image.webp`,
+            `coursepic/${courseId}.jpg`,
+            `coursepic/${courseId}.png`,
+            `coursepic/${courseId}.jpeg`,
+            `coursepic/${courseId}.webp`
+          ];
+          
+          console.log(`Looking for course image for ID: ${courseId} (cleaned: ${cleanCourseId})`);
+          
+          // Try each possible path
+          for (const path of possiblePaths) {
+            try {
+              const imageRef = storage.ref().child(path);
+              const url = await imageRef.getDownloadURL();
+              console.log(`Found course image at: ${path}`);
+              return url;
+            } catch (error) {
+              // Continue to next path if this one fails
+              continue;
+            }
+          }
+          
+          // If no image found, return null
+          console.log(`No course image found for ID: ${courseId}`);
+          return null;
+        } catch (error) {
+          console.error(`Error getting course image for ${courseId}:`, error);
+          return null;
+        }
+      }
+
+      // Function to get course image with fallback
+      async function getCourseImage(course) {
+        try {
+          // First try to get image from Firebase Storage
+          const firebaseImageUrl = await getCourseImageUrl(course.id);
+          if (firebaseImageUrl) {
+            return firebaseImageUrl;
+          }
+          
+          // Fallback to default images based on category
+          const category = course.category || "default";
+          return defaultCourseImages[category] || defaultCourseImages.default;
+        } catch (error) {
+          console.error("Error getting course image:", error);
+          const category = course.category || "default";
+          return defaultCourseImages[category] || defaultCourseImages.default;
+        }
+      }
 
       // Create floating particles
       function createParticles() {
@@ -2168,16 +2257,13 @@
         }
       }
 
-      // Function to get course image
-      function getCourseImage(course) {
-        const category = course.category || "default";
-        return courseImages[category] || courseImages.default;
-      }
-
       // Function to show course details modal
-      function showCourseModal(course) {
+      async function showCourseModal(course) {
         modalCourseTitle.textContent = course.name || course.title || "Untitled Course";
-        modalCourseImage.src = getCourseImage(course);
+        
+        // Get course image from Firebase Storage
+        const courseImageUrl = await getCourseImage(course);
+        modalCourseImage.src = courseImageUrl;
         modalCourseImage.alt = course.name || course.title || "Course Image";
 
         modalCourseCategory.textContent = course.category || "General";
@@ -2212,7 +2298,7 @@
       }
 
       // Function to fetch and display courses
-      function fetchCourses() {
+      async function fetchCourses() {
         const coursesGrid = document.getElementById('coursesGrid');
 
         coursesGrid.innerHTML = `
@@ -2222,96 +2308,107 @@
           </div>
         `;
 
-        db.collection("courses")
-          .limit(6)
-          .get()
-          .then((querySnapshot) => {
-            if (querySnapshot.empty) {
-              coursesGrid.innerHTML = `
-                <div class="courses-empty">
-                  <i class="fas fa-book-open"></i>
-                  <p>No courses available at the moment. Check back soon!</p>
-                </div>
-              `;
-              return;
-            }
-
-            coursesGrid.innerHTML = '';
-
-            querySnapshot.forEach((doc, index) => {
-              const course = doc.data();
-              const courseId = doc.id;
-              course.id = courseId;
-
-              const courseCard = document.createElement('div');
-              courseCard.className = 'course-card';
-              courseCard.style.animationDelay = `${index * 0.1}s`;
-
-              const courseName = course.name || course.title || "Untitled Course";
-              const courseDescription = course.description || "No description available.";
-              const courseCategory = course.category || "General";
-              const courseLevel = course.level || "Beginner";
-              const enrolledCount = course.enrolledCount || 0;
-              const price = course.price || 0;
-              const formattedPrice = price === 0 ? "Free" : `$${price}`;
-
-              const courseImage = getCourseImage(course);
-
-              const rating = course.rating || 4.5;
-              const stars = "★".repeat(Math.floor(rating)) + "☆".repeat(5 - Math.floor(rating));
-
-              courseCard.innerHTML = `
-                <div class="course-image">
-                  <div class="course-level">${courseLevel}</div>
-                  <div class="course-category">${courseCategory}</div>
-                  <img src="${courseImage}" alt="${courseName}" onerror="this.src='${courseImages.default}'">
-                </div>
-                <div class="course-content">
-                  <h3 class="course-title">${courseName}</h3>
-                  <p class="course-description">${courseDescription}</p>
-                  <div class="course-meta">
-                    <div class="course-rating">
-                      <div class="stars">${stars}</div>
-                      <div class="rating-value">${rating.toFixed(1)}</div>
-                    </div>
-                    <div class="course-price ${price === 0 ? 'free' : ''}">${formattedPrice}</div>
-                  </div>
-                  <div class="course-actions">
-                    <button class="enroll-btn" data-course-id="${courseId}">Enroll Now</button>
-                    <button class="view-details-btn" data-course='${JSON.stringify(course).replace(/'/g, "&#39;")}'>View Details</button>
-                  </div>
-                </div>
-              `;
-
-              coursesGrid.appendChild(courseCard);
-
-              setTimeout(() => {
-                courseCard.classList.add('animate');
-              }, 100 + (index * 100));
-
-              // Add event listeners
-              const enrollBtn = courseCard.querySelector('.enroll-btn');
-              enrollBtn.addEventListener('click', function() {
-                const courseId = this.getAttribute('data-course-id');
-                enrollInCourse(courseId);
-              });
-
-              const viewDetailsBtn = courseCard.querySelector('.view-details-btn');
-              viewDetailsBtn.addEventListener('click', function() {
-                const courseData = JSON.parse(this.getAttribute('data-course'));
-                showCourseModal(courseData);
-              });
-            });
-          })
-          .catch((error) => {
-            console.error("Error fetching courses: ", error);
+        try {
+          const querySnapshot = await db.collection("courses").limit(6).get();
+          
+          if (querySnapshot.empty) {
             coursesGrid.innerHTML = `
               <div class="courses-empty">
-                <i class="fas fa-exclamation-triangle"></i>
-                <p>Failed to load courses. Please try again later.</p>
+                <i class="fas fa-book-open"></i>
+                <p>No courses available at the moment. Check back soon!</p>
               </div>
             `;
+            return;
+          }
+
+          coursesGrid.innerHTML = '';
+
+          const coursePromises = [];
+          querySnapshot.forEach((doc, index) => {
+            const course = doc.data();
+            const courseId = doc.id;
+            course.id = courseId;
+
+            // Create a promise for each course to get its image
+            const coursePromise = getCourseImage(course).then(imageUrl => {
+              return { course, imageUrl, index };
+            });
+            coursePromises.push(coursePromise);
           });
+
+          // Wait for all images to load
+          const coursesWithImages = await Promise.all(coursePromises);
+
+          // Sort courses by original index to maintain order
+          coursesWithImages.sort((a, b) => a.index - b.index);
+
+          coursesWithImages.forEach(({ course, imageUrl, index }) => {
+            const courseCard = document.createElement('div');
+            courseCard.className = 'course-card';
+            courseCard.style.animationDelay = `${index * 0.1}s`;
+
+            const courseName = course.name || course.title || "Untitled Course";
+            const courseDescription = course.description || "No description available.";
+            const courseCategory = course.category || "General";
+            const courseLevel = course.level || "Beginner";
+            const enrolledCount = course.enrolledCount || 0;
+            const price = course.price || 0;
+            const formattedPrice = price === 0 ? "Free" : `$${price}`;
+
+            const rating = course.rating || 4.5;
+            const stars = "★".repeat(Math.floor(rating)) + "☆".repeat(5 - Math.floor(rating));
+
+            courseCard.innerHTML = `
+              <div class="course-image">
+                <div class="course-level">${courseLevel}</div>
+                <div class="course-category">${courseCategory}</div>
+                <img src="${imageUrl}" alt="${courseName}" onerror="this.src='${defaultCourseImages.default}'">
+              </div>
+              <div class="course-content">
+                <h3 class="course-title">${courseName}</h3>
+                <p class="course-description">${courseDescription}</p>
+                <div class="course-meta">
+                  <div class="course-rating">
+                    <div class="stars">${stars}</div>
+                    <div class="rating-value">${rating.toFixed(1)}</div>
+                  </div>
+                  <div class="course-price ${price === 0 ? 'free' : ''}">${formattedPrice}</div>
+                </div>
+                <div class="course-actions">
+                  <button class="enroll-btn" data-course-id="${course.id}">Enroll Now</button>
+                  <button class="view-details-btn" data-course='${JSON.stringify(course).replace(/'/g, "&#39;")}'>View Details</button>
+                </div>
+              </div>
+            `;
+
+            coursesGrid.appendChild(courseCard);
+
+            setTimeout(() => {
+              courseCard.classList.add('animate');
+            }, 100 + (index * 100));
+
+            // Add event listeners
+            const enrollBtn = courseCard.querySelector('.enroll-btn');
+            enrollBtn.addEventListener('click', function() {
+              const courseId = this.getAttribute('data-course-id');
+              enrollInCourse(courseId);
+            });
+
+            const viewDetailsBtn = courseCard.querySelector('.view-details-btn');
+            viewDetailsBtn.addEventListener('click', function() {
+              const courseData = JSON.parse(this.getAttribute('data-course'));
+              showCourseModal(courseData);
+            });
+          });
+        } catch (error) {
+          console.error("Error fetching courses: ", error);
+          coursesGrid.innerHTML = `
+            <div class="courses-empty">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Failed to load courses. Please try again later.</p>
+            </div>
+          `;
+        }
       }
 
       // Function to handle course enrollment

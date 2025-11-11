@@ -836,6 +836,461 @@
     .no-results p {
       font-size: 1rem;
     }
+    /* Course Details Modal */
+.course-details-modal .modal-content {
+  max-width: 900px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.course-details-header {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+}
+
+.course-details-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.course-details-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+}
+
+.course-details-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+  padding: 30px;
+  color: white;
+}
+
+.course-details-category {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.course-details-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.course-details-meta-row {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.course-details-body {
+  padding: 30px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.course-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 25px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(67, 97, 238, 0.1);
+}
+
+.course-stat {
+  text-align: center;
+  padding: 15px;
+  background: var(--bg-main);
+  border-radius: 10px;
+}
+
+.course-stat-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: var(--success);
+}
+
+.course-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 5px;
+}
+
+.course-stat-label {
+  font-size: 12px;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.course-price-section {
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  text-align: center;
+  border: 1px solid rgba(67, 97, 238, 0.2);
+}
+
+.course-price-label {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.course-price {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 10px;
+  background: linear-gradient(45deg, var(--primary), var(--success));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.course-price-note {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.course-description-section {
+  margin-bottom: 30px;
+}
+
+.course-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-section-title i {
+  color: var(--success);
+}
+
+.course-description-text {
+  color: var(--gray);
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+.course-features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.course-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.course-feature-item:hover {
+  background: rgba(67, 97, 238, 0.1);
+  transform: translateX(5px);
+}
+
+.course-feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.course-feature-text {
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.course-feedback-section {
+  margin-bottom: 30px;
+}
+
+.course-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 25px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.rating-score-container {
+  text-align: center;
+  padding: 20px;
+  background: var(--bg-main);
+  border-radius: 15px;
+  min-width: 150px;
+}
+
+.rating-score {
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 10px;
+  background: linear-gradient(45deg, var(--primary), var(--success));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rating-stars {
+  font-size: 20px;
+  color: #ffc107;
+  margin-bottom: 10px;
+}
+
+.rating-count {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.rating-breakdown {
+  flex: 1;
+}
+
+.rating-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.rating-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 80px;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.rating-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rating-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffc107, #ff9800);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.rating-bar-percentage {
+  min-width: 50px;
+  text-align: right;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.student-feedback-list {
+  display: grid;
+  gap: 15px;
+}
+
+.student-feedback-item {
+  padding: 20px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(67, 97, 238, 0.1);
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.feedback-student-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feedback-student-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.feedback-student-name {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 15px;
+}
+
+.feedback-rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.feedback-stars {
+  color: #ffc107;
+  font-size: 14px;
+}
+
+.feedback-text {
+  color: var(--gray);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.view-all-feedback-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 2px solid rgba(67, 97, 238, 0.3);
+  border-radius: 10px;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.view-all-feedback-btn:hover {
+  background: rgba(67, 97, 238, 0.1);
+  border-color: rgba(67, 97, 238, 0.5);
+  transform: translateY(-2px);
+}
+
+.course-details-footer {
+  padding: 25px 30px;
+  background: rgba(67, 97, 238, 0.05);
+  border-top: 1px solid rgba(67, 97, 238, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.footer-price-info {
+  flex: 1;
+}
+
+.footer-price-label {
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.footer-price {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+  background: linear-gradient(45deg, var(--primary), var(--success));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.no-feedback-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--gray);
+}
+
+.no-feedback-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+/* Responsive for course details modal */
+@media (max-width: 768px) {
+  .course-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .course-features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .course-rating-summary {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .rating-breakdown {
+    width: 100%;
+  }
+
+  .course-details-footer {
+    flex-direction: column;
+  }
+
+  .footer-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .footer-actions button {
+    width: 100%;
+  }
+}
 
     /* Loading State */
     .loading {
@@ -1548,6 +2003,7 @@
       </div>
     </div>
   </div>
+  
 
   <!-- Teacher Selection Modal -->
   <div class="modal" id="teacherModal">
@@ -2255,6 +2711,15 @@ async function getCourseImageUrl(courseId) {
             }));
           }
         }
+        // Load course images and feedback for all courses
+for (let course of courses) {
+  course.imageUrl = await getCourseImageUrl(course.id);
+  
+  // Load feedback data
+  const feedbackData = await loadCourseFeedback(course.id);
+  course.averageRating = parseFloat(feedbackData.average);
+  course.ratingCount = feedbackData.total;
+}
 
         // Load course images for all courses
         for (let course of courses) {
@@ -2274,72 +2739,77 @@ async function getCourseImageUrl(courseId) {
       }
     }
 
-    // Render courses with proper enrollment status and images
-    function renderCourses(coursesToRender) {
-      if (!coursesGrid) return;
+// Render courses with proper enrollment status, images, feedback and price
+function renderCourses(coursesToRender) {
+  if (!coursesGrid) return;
+  
+  if (coursesToRender.length === 0) {
+    coursesGrid.innerHTML = "";
+    if (noResults) noResults.classList.add("show");
+    return;
+  }
+
+  if (noResults) noResults.classList.remove("show");
+
+  const coursesHTML = coursesToRender
+    .map((course, index) => {
+      const progress = course.enrollmentData ? course.enrollmentData.progress || 0 : 0;
+      const isCompleted = course.enrollmentData ? (course.enrollmentData.progress === 100 || course.enrollmentData.hasPassedTest) : false;
       
-      if (coursesToRender.length === 0) {
-        coursesGrid.innerHTML = "";
-        if (noResults) noResults.classList.add("show");
-        return;
-      }
-
-      if (noResults) noResults.classList.remove("show");
-
-      const coursesHTML = coursesToRender
-        .map((course, index) => {
-          const progress = course.enrollmentData ? course.enrollmentData.progress || 0 : 0;
-          const isCompleted = course.enrollmentData ? (course.enrollmentData.progress === 100 || course.enrollmentData.hasPassedTest) : false;
+      // Use cached feedback data if available, otherwise show 0
+      const rating = course.averageRating || 0;
+      const ratingCount = course.ratingCount || 0;
+      const stars = generateStarRating(rating);
+      
+      return `
+      <div class="course-card" style="animation-delay: ${index * 0.1}s">
+        <div class="course-image">
+          ${course.imageUrl ? 
+            `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
+            `<i class="fas fa-book"></i><span>${course.name || course.title || 'Course'}</span>`
+          }
+        </div>
+        <div class="course-content">
+          <div class="course-category">${course.category || "General"}</div>
+          <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
           
-          return `
-          <div class="course-card" style="animation-delay: ${index * 0.1}s">
-            <div class="course-image">
-              ${course.imageUrl ? 
-                `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
-                `<i class="fas fa-book"></i><span>${course.name || course.title || 'Course'}</span>`
-              }
+          <div class="course-meta">
+            <div class="course-duration" style="color: #ffc107;">
+              ${stars}
+              <span style="color: var(--gray); margin-left: 5px;">(${ratingCount})</span>
             </div>
-            <div class="course-content">
-              <div class="course-category">${course.category || "General"}</div>
-              <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
-              <p class="course-description">${course.description || "No description available"}</p>
-              <div class="course-meta">
-                <div class="course-duration">
-                  <span>⏱️</span>
-                  <span>${course.duration || "Self-paced"}</span>
-                </div>
-                <div class="course-level">${course.level || "All Levels"}</div>
-              </div>
-              ${course.isEnrolled ? `
-                <div class="course-progress" style="margin-bottom: 15px;">
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${progress}%"></div>
-                  </div>
-                  <div class="progress-text">${progress}% Complete${isCompleted ? ' ✅' : ''}</div>
-                </div>
-              ` : ''}
-              <div class="course-actions">
-                ${course.isEnrolled ? 
-                  `<div class="enrolled-badge">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
-                   <button class="continue-learning-btn" data-course-id="${course.id}">
-                    ${isCompleted ? 'Review Course' : 'Continue Learning'} →
-                   </button>` 
-                  : 
-                  `<button class="course-button" data-course-id="${course.id}">
-                    Start Learning
-                   </button>`
-                }
-              </div>
-            </div>
+            <div class="course-level" style="font-weight: 700; font-size: 18px;">₹${course.price || 0}</div>
           </div>
-        `})
-        .join("");
+          
+          ${course.isEnrolled ? `
+            <div class="course-progress" style="margin-bottom: 15px; margin-top: 15px;">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${progress}%"></div>
+              </div>
+              <div class="progress-text" style="margin-top: 8px; color: var(--gray); font-size: 14px;">${progress}% Complete${isCompleted ? ' ✅' : ''}</div>
+            </div>
+          ` : ''}
+          
+          <div class="course-actions">
+            ${course.isEnrolled ? 
+              `<div class="enrolled-badge">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
+               <button class="continue-learning-btn" data-course-id="${course.id}">
+                ${isCompleted ? 'Review' : 'Continue'} →
+               </button>` 
+              : 
+              `<button class="course-button" data-course-id="${course.id}">
+                View Details
+               </button>`
+            }
+          </div>
+        </div>
+      </div>
+    `})
+    .join("");
 
-      coursesGrid.innerHTML = coursesHTML;
-
-      // Attach event listeners to buttons
-      attachCourseButtonListeners();
-    }
+  coursesGrid.innerHTML = coursesHTML;
+  attachCourseButtonListeners();
+}
 
     // Attach event listeners to course buttons
     function attachCourseButtonListeners() {
@@ -2378,25 +2848,358 @@ async function getCourseImageUrl(courseId) {
       });
     }
 
-    // Enroll user in a course with teacher selection
-    function enrollInCourse(courseId) {
-      console.log("Enrolling in course:", courseId);
-      
-      if (!currentUser) {
-        showMessage("Please log in to enroll in courses", "error");
-        setTimeout(() => {
-          window.location.href = "signin.html";
-        }, 2000);
-        return;
-      }
+// Show course details modal before enrollment
+function enrollInCourse(courseId) {
+  console.log("Showing course details for:", courseId);
+  
+  if (!currentUser) {
+    showMessage("Please log in to enroll in courses", "error");
+    setTimeout(() => {
+      window.location.href = "signin.html";
+    }, 2000);
+    return;
+  }
 
-      currentCourseToEnroll = {
-        id: courseId,
-        name: courses.find(c => c.id === courseId)?.name || courses.find(c => c.id === courseId)?.title || "Course"
-      };
-      
-      showTeacherModal();
+  const course = courses.find(c => c.id === courseId);
+  if (!course) {
+    showMessage("Course not found", "error");
+    return;
+  }
+
+  currentCourseToEnroll = {
+    id: courseId,
+    name: course.name || course.title || "Course",
+    price: course.price || 0
+  };
+  
+  showCourseDetailsModal(course);
+}
+
+// Show detailed course information modal
+async function showCourseDetailsModal(course) {
+  // Create modal if it doesn't exist
+  let courseDetailsModal = document.getElementById('courseDetailsModal');
+  
+  if (!courseDetailsModal) {
+    courseDetailsModal = document.createElement('div');
+    courseDetailsModal.id = 'courseDetailsModal';
+    courseDetailsModal.className = 'modal course-details-modal';
+    document.body.appendChild(courseDetailsModal);
+  }
+
+  // Load course feedback from Firestore
+  let feedbackData = await loadCourseFeedback(course.id);
+  
+  // Count lectures and assignments
+  const lecturesCount = await countCourseLectures(course.id);
+  const assignmentsCount = await countCourseAssignments(course.id);
+  
+  // Generate feedback HTML
+  const feedbackHTML = generateFeedbackHTML(feedbackData);
+  
+  // Course features
+  const features = [
+    { icon: 'fa-infinity', text: 'Lifetime Access' },
+    { icon: 'fa-mobile-alt', text: 'Access on Mobile & Desktop' },
+    { icon: 'fa-certificate', text: 'Certificate of Completion' },
+    { icon: 'fa-users', text: 'Expert Instructors' },
+    { icon: 'fa-headphones', text: '24/7 Support' },
+    { icon: 'fa-cloud-download-alt', text: 'Downloadable Resources' }
+  ];
+
+  courseDetailsModal.innerHTML = `
+    <div class="modal-content">
+      <!-- Course Header with Image -->
+      <div class="course-details-header">
+        ${course.imageUrl ? 
+          `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
+          `<div class="course-details-image-placeholder">
+            <i class="fas fa-graduation-cap"></i>
+          </div>`
+        }
+        <div class="course-details-overlay">
+          <div class="course-details-category">${course.category || 'General'}</div>
+          <h2 class="course-details-title">${course.name || course.title}</h2>
+          <div class="course-details-meta-row">
+            <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
+            <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
+            <span><i class="fas fa-users"></i> ${course.enrolledCount || 0} students</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course Body -->
+      <div class="course-details-body">
+        <!-- Course Stats -->
+        <div class="course-stats-grid">
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-video"></i></div>
+            <div class="course-stat-value">${lecturesCount}</div>
+            <div class="course-stat-label">Lectures</div>
+          </div>
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
+            <div class="course-stat-value">${assignmentsCount}</div>
+            <div class="course-stat-label">Assignments</div>
+          </div>
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="course-stat-value">${course.duration || 'N/A'}</div>
+            <div class="course-stat-label">Duration</div>
+          </div>
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
+            <div class="course-stat-value">Yes</div>
+            <div class="course-stat-label">Certificate</div>
+          </div>
+        </div>
+
+        <!-- Price Section -->
+        <div class="course-price-section">
+          <div class="course-price-label">Course Price</div>
+          <div class="course-price">₹${course.price || 0}</div>
+          <div class="course-price-note">One-time payment • Lifetime access</div>
+        </div>
+
+        <!-- Description -->
+        <div class="course-description-section">
+          <h3 class="course-section-title">
+            <i class="fas fa-info-circle"></i>
+            About This Course
+          </h3>
+          <p class="course-description-text">${course.description || 'No description available'}</p>
+        </div>
+
+        <!-- Course Features -->
+        <div class="course-description-section">
+          <h3 class="course-section-title">
+            <i class="fas fa-check-circle"></i>
+            What You'll Get
+          </h3>
+          <div class="course-features-grid">
+            ${features.map(feature => `
+              <div class="course-feature-item">
+                <div class="course-feature-icon">
+                  <i class="fas ${feature.icon}"></i>
+                </div>
+                <div class="course-feature-text">${feature.text}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Student Feedback -->
+        ${feedbackHTML}
+      </div>
+
+      <!-- Footer with Price and Actions -->
+      <div class="course-details-footer">
+        <div class="footer-price-info">
+          <div class="footer-price-label">Total Price</div>
+          <div class="footer-price">₹${course.price || 0}</div>
+        </div>
+        <div class="footer-actions">
+          <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
+            Cancel
+          </button>
+          <button class="modal-btn confirm" onclick="proceedToTeacherSelection()">
+            <i class="fas fa-shopping-cart"></i> Enroll Now
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  courseDetailsModal.classList.add('active');
+
+  // Close on outside click
+  courseDetailsModal.addEventListener('click', (e) => {
+    if (e.target === courseDetailsModal) {
+      closeCourseDetailsModal();
     }
+  });
+}
+
+// Load course feedback from Firestore
+async function loadCourseFeedback(courseId) {
+  try {
+    const feedbackQuery = query(
+      collection(db, "courseFeedback"),
+      where("courseId", "==", courseId)
+    );
+    
+    const feedbackSnap = await getDocs(feedbackQuery);
+    
+    if (feedbackSnap.empty) {
+      return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+    }
+
+    const feedbacks = [];
+    let totalRating = 0;
+    const distribution = [0, 0, 0, 0, 0]; // 1-star to 5-star
+
+    feedbackSnap.forEach(doc => {
+      const data = doc.data();
+      feedbacks.push(data);
+      totalRating += data.rating || 0;
+      if (data.rating >= 1 && data.rating <= 5) {
+        distribution[data.rating - 1]++;
+      }
+    });
+
+    const average = totalRating / feedbacks.length;
+
+    return {
+      average: average.toFixed(1),
+      total: feedbacks.length,
+      distribution: distribution,
+      feedbacks: feedbacks.slice(0, 3) // Show top 3 feedbacks
+    };
+  } catch (error) {
+    console.error("Error loading course feedback:", error);
+    return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+  }
+}
+
+// Generate feedback HTML
+function generateFeedbackHTML(feedbackData) {
+  if (feedbackData.total === 0) {
+    return `
+      <div class="course-feedback-section">
+        <h3 class="course-section-title">
+          <i class="fas fa-star"></i>
+          Student Feedback
+        </h3>
+        <div class="no-feedback-message">
+          <div class="no-feedback-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <p>No feedback yet. Be the first to review this course!</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const stars = generateStarRating(feedbackData.average);
+  
+  return `
+    <div class="course-feedback-section">
+      <h3 class="course-section-title">
+        <i class="fas fa-star"></i>
+        Student Feedback
+      </h3>
+      
+      <div class="course-rating-summary">
+        <div class="rating-score-container">
+          <div class="rating-score">${feedbackData.average}</div>
+          <div class="rating-stars">${stars}</div>
+          <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
+        </div>
+        
+        <div class="rating-breakdown">
+          ${[5, 4, 3, 2, 1].map(star => {
+            const count = feedbackData.distribution[star - 1];
+            const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
+            return `
+              <div class="rating-bar-item">
+                <div class="rating-bar-label">
+                  <span>${star}</span>
+                  <i class="fas fa-star" style="color: #ffc107;"></i>
+                </div>
+                <div class="rating-bar">
+                  <div class="rating-bar-fill" style="width: ${percentage}%"></div>
+                </div>
+                <div class="rating-bar-percentage">${percentage}%</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      ${feedbackData.feedbacks.length > 0 ? `
+        <div class="student-feedback-list">
+          ${feedbackData.feedbacks.map(feedback => `
+            <div class="student-feedback-item">
+              <div class="feedback-header">
+                <div class="feedback-student-info">
+                  <div class="feedback-student-avatar">
+                    ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
+                  </div>
+                  <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
+                </div>
+                <div class="feedback-rating">
+                  <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
+                </div>
+              </div>
+              <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
+            </div>
+          `).join('')}
+        </div>
+        ${feedbackData.total > 3 ? `
+          <button class="view-all-feedback-btn">
+            View all ${feedbackData.total} reviews
+          </button>
+        ` : ''}
+      ` : ''}
+    </div>
+  `;
+}
+
+// Generate star rating HTML
+function generateStarRating(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  
+  let stars = '';
+  for (let i = 0; i < fullStars; i++) {
+    stars += '<i class="fas fa-star"></i>';
+  }
+  if (hasHalfStar) {
+    stars += '<i class="fas fa-star-half-alt"></i>';
+  }
+  for (let i = 0; i < emptyStars; i++) {
+    stars += '<i class="far fa-star"></i>';
+  }
+  
+  return stars;
+}
+
+// Count course lectures
+async function countCourseLectures(courseId) {
+  try {
+    const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
+    return lecturesSnap.size;
+  } catch (error) {
+    console.error("Error counting lectures:", error);
+    return 0;
+  }
+}
+
+// Count course assignments
+async function countCourseAssignments(courseId) {
+  try {
+    const assignmentsSnap = await getDocs(collection(db, "courses", courseId, "assignments"));
+    return assignmentsSnap.size;
+  } catch (error) {
+    console.error("Error counting assignments:", error);
+    return 0;
+  }
+}
+
+// Close course details modal
+window.closeCourseDetailsModal = function() {
+  const modal = document.getElementById('courseDetailsModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+};
+
+// Proceed to teacher selection
+window.proceedToTeacherSelection = function() {
+  closeCourseDetailsModal();
+  showTeacherModal();
+};
 
     // Show teacher selection modal
     function showTeacherModal() {

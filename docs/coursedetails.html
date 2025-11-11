@@ -2096,12 +2096,33 @@ body::before {
 
 .certificate-text {
   font-size: 15px;
-  color: #2d3748;
+  color: #2d3748 !important;
   margin: 12px 0;
   line-height: 1.6;
   max-width: 850px;
   margin-left: auto;
   margin-right: auto;
+  background: transparent !important;
+  text-decoration: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+/* Prevent blue highlighting in certificate */
+.certificate-container *,
+.certificate-container *::selection {
+  background: transparent !important;
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.certificate-container ::selection {
+  background: transparent !important;
+}
+
+.certificate-container ::-moz-selection {
+  background: transparent !important;
 }
 
 .certificate-details {
@@ -2385,6 +2406,17 @@ body::before {
 
 /* Print Styles for Certificate - ONLY CERTIFICATE, NO BUTTONS */
 @media print {
+ * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    background: transparent !important;
+  }
+  
+  ::selection {
+    background: transparent !important;
+  }
+  
   body * {
     visibility: hidden;
   }
@@ -4676,19 +4708,17 @@ function initCoursePage() {
   console.log("Event listeners attached");
 
   // Check auth state
-  onAuthStateChanged(auth, async (user) => {
-    console.log("=== AUTH STATE CHANGED ===");
-    console.log("User:", user ? user.email : "Not logged in");
+onAuthStateChanged(auth, async (user) => {
+  console.log("=== AUTH STATE CHANGED ===");
+  console.log("User:", user ? user.email : "Not logged in");
+  
+  if (user) {
+    currentUser = user;
     
-    if (user) {
-      currentUser = user;
-      const displayName = user.displayName || "Learner";
-      
-      userDisplayName.textContent = displayName;
-      const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
-      userInitials.textContent = initials;
-      
-      console.log("Loading course data...");
+    // Update user display with profile picture
+    await updateUserDisplay(user);
+    
+    console.log("Loading course data...");
       
       // Load data
       await loadCourse();
@@ -4724,6 +4754,25 @@ function initCoursePage() {
       window.location.href = "signin.html";
     }
   });
+}
+// Update user display with profile picture
+async function updateUserDisplay(user) {
+  const displayName = user.displayName || "Learner";
+  userDisplayName.textContent = displayName;
+  
+  const avatarContainer = document.querySelector('.avatar');
+  const userInitialsElement = document.getElementById('userInitials');
+  
+  if (user.photoURL) {
+    // Show profile picture
+    avatarContainer.classList.add('has-image');
+    userInitialsElement.innerHTML = `<img src="${user.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  } else {
+    // Show initials
+    avatarContainer.classList.remove('has-image');
+    const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+    userInitialsElement.textContent = initials;
+  }
 }
 
 // Updated playVideo function with correct Storage path handling
@@ -7912,19 +7961,31 @@ async function downloadCertificateAsPDF() {
 
     console.log("Generating PDF certificate...");
 
+    // Remove any text selection
+    window.getSelection().removeAllRanges();
+    
+    // Force remove any highlight styling
+    const allTextElements = certificateElement.querySelectorAll('*');
+    allTextElements.forEach(el => {
+      el.style.background = 'transparent';
+      el.style.backgroundColor = 'transparent';
+      el.style.color = el.style.color || 'inherit';
+      el.style.userSelect = 'none';
+      el.style.webkitUserSelect = 'none';
+    });
+
     // Get the computed dimensions
-    const rect = certificateElement.getBoundingClientRect();
     const elementWidth = certificateElement.scrollWidth;
     const elementHeight = certificateElement.scrollHeight;
 
     console.log(`Certificate dimensions: ${elementWidth}x${elementHeight}`);
 
     // Wait for fonts and layout to settle
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Use html2canvas with optimal settings for certificate
+    // Use html2canvas with optimal settings
     const canvas = await html2canvas(certificateElement, {
-      scale: 3, // Higher quality
+      scale: 4, // Very high quality
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',
@@ -7937,16 +7998,38 @@ async function downloadCertificateAsPDF() {
       scrollY: -window.scrollY,
       x: 0,
       y: 0,
-      foreignObjectRendering: false, // Better rendering for complex layouts
-      imageTimeout: 0
+      foreignObjectRendering: false,
+      imageTimeout: 15000,
+      onclone: (clonedDoc) => {
+        // Clean the cloned document
+        const clonedElement = clonedDoc.getElementById('certificate-content');
+        if (clonedElement) {
+          const allElements = clonedElement.querySelectorAll('*');
+          allElements.forEach(el => {
+            // Remove all selection/highlight styles
+            el.style.background = 'transparent';
+            el.style.backgroundColor = el.style.backgroundColor === 'transparent' ? 'transparent' : el.style.backgroundColor;
+            el.style.webkitUserSelect = 'none';
+            el.style.mozUserSelect = 'none';
+            el.style.msUserSelect = 'none';
+            el.style.userSelect = 'none';
+            el.style.webkitTapHighlightColor = 'transparent';
+            
+            // Ensure text elements maintain proper colors
+            if (el.classList.contains('certificate-text')) {
+              el.style.color = '#2d3748';
+              el.style.background = 'transparent';
+            }
+          });
+        }
+      }
     });
 
     console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
 
-    // Convert canvas to PDF in landscape orientation
+    // Convert canvas to PDF
     const { jsPDF } = window.jspdf;
     
-    // Calculate PDF dimensions based on canvas aspect ratio
     const canvasAspectRatio = canvas.width / canvas.height;
     let pdfOrientation = canvasAspectRatio > 1.3 ? 'landscape' : 'portrait';
     
@@ -7960,14 +8043,12 @@ async function downloadCertificateAsPDF() {
     let imgWidth, imgHeight, imgX, imgY;
     
     if (canvasAspectRatio > (pdfWidth / pdfHeight)) {
-      // Width is the limiting factor
-      imgWidth = pdfWidth * 0.95; // 95% of page width
+      imgWidth = pdfWidth * 0.95;
       imgHeight = imgWidth / canvasAspectRatio;
       imgX = (pdfWidth - imgWidth) / 2;
       imgY = (pdfHeight - imgHeight) / 2;
     } else {
-      // Height is the limiting factor
-      imgHeight = pdfHeight * 0.95; // 95% of page height
+      imgHeight = pdfHeight * 0.95;
       imgWidth = imgHeight * canvasAspectRatio;
       imgX = (pdfWidth - imgWidth) / 2;
       imgY = (pdfHeight - imgHeight) / 2;
@@ -7981,10 +8062,19 @@ async function downloadCertificateAsPDF() {
     // Add image to PDF
     pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
     
-    // Generate filename
-    const userName = currentUser.displayName || currentUser.email.split('@')[0];
-    const courseName = courseData?.name || 'Course';
-    const fileName = `Certificate_${courseName.replace(/\s+/g, '_')}_${userName.replace(/\s+/g, '_')}.pdf`;
+    // Generate clean filename
+    const userName = (currentUser.displayName || currentUser.email.split('@')[0])
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 50);
+    const courseName = (courseData?.name || 'Course')
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 50);
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `Certificate_${courseName}_${userName}_${dateStr}.pdf`;
+    
+    console.log(`Filename: ${fileName}`);
     
     // Save the PDF
     pdf.save(fileName);
