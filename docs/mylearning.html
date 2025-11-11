@@ -871,6 +871,7 @@
       gap: 25px;
     }
 
+    /* Course Card with Image */
     .course-card {
       background: var(--bg-secondary);
       border-radius: 20px;
@@ -900,6 +901,31 @@
     .course-card:hover {
       transform: translateY(-15px);
       box-shadow: 0 25px 50px rgba(67, 97, 238, 0.3);
+    }
+
+    /* Course Image Section */
+    .course-image {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .course-card:hover .course-image img {
+      transform: scale(1.05);
     }
 
     .course-content {
@@ -1825,6 +1851,60 @@ const pageLoadTime = Date.now();
       if (avgProgressEl) avgProgressEl.textContent = `${avgProgress}%`;
     }
 
+// Function to get course image URL from Firebase Storage - CORRECTED
+async function getCourseImageUrl(courseId) {
+  try {
+    // Clean the courseId to remove any "course" prefix if it exists
+    const cleanCourseId = courseId.replace(/^course/, '');
+    
+    // Try different possible image paths and names
+    const possiblePaths = [
+      `coursepic/course${cleanCourseId}/course${cleanCourseId}.jpg`,
+      `coursepic/course${cleanCourseId}/course${cleanCourseId}.png`,
+      `coursepic/course${cleanCourseId}/image.jpg`,
+      `coursepic/course${cleanCourseId}/image.png`,
+      `coursepic/course${cleanCourseId}/thumbnail.jpg`,
+      `coursepic/course${cleanCourseId}/thumbnail.png`,
+      `coursepic/course${cleanCourseId}/cover.jpg`,
+      `coursepic/course${cleanCourseId}/cover.png`,
+      `coursepic/${cleanCourseId}.jpg`,
+      `coursepic/${cleanCourseId}.png`,
+      `courses/${cleanCourseId}/image.jpg`,
+      `courses/${cleanCourseId}/image.png`,
+      `courses/${cleanCourseId}/thumbnail.jpg`,
+      `courses/${cleanCourseId}/thumbnail.png`,
+      // Also try with the original courseId in case it's already clean
+      `coursepic/course${courseId}/course${courseId}.jpg`,
+      `coursepic/course${courseId}/course${courseId}.png`,
+      `coursepic/course${courseId}/image.jpg`,
+      `coursepic/course${courseId}/image.png`,
+      `coursepic/${courseId}.jpg`,
+      `coursepic/${courseId}.png`
+    ];
+    
+    console.log(`Looking for course image for ID: ${courseId} (cleaned: ${cleanCourseId})`);
+    
+    for (const path of possiblePaths) {
+      try {
+        const imageRef = ref(storage, path);
+        const url = await getDownloadURL(imageRef);
+        console.log(`Found course image at: ${path}`);
+        return url;
+      } catch (error) {
+        // Continue to next path if this one fails
+        continue;
+      }
+    }
+    
+    // If no image found, return null
+    console.log(`No course image found for ID: ${courseId}`);
+    return null;
+  } catch (error) {
+    console.error(`Error getting course image for ${courseId}:`, error);
+    return null;
+  }
+}
+
 // Setup user information - UPDATED with profile picture support
 async function setupUserInfo(user) {
   try {
@@ -2166,257 +2246,258 @@ function showMessage(message, type = "success") {
         return isTeacher;
       } catch (error) {
         console.error("Error checking teacher status:", error);
+        isTeacher = false;
         return false;
       }
     }
 
-// Load enrolled courses for student
+    // Load enrolled courses for students
     async function loadEnrolledCourses(userId) {
       try {
         if (!coursesGrid) return;
-
+        
+        coursesGrid.innerHTML = '<div class="no-courses">Loading your courses...</div>';
+        
         const userRef = doc(db, "users", userId);
         const userSnap = await getDoc(userRef);
-
+        
+        if (!userSnap.exists()) {
+          coursesGrid.innerHTML = '<div class="no-courses">No courses found. Start by enrolling in a course!</div>';
+          return;
+        }
+        
+        const userData = userSnap.data();
         courses = [];
-
-        if (userSnap.exists() && userSnap.data().enrollments) {
-          const enrollments = userSnap.data().enrollments;
-          const enrolledCourseIds = Object.keys(enrollments);
-
-          // Show message if no enrolled courses
-          if (enrolledCourseIds.length === 0) {
-            coursesGrid.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
-            return;
-          }
-
-          // Remove duplicates by using Set
-          const uniqueEnrolledIds = [...new Set(enrolledCourseIds)];
-          
-          for (const courseId of uniqueEnrolledIds) {
-            const courseRef = doc(db, "courses", courseId);
-            const courseSnap = await getDoc(courseRef);
-
-            if (courseSnap.exists()) {
-              const courseData = courseSnap.data();
-              const enrollment = enrollments[courseId];
+        
+        if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
+          const enrollmentPromises = Object.keys(userData.enrollments).map(async (courseId) => {
+            try {
+              const courseRef = doc(db, "courses", courseId);
+              const courseSnap = await getDoc(courseRef);
               
-              // Get progress data directly from enrollment object
-              const progress = enrollment.progress || 0;
-              const lectureProgress = enrollment.lectureProgress || 0;
-              const assignmentProgress = enrollment.assignmentProgress || 0;
-              const testProgress = enrollment.testProgress || 0;
-              
-              const completedLessons = enrollment.completedLessons 
-                ? enrollment.completedLessons.length 
-                : 0;
-              const hasPassedTest = enrollment.hasPassedTest || false;
-              
-              // Get total lessons count for this course
-              let totalLessons = 0;
-              try {
-                const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
-                totalLessons = lecturesSnap.size;
-              } catch (error) {
-                console.error("Error getting lectures count:", error);
-                totalLessons = 0;
+              if (courseSnap.exists()) {
+                const courseData = courseSnap.data();
+                const enrollmentData = userData.enrollments[courseId];
+                
+                // Get course image URL
+                const imageUrl = await getCourseImageUrl(courseId);
+                
+                courses.push({
+                  id: courseId,
+                  ...courseData,
+                  progress: enrollmentData.progress || 0,
+                  hasPassedTest: enrollmentData.hasPassedTest || false,
+                  lastAccessed: enrollmentData.lastAccessed,
+                  imageUrl: imageUrl
+                });
               }
-              
-              courses.push({
-                id: courseId,
-                name: enrollment.courseName || courseData.name || courseData.title || "Untitled Course",
-                description: courseData.description || 'No description available',
-                progress: progress,
-                lectureProgress: lectureProgress,
-                assignmentProgress: assignmentProgress,
-                testProgress: testProgress,
-                completedLessons: completedLessons,
-                totalLessons: totalLessons,
-                hasPassedTest: hasPassedTest,
-                teacherName: enrollment.teacherName || "Unknown Teacher"
-              });
+            } catch (error) {
+              console.error(`Error loading course ${courseId}:`, error);
             }
-          }
-
-          renderCourses();
+          });
+          
+          await Promise.all(enrollmentPromises);
+          
+          // Remove duplicates and render courses
+          const uniqueCourses = [...new Map(courses.map(course => [course.id, course])).values()];
+          renderCourses(uniqueCourses);
         } else {
-          coursesGrid.innerHTML = "<p class='no-courses'>No enrolled courses yet. Browse our courses to get started!</p>";
+          coursesGrid.innerHTML = '<div class="no-courses">You haven\'t enrolled in any courses yet. <a href="courses.html" style="color: var(--success); text-decoration: underline;">Browse courses</a> to get started!</div>';
         }
       } catch (error) {
         console.error("Error loading enrolled courses:", error);
         if (coursesGrid) {
-          coursesGrid.innerHTML = "<p class='no-courses'>Error loading courses. Please try again.</p>";
+          coursesGrid.innerHTML = '<div class="no-courses">Error loading courses. Please try refreshing the page.</div>';
         }
       }
     }
 
-    // Create course card HTML - FIXED progress bar and removed instructor name
-    function createCourseCard(course) {
-      const progressWidth = course.progress || 0;
-      const isCompleted = course.hasPassedTest || progressWidth >= 100;
-      const isNotStarted = progressWidth === 0;
-      const isInProgress = progressWidth > 0 && progressWidth < 100 && !isCompleted;
+    // Render courses to the grid
+    function renderCourses(coursesToRender) {
+      if (!coursesGrid) return;
       
-      // Determine status for filtering
-      let status = 'in-progress';
-      if (isCompleted) status = 'completed';
-      if (isNotStarted) status = 'not-started';
-
-      // Determine completion reason for the badge
-      let completionBadgeText = '✓ Completed';
-      if (course.hasPassedTest) {
-        completionBadgeText = '✓ Test Passed';
-      } else if (progressWidth >= 100) {
-        completionBadgeText = '✓ 100% Complete';
+      if (coursesToRender.length === 0) {
+        coursesGrid.innerHTML = '<div class="no-courses">No courses match your current filter.</div>';
+        return;
       }
-
-      return `
-        <div class="course-card" data-status="${status}">
-          ${isCompleted ? `<span class="completed-badge">${completionBadgeText}</span>` : ''}
-
+      
+      coursesGrid.innerHTML = '';
+      
+      coursesToRender.forEach(course => {
+        const courseCard = document.createElement('div');
+        courseCard.className = 'course-card';
+        
+        // Check if course is completed
+        const isCompleted = course.hasPassedTest || course.progress >= 100;
+        
+        // Get lesson count
+        const lessonCount = course.lessons ? Object.keys(course.lessons).length : 0;
+        const completedLessons = Math.floor((course.progress / 100) * lessonCount);
+        
+        courseCard.innerHTML = `
+          ${isCompleted ? '<div class="completed-badge">Completed</div>' : ''}
+          <div class="course-image">
+            ${course.imageUrl ? 
+              `<img src="${course.imageUrl}" alt="${course.title}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-book\\'></i> ${course.title}';">` : 
+              `<i class="fas fa-book"></i>`
+            }
+          </div>
           <div class="course-content">
-            <h3 class="course-title">${course.name}</h3>
-            <p class="course-description">${course.description || 'No description available'}</p>
+            <h3 class="course-title">${course.title || 'Untitled Course'}</h3>
+            <p class="course-description">${course.description || 'No description available.'}</p>
             
             <div class="course-progress">
               <div class="progress-bar">
-                <div class="progress-fill" style="width: ${progressWidth}%"></div>
+                <div class="progress-fill" style="width: ${course.progress || 0}%"></div>
               </div>
-              <div class="progress-text">${progressWidth}% Complete${isCompleted ? ' ✅' : ''}</div>
-              <div class="lessons-info">${course.completedLessons || 0} of ${course.totalLessons || 0} lessons completed</div>
-              ${course.hasPassedTest ? '<p class="test-status">✅ Test Passed</p>' : 
-                isCompleted ? '<p class="test-status">✅ All Lessons Completed</p>' : ''}
+              <div class="progress-text">${course.progress || 0}% Complete</div>
+              ${lessonCount > 0 ? `<div class="lessons-info">${completedLessons}/${lessonCount} lessons completed</div>` : ''}
+              ${course.hasPassedTest ? '<div class="test-status">✓ Test Passed</div>' : ''}
             </div>
             
             <div class="course-actions">
-              <button class="continue-btn" onclick="continueCourse('${course.id}')">
-                ${isCompleted ? 'Review Course' : 'Continue Learning'}
+              <button class="btn btn-primary btn-small continue-btn" data-course-id="${course.id}">
+                ${isCompleted ? 'Review' : course.progress > 0 ? 'Continue' : 'Start'}
               </button>
             </div>
           </div>
-        </div>
-      `;
-    }
-
-    // Render courses - FIXED progress bar animation
-    function renderCourses(coursesToRender = courses) {
-      if (!coursesToRender.length) {
-        coursesGrid.innerHTML = "<p class='no-courses'>No courses found.</p>";
-        return;
-      }
-
-      // Remove duplicates before rendering
-      const uniqueCourses = [...new Map(coursesToRender.map(course => [course.id, course])).values()];
+        `;
+        
+        coursesGrid.appendChild(courseCard);
+      });
       
-      coursesGrid.innerHTML = uniqueCourses.map(createCourseCard).join('');
-
-      // Animate progress bars - FIXED animation
-      setTimeout(() => {
-        document.querySelectorAll('.progress-fill').forEach(bar => {
-          const computedWidth = bar.style.width;
-          if (computedWidth && computedWidth !== '0%') {
-            bar.style.width = '0%';
-            // Use requestAnimationFrame for smoother animation
-            requestAnimationFrame(() => {
-              setTimeout(() => {
-                bar.style.width = computedWidth;
-                bar.style.transition = 'width 1s ease-in-out';
-              }, 100);
-            });
-          }
+      // Add event listeners to continue buttons
+      document.querySelectorAll('.continue-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const courseId = this.getAttribute('data-course-id');
+          window.location.href = `coursedetails.html?id=${courseId}`;
         });
-      }, 300);
+      });
     }
 
-    // Filter courses
+    // Filter courses based on status
     function filterCourses(filter) {
-      let filteredCourses = [];
-
-      switch (filter) {
-        case 'all':
-          filteredCourses = courses;
+      let filteredCourses = [...courses];
+      
+      switch(filter) {
+        case 'in-progress':
+          filteredCourses = courses.filter(course => 
+            course.progress > 0 && course.progress < 100 && !course.hasPassedTest
+          );
           break;
         case 'completed':
-          filteredCourses = courses.filter(c => {
-            const progress = c.progress || 0;
-            return c.hasPassedTest || progress >= 100;
-          });
-          break;
-        case 'in-progress':
-          filteredCourses = courses.filter(c => {
-            const progress = c.progress || 0;
-            return progress > 0 && progress < 100 && !c.hasPassedTest;
-          });
+          filteredCourses = courses.filter(course => 
+            course.hasPassedTest || course.progress >= 100
+          );
           break;
         case 'not-started':
-          filteredCourses = courses.filter(c => (c.progress || 0) === 0 && !c.hasPassedTest);
+          filteredCourses = courses.filter(course => 
+            (!course.progress || course.progress === 0) && !course.hasPassedTest
+          );
           break;
+        case 'all':
         default:
-          filteredCourses = courses;
+          // Show all courses
+          break;
       }
-
+      
       renderCourses(filteredCourses);
     }
 
     // Search courses
     function searchCourses(query) {
-      if (!query) return renderCourses(courses);
-
-      const filtered = courses.filter(course =>
-        course.name.toLowerCase().includes(query.toLowerCase()) ||
-        (course.description || "").toLowerCase().includes(query.toLowerCase())
-      );
-
-      renderCourses(filtered);
+      if (!query.trim()) {
+        const activeFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+        filterCourses(activeFilter);
+        return;
+      }
+      
+      const filteredCourses = courses.filter(course => {
+        const searchableText = `${course.title || ''} ${course.description || ''} ${course.category || ''}`.toLowerCase();
+        return searchableText.includes(query.toLowerCase());
+      });
+      
+      renderCourses(filteredCourses);
     }
 
     // Create progress chart
     function createProgressChart() {
-      if (!progressChart) return;
+      if (!progressChart || isTeacher) return;
+      
+      const ctx = progressChart.getContext('2d');
       
       // Destroy existing chart if it exists
       if (chart) {
         chart.destroy();
       }
       
-      const ctx = progressChart.getContext('2d');
+      // Group courses by progress ranges
+      const progressRanges = {
+        '0%': 0,      // Not started
+        '1-25%': 0,   // Just started
+        '26-50%': 0,  // In progress
+        '51-75%': 0,  // Almost there
+        '76-99%': 0,  // Nearly complete
+        '100%': 0     // Completed
+      };
       
-      // Remove duplicates before creating chart
-      const uniqueCourses = [...new Map(courses.map(course => [course.id, course])).values()];
-      
-      // Prepare data for chart
-      const courseNames = uniqueCourses.map(c => c.name);
-      const progressData = uniqueCourses.map(c => c.progress || 0);
-      const completedData = uniqueCourses.map(c => (c.hasPassedTest || (c.progress || 0) >= 100) ? 100 : 0);
+      courses.forEach(course => {
+        const progress = course.progress || 0;
+        
+        if (progress === 0) progressRanges['0%']++;
+        else if (progress <= 25) progressRanges['1-25%']++;
+        else if (progress <= 50) progressRanges['26-50%']++;
+        else if (progress <= 75) progressRanges['51-75%']++;
+        else if (progress < 100) progressRanges['76-99%']++;
+        else progressRanges['100%']++;
+      });
       
       chart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: courseNames,
-          datasets: [
-            {
-              label: 'Current Progress',
-              data: progressData,
-              backgroundColor: 'rgba(67, 97, 238, 0.7)',
-              borderColor: 'rgba(67, 97, 238, 1)',
-              borderWidth: 1
-            },
-            {
-              label: 'Completed (100%)',
-              data: completedData,
-              backgroundColor: 'rgba(0, 245, 255, 0.7)',
-              borderColor: 'rgba(0, 245, 255, 1)',
-              borderWidth: 1
-            }
-          ]
+          labels: Object.keys(progressRanges),
+          datasets: [{
+            label: 'Number of Courses',
+            data: Object.values(progressRanges),
+            backgroundColor: [
+              'rgba(67, 97, 238, 0.7)',
+              'rgba(67, 97, 238, 0.8)',
+              'rgba(67, 97, 238, 0.9)',
+              'rgba(0, 245, 255, 0.7)',
+              'rgba(0, 245, 255, 0.8)',
+              'rgba(0, 245, 255, 0.9)'
+            ],
+            borderColor: [
+              'rgba(67, 97, 238, 1)',
+              'rgba(67, 97, 238, 1)',
+              'rgba(67, 97, 238, 1)',
+              'rgba(0, 245, 255, 1)',
+              'rgba(0, 245, 255, 1)',
+              'rgba(0, 245, 255, 1)'
+            ],
+            borderWidth: 1,
+            borderRadius: 8
+          }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            title: {
+              display: true,
+              text: 'Course Progress Distribution',
+              color: '#ffffff',
+              font: {
+                size: 16
+              }
+            }
+          },
           scales: {
             y: {
               beginAtZero: true,
-              max: 100,
               ticks: {
                 color: '#adb5bd'
               },
@@ -2426,18 +2507,10 @@ function showMessage(message, type = "success") {
             },
             x: {
               ticks: {
-                color: '#adb5bd',
-                maxTicksLimit: 5
+                color: '#adb5bd'
               },
               grid: {
                 color: 'rgba(67, 97, 238, 0.1)'
-              }
-            }
-          },
-          plugins: {
-            legend: {
-              labels: {
-                color: '#ffffff'
               }
             }
           }
@@ -2448,46 +2521,65 @@ function showMessage(message, type = "success") {
     // Load students for teacher view
     async function loadStudentsForTeacher() {
       try {
-        if (!studentList) return;
+        if (!studentList || !isTeacher) return;
         
-        // Get all students enrolled in courses taught by this teacher
+        studentList.innerHTML = '<div class="no-courses">Loading student data...</div>';
+        
+        // Get all users who are enrolled in courses created by this teacher
+        const usersSnap = await getDocs(collection(db, "users"));
         const students = [];
         
-        // Get all users and check their enrollments
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        
-        for (const userDoc of usersSnapshot.docs) {
+        for (const userDoc of usersSnap.docs) {
           const userData = userDoc.data();
-          
           if (userData.enrollments) {
-            // Check each enrollment to see if this teacher is assigned
-            Object.entries(userData.enrollments).forEach(([courseId, enrollment]) => {
-              if (enrollment.teacherId === currentUser.uid) {
-                // This student is enrolled in a course taught by this teacher
-                students.push({
-                  id: userDoc.id,
-                  name: userData.name || "Student",
-                  email: userData.email || "No email",
-                  course: enrollment.courseName || "Course",
-                  progress: enrollment.progress || 0,
-                  completedLessons: enrollment.completedLessons ? enrollment.completedLessons.length : 0,
-                  hasPassedTest: enrollment.hasPassedTest || false
-                });
+            // Check if user is enrolled in any of this teacher's courses
+            const teacherCoursesQuery = query(
+              collection(db, "courses"),
+              where("instructorId", "==", currentUser.uid)
+            );
+            
+            const teacherCoursesSnap = await getDocs(teacherCoursesQuery);
+            const teacherCourseIds = teacherCoursesSnap.docs.map(doc => doc.id);
+            
+            for (const enrolledCourseId of Object.keys(userData.enrollments)) {
+              if (teacherCourseIds.includes(enrolledCourseId)) {
+                // This user is a student of this teacher
+                const enrollment = userData.enrollments[enrolledCourseId];
+                const courseRef = doc(db, "courses", enrolledCourseId);
+                const courseSnap = await getDoc(courseRef);
+                
+                if (courseSnap.exists()) {
+                  students.push({
+                    userId: userDoc.id,
+                    name: userData.name || userData.email.split('@')[0],
+                    email: userData.email,
+                    course: courseSnap.data().title,
+                    progress: enrollment.progress || 0,
+                    hasPassedTest: enrollment.hasPassedTest || false,
+                    lastAccessed: enrollment.lastAccessed
+                  });
+                }
+                break; // Only show each student once
               }
-            });
+            }
           }
         }
         
-        // Render students
         if (students.length === 0) {
-          studentList.innerHTML = "<p class='no-courses'>No students enrolled in your courses yet.</p>";
+          studentList.innerHTML = '<div class="no-courses">No students enrolled in your courses yet.</div>';
           return;
         }
         
-        studentList.innerHTML = students.map(student => `
-          <div class="student-card">
+        studentList.innerHTML = '';
+        students.forEach(student => {
+          const studentCard = document.createElement('div');
+          studentCard.className = 'student-card';
+          
+          studentCard.innerHTML = `
             <div class="student-header">
-              <div class="student-avatar">${student.name.charAt(0)}</div>
+              <div class="student-avatar">
+                ${student.name ? student.name.charAt(0).toUpperCase() : 'S'}
+              </div>
               <div class="student-info">
                 <h4>${student.name}</h4>
                 <p>${student.email}</p>
@@ -2498,30 +2590,24 @@ function showMessage(message, type = "success") {
               <div class="progress-bar">
                 <div class="progress-fill" style="width: ${student.progress}%"></div>
               </div>
-              <div class="progress-text">
-                ${student.progress}% Complete • 
-                ${student.completedLessons} lessons completed
-                ${student.hasPassedTest ? ' • ✅ Test Passed' : ''}
-              </div>
+              <div class="progress-text">${student.progress}% Complete</div>
+              ${student.hasPassedTest ? '<div class="test-status">✓ Test Passed</div>' : ''}
             </div>
-          </div>
-        `).join('');
+          `;
+          
+          studentList.appendChild(studentCard);
+        });
         
       } catch (error) {
         console.error("Error loading students:", error);
         if (studentList) {
-          studentList.innerHTML = "<p class='no-courses'>Error loading student data.</p>";
+          studentList.innerHTML = '<div class="no-courses">Error loading student data.</div>';
         }
       }
     }
 
-    // Continue course function (global for onclick)
-    window.continueCourse = function (courseId) {
-      window.location.href = `coursedetails.html?id=${courseId}`;
-    };
-
-    // Initialize the page when the DOM is loaded
+    // Initialize the page when DOM is loaded
     document.addEventListener('DOMContentLoaded', initPage);
-  </script>
-</body>
+    </script>
+  </body>
 </html>
