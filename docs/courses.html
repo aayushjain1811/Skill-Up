@@ -3632,30 +3632,6 @@ async function storePaymentRecord(transactionId, qrCodeUrl) {
   }
 }
 
-    // Store payment record in Firestore
-    async function storePaymentRecord(transactionId, qrCodeUrl) {
-      try {
-        const paymentData = {
-          transactionId: transactionId,
-          studentId: currentUser.uid,
-          studentName: currentUser.displayName || "Student",
-          studentEmail: currentUser.email,
-          courseId: currentCourseToEnroll.id,
-          courseName: currentCourseToEnroll.name,
-          amount: currentCourseToEnroll.price,
-          paymentMethod: selectedPaymentMethod,
-          status: 'pending',
-          qrCodeUrl: qrCodeUrl,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-        
-        await addDoc(collection(db, "payments"), paymentData);
-        console.log("Payment record stored in Firestore");
-      } catch (error) {
-        console.error("Error storing payment record:", error);
-      }
-    }
 
     // Handle payment proceed
     function handlePaymentProceed() {
