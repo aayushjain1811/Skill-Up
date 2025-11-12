@@ -2516,92 +2516,486 @@ const pageLoadTime = Date.now();
       updateStudentOnlineStatus(false);
     });
 
-    // Fetch recommended courses - Updated enrollment check
-    async function loadRecommendedCourses(userId) {
-      try {
-        if (!recommendedCoursesList) return;
+// Fetch recommended courses - Top 6 rated courses
+async function loadRecommendedCourses(userId) {
+  try {
+    if (!recommendedCoursesList) return;
 
-        const q = query(collection(db, "courses"), limit(3));
-        const querySnapshot = await getDocs(q);
+    recommendedCoursesList.innerHTML = "<div class='loading-text'>Loading recommended courses...</div>";
 
-        recommendedCoursesList.innerHTML = "";
+    // Get all courses
+    const coursesSnap = await getDocs(collection(db, "courses"));
+    
+    if (coursesSnap.empty) {
+      recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
+      return;
+    }
 
-        let enrolledCourseIds = [];
-        const userRef = doc(db, "users", userId);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists() && userSnap.data().enrollments) {
-          enrolledCourseIds = Object.keys(userSnap.data().enrollments);
-        }
+    let enrolledCourseIds = [];
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists() && userSnap.data().enrollments) {
+      enrolledCourseIds = Object.keys(userSnap.data().enrollments);
+    }
 
-        if (querySnapshot.empty) {
-          recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
-          return;
-        }
+    // Load courses with feedback data
+    const coursesWithRatings = [];
+    
+    for (const docSnap of coursesSnap.docs) {
+      const course = docSnap.data();
+      const courseId = docSnap.id;
+      const isEnrolled = enrolledCourseIds.includes(courseId);
+      
+      // Load feedback data for rating
+      const feedbackData = await loadCourseFeedback(courseId);
+      const imageUrl = await getCourseImageUrl(courseId);
+      
+      coursesWithRatings.push({
+        id: courseId,
+        ...course,
+        isEnrolled: isEnrolled,
+        averageRating: parseFloat(feedbackData.average),
+        ratingCount: feedbackData.total,
+        imageUrl: imageUrl
+      });
+    }
 
-        querySnapshot.forEach(async (docSnap) => {
-          const course = docSnap.data();
-          const isEnrolled = enrolledCourseIds.includes(docSnap.id);
+    // Sort by rating (highest first)
+    coursesWithRatings.sort((a, b) => {
+      // If ratings are equal, sort by rating count
+      if (b.averageRating === a.averageRating) {
+        return b.ratingCount - a.ratingCount;
+      }
+      return b.averageRating - a.averageRating;
+    });
+
+    // Get top 6 rated courses
+    const topCourses = coursesWithRatings.slice(0, 6);
+
+    recommendedCoursesList.innerHTML = "";
+
+    if (topCourses.length === 0) {
+      recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
+      return;
+    }
+
+    for (const course of topCourses) {
+      const rating = course.averageRating || 0;
+      const ratingCount = course.ratingCount || 0;
+      const stars = generateStarRating(rating);
+      
+      const card = document.createElement("div");
+      card.classList.add("course-card");
+      card.innerHTML = `
+        <div class="course-image">
+          ${course.imageUrl ? 
+            `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
+            `<i class="fas fa-book"></i>`}
+        </div>
+        <div class="course-content">
+          <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
           
-          // Get course image URL
-          const imageUrl = await getCourseImageUrl(docSnap.id);
-          
-          const card = document.createElement("div");
-          card.classList.add("course-card");
-          card.innerHTML = `
-            <div class="course-image">
-              ${imageUrl ? `<img src="${imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
-                `<i class="fas fa-book"></i>`}
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
+            <div style="display: flex; align-items: center; gap: 5px; color: #ffc107;">
+              ${stars}
+              <span style="color: var(--gray); font-size: 14px; margin-left: 5px;">(${ratingCount})</span>
             </div>
-            <div class="course-content">
-              <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
-              <p class="course-description">${course.description || 'No description available'}</p>
-              <div class="course-actions">
-                <button class="enroll-btn ${isEnrolled ? 'enrolled' : ''}" 
-                        data-id="${docSnap.id}" 
-                        ${isEnrolled ? 'disabled' : ''}>
-                  ${isEnrolled ? 'Enrolled ✓' : 'Enroll Now'}
-                </button>
-                ${isEnrolled ? `<button class="btn btn-primary continue-btn" data-id="${docSnap.id}">Continue</button>` : ''}
-              </div>
-            </div>
-          `;
-          recommendedCoursesList.appendChild(card);
-
-          const enrollBtn = card.querySelector(".enroll-btn");
-          if (!isEnrolled) {
-            enrollBtn.addEventListener("click", async () => {
-              // Disable the button to prevent multiple clicks
-              enrollBtn.disabled = true;
-              enrollBtn.textContent = "Loading...";
-              
-              currentCourseToEnroll = {
-                id: docSnap.id,
-                name: course.name || course.title || "Untitled Course"
-              };
-              await loadTeachers();
-              if (teacherModal) teacherModal.classList.add("active");
-              
-              // Re-enable button
-              enrollBtn.disabled = false;
-              enrollBtn.textContent = "Enroll Now";
-            });
-          }
+            <div style="font-weight: 700; font-size: 18px; color: var(--primary);">₹${course.price || 0}</div>
+          </div>
           
-          const continueBtn = card.querySelector(".continue-btn");
-          if (continueBtn) {
-            continueBtn.addEventListener("click", () => {
-              window.location.href = `coursedetails.html?id=${docSnap.id}`;
-            });
-          }
+          <div class="course-actions" style="display: flex; gap: 10px; margin-top: 20px;">
+            ${course.isEnrolled ? 
+              `<button class="btn btn-primary continue-btn" data-id="${course.id}" style="flex: 1;">
+                Continue Learning →
+              </button>` 
+              : 
+              `<button class="enroll-btn" data-id="${course.id}" style="flex: 1; background: linear-gradient(45deg, #28a745, #20c997); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                <i class="fas fa-shopping-cart"></i> Enroll Now
+              </button>
+              <button class="view-details-btn" data-id="${course.id}" style="flex: 1; background: linear-gradient(45deg, var(--light), var(--success)); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                <i class="fas fa-info-circle"></i> View Details
+              </button>`
+            }
+          </div>
+        </div>
+      `;
+      recommendedCoursesList.appendChild(card);
+
+      // Add event listeners
+      const enrollBtn = card.querySelector(".enroll-btn");
+      if (enrollBtn) {
+        enrollBtn.addEventListener("click", async () => {
+          enrollBtn.disabled = true;
+          enrollBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+          
+          currentCourseToEnroll = {
+            id: course.id,
+            name: course.name || course.title || "Untitled Course",
+            price: course.price || 0
+          };
+          
+          // Direct enrollment with teacher selection
+          await loadTeachers();
+          if (teacherModal) teacherModal.classList.add("active");
+          
+          enrollBtn.disabled = false;
+          enrollBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Enroll Now';
         });
-      } catch (error) {
-        console.error("Error fetching courses:", error);
-        if (recommendedCoursesList) {
-          recommendedCoursesList.innerHTML = "<p class='error-msg'>Error loading recommended courses.</p>";
-        }
+      }
+      
+      const viewDetailsBtn = card.querySelector(".view-details-btn");
+      if (viewDetailsBtn) {
+        viewDetailsBtn.addEventListener("click", () => {
+          currentCourseToEnroll = {
+            id: course.id,
+            name: course.name || course.title || "Untitled Course",
+            price: course.price || 0
+          };
+          showCourseDetailsModal(course);
+        });
+      }
+      
+      const continueBtn = card.querySelector(".continue-btn");
+      if (continueBtn) {
+        continueBtn.addEventListener("click", () => {
+          window.location.href = `coursedetails.html?id=${course.id}`;
+        });
       }
     }
+  } catch (error) {
+    console.error("Error fetching recommended courses:", error);
+    if (recommendedCoursesList) {
+      recommendedCoursesList.innerHTML = "<p class='error-msg'>Error loading recommended courses.</p>";
+    }
+  }
+}
+// Generate star rating HTML
+function generateStarRating(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  
+  let stars = '';
+  for (let i = 0; i < fullStars; i++) {
+    stars += '<i class="fas fa-star"></i>';
+  }
+  if (hasHalfStar) {
+    stars += '<i class="fas fa-star-half-alt"></i>';
+  }
+  for (let i = 0; i < emptyStars; i++) {
+    stars += '<i class="far fa-star"></i>';
+  }
+  
+  return stars;
+}
+
+// Load course feedback from Firestore
+async function loadCourseFeedback(courseId) {
+  try {
+    const feedbackQuery = query(
+      collection(db, "courseFeedback"),
+      where("courseId", "==", courseId)
+    );
+    
+    const feedbackSnap = await getDocs(feedbackQuery);
+    
+    if (feedbackSnap.empty) {
+      return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+    }
+
+    const feedbacks = [];
+    let totalRating = 0;
+    const distribution = [0, 0, 0, 0, 0]; // 1-star to 5-star
+
+    feedbackSnap.forEach(doc => {
+      const data = doc.data();
+      feedbacks.push(data);
+      totalRating += data.rating || 0;
+      if (data.rating >= 1 && data.rating <= 5) {
+        distribution[data.rating - 1]++;
+      }
+    });
+
+    const average = totalRating / feedbacks.length;
+
+    return {
+      average: average.toFixed(1),
+      total: feedbacks.length,
+      distribution: distribution,
+      feedbacks: feedbacks.slice(0, 3)
+    };
+  } catch (error) {
+    console.error("Error loading course feedback:", error);
+    return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+  }
+}
+
+// Count course lectures
+async function countCourseLectures(courseId) {
+  try {
+    const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
+    return lecturesSnap.size;
+  } catch (error) {
+    console.error("Error counting lectures:", error);
+    return 0;
+  }
+}
+
+// Count course assignments
+async function countCourseAssignments(courseId) {
+  try {
+    const assignmentsSnap = await getDocs(collection(db, "courses", courseId, "assignments"));
+    return assignmentsSnap.size;
+  } catch (error) {
+    console.error("Error counting assignments:", error);
+    return 0;
+  }
+}
+
+// Show detailed course information modal (same as courses.html)
+async function showCourseDetailsModal(course) {
+  // Create modal if it doesn't exist
+  let courseDetailsModal = document.getElementById('courseDetailsModal');
+  
+  if (!courseDetailsModal) {
+    courseDetailsModal = document.createElement('div');
+    courseDetailsModal.id = 'courseDetailsModal';
+    courseDetailsModal.className = 'modal course-details-modal';
+    document.body.appendChild(courseDetailsModal);
+  }
+
+  // Load course feedback from Firestore
+  let feedbackData = await loadCourseFeedback(course.id);
+  
+  // Count lectures and assignments
+  const lecturesCount = await countCourseLectures(course.id);
+  const assignmentsCount = await countCourseAssignments(course.id);
+  
+  // Generate feedback HTML
+  const feedbackHTML = generateFeedbackHTML(feedbackData);
+  
+  // Course features
+  const features = [
+    { icon: 'fa-infinity', text: 'Lifetime Access' },
+    { icon: 'fa-mobile-alt', text: 'Access on Mobile & Desktop' },
+    { icon: 'fa-certificate', text: 'Certificate of Completion' },
+    { icon: 'fa-users', text: 'Expert Instructors' },
+    { icon: 'fa-headphones', text: '24/7 Support' },
+    { icon: 'fa-cloud-download-alt', text: 'Downloadable Resources' }
+  ];
+
+  courseDetailsModal.innerHTML = `
+    <div class="modal-content">
+      <!-- Course Header with Image -->
+      <div class="course-details-header">
+        ${course.imageUrl ? 
+          `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
+          `<div class="course-details-image-placeholder">
+            <i class="fas fa-graduation-cap"></i>
+          </div>`
+        }
+        <div class="course-details-overlay">
+          <div class="course-details-category">${course.category || 'General'}</div>
+          <h2 class="course-details-title">${course.name || course.title}</h2>
+          <div class="course-details-meta-row">
+            <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
+            <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
+            <span><i class="fas fa-users"></i> ${course.enrolledCount || 0} students</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course Body -->
+      <div class="course-details-body">
+        <!-- Course Stats -->
+        <div class="course-stats-grid">
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-video"></i></div>
+            <div class="course-stat-value">${lecturesCount}</div>
+            <div class="course-stat-label">Lectures</div>
+          </div>
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
+            <div class="course-stat-value">${assignmentsCount}</div>
+            <div class="course-stat-label">Assignments</div>
+          </div>
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="course-stat-value">${course.duration || 'N/A'}</div>
+            <div class="course-stat-label">Duration</div>
+          </div>
+          <div class="course-stat">
+            <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
+            <div class="course-stat-value">Yes</div>
+            <div class="course-stat-label">Certificate</div>
+          </div>
+        </div>
+
+        <!-- Price Section -->
+        <div class="course-price-section">
+          <div class="course-price-label">Course Price</div>
+          <div class="course-price">₹${course.price || 0}</div>
+          <div class="course-price-note">One-time payment • Lifetime access</div>
+        </div>
+
+        <!-- Description -->
+        <div class="course-description-section">
+          <h3 class="course-section-title">
+            <i class="fas fa-info-circle"></i>
+            About This Course
+          </h3>
+          <p class="course-description-text">${course.description || 'No description available'}</p>
+        </div>
+
+        <!-- Course Features -->
+        <div class="course-description-section">
+          <h3 class="course-section-title">
+            <i class="fas fa-check-circle"></i>
+            What You'll Get
+          </h3>
+          <div class="course-features-grid">
+            ${features.map(feature => `
+              <div class="course-feature-item">
+                <div class="course-feature-icon">
+                  <i class="fas ${feature.icon}"></i>
+                </div>
+                <div class="course-feature-text">${feature.text}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Student Feedback -->
+        ${feedbackHTML}
+      </div>
+
+      <!-- Footer with Price and Actions -->
+      <div class="course-details-footer">
+        <div class="footer-price-info">
+          <div class="footer-price-label">Total Price</div>
+          <div class="footer-price">₹${course.price || 0}</div>
+        </div>
+        <div class="footer-actions">
+          <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
+            Cancel
+          </button>
+          <button class="modal-btn confirm" onclick="proceedToTeacherSelection()">
+            <i class="fas fa-shopping-cart"></i> Enroll Now
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  courseDetailsModal.classList.add('active');
+
+  // Close on outside click
+  courseDetailsModal.addEventListener('click', (e) => {
+    if (e.target === courseDetailsModal) {
+      closeCourseDetailsModal();
+    }
+  });
+}
+
+// Generate feedback HTML
+function generateFeedbackHTML(feedbackData) {
+  if (feedbackData.total === 0) {
+    return `
+      <div class="course-feedback-section">
+        <h3 class="course-section-title">
+          <i class="fas fa-star"></i>
+          Student Feedback
+        </h3>
+        <div class="no-feedback-message">
+          <div class="no-feedback-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <p>No feedback yet. Be the first to review this course!</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const stars = generateStarRating(feedbackData.average);
+  
+  return `
+    <div class="course-feedback-section">
+      <h3 class="course-section-title">
+        <i class="fas fa-star"></i>
+        Student Feedback
+      </h3>
+      
+      <div class="course-rating-summary">
+        <div class="rating-score-container">
+          <div class="rating-score">${feedbackData.average}</div>
+          <div class="rating-stars">${stars}</div>
+          <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
+        </div>
+        
+        <div class="rating-breakdown">
+          ${[5, 4, 3, 2, 1].map(star => {
+            const count = feedbackData.distribution[star - 1];
+            const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
+            return `
+              <div class="rating-bar-item">
+                <div class="rating-bar-label">
+                  <span>${star}</span>
+                  <i class="fas fa-star" style="color: #ffc107;"></i>
+                </div>
+                <div class="rating-bar">
+                  <div class="rating-bar-fill" style="width: ${percentage}%"></div>
+                </div>
+                <div class="rating-bar-percentage">${percentage}%</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      ${feedbackData.feedbacks.length > 0 ? `
+        <div class="student-feedback-list">
+          ${feedbackData.feedbacks.map(feedback => `
+            <div class="student-feedback-item">
+              <div class="feedback-header">
+                <div class="feedback-student-info">
+                  <div class="feedback-student-avatar">
+                    ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
+                  </div>
+                  <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
+                </div>
+                <div class="feedback-rating">
+                  <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
+                </div>
+              </div>
+              <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
+            </div>
+          `).join('')}
+        </div>
+        ${feedbackData.total > 3 ? `
+          <button class="view-all-feedback-btn">
+            View all ${feedbackData.total} reviews
+          </button>
+        ` : ''}
+      ` : ''}
+    </div>
+  `;
+}
+
+// Close course details modal
+window.closeCourseDetailsModal = function() {
+  const modal = document.getElementById('courseDetailsModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+};
+
+// Proceed to teacher selection
+window.proceedToTeacherSelection = async function() {
+  closeCourseDetailsModal();
+  await loadTeachers();
+  if (teacherModal) teacherModal.classList.add("active");
+};
 
     // Load teachers for enrollment
     async function loadTeachers() {

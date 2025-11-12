@@ -1302,6 +1302,7 @@
   opacity: 0.5;
 }
 
+
 /* Responsive for course details modal */
 @media (max-width: 768px) {
   .course-stats-grid {
@@ -1335,6 +1336,409 @@
   }
 }
 
+ /* Payment Modal Styles */
+    .payment-modal .modal-content {
+      max-width: 500px;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .payment-header {
+      background: linear-gradient(135deg, var(--light), var(--success));
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .payment-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .payment-subtitle {
+      opacity: 0.9;
+      font-size: 16px;
+    }
+
+    .payment-body {
+      padding: 25px;
+    }
+
+    .payment-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(67, 97, 238, 0.1);
+    }
+
+    .course-name-payment {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .course-price-payment {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .payment-methods {
+      margin-bottom: 20px;
+    }
+
+    .payment-method-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--primary);
+    }
+
+    .payment-methods-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 2px solid rgba(67, 97, 238, 0.2);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .payment-method:hover {
+      border-color: rgba(67, 97, 238, 0.5);
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .payment-method.selected {
+      border-color: var(--success);
+      background: rgba(0, 245, 255, 0.1);
+    }
+
+    .payment-method-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--bg-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--primary);
+    }
+
+    .payment-method-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .qr-payment-section {
+      text-align: center;
+      padding: 20px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 15px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.1);
+      display: none;
+    }
+
+    .qr-payment-section.active {
+      display: block;
+    }
+
+    .qr-code-container {
+      margin: 20px auto;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #qrCodeCanvas {
+      border-radius: 8px;
+    }
+
+    .qr-instructions {
+      margin-top: 15px;
+      color: var(--gray);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .upi-id-display {
+      margin-top: 15px;
+      padding: 10px;
+      background: var(--bg-main);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 16px;
+      color: var(--primary);
+      border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+
+    .payment-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .payment-actions button {
+      flex: 1;
+    }
+
+    .payment-processing {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .processing-spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(67, 97, 238, 0.3);
+      border-top: 5px solid var(--success);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    .processing-text {
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .processing-subtext {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .payment-success {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .success-checkmark .check-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid var(--success);
+    }
+
+    .success-checkmark .check-icon::before {
+      top: 3px;
+      left: -2px;
+      width: 30px;
+      transform-origin: 100% 50%;
+      border-radius: 100px 0 0 100px;
+    }
+
+    .success-checkmark .check-icon::after {
+      top: 0;
+      left: 30px;
+      width: 60px;
+      transform-origin: 0 50%;
+      border-radius: 0 100px 100px 0;
+      animation: rotate-circle 4.25s ease-in;
+    }
+
+    .success-checkmark .check-icon .icon-line {
+      height: 5px;
+      background-color: var(--success);
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+
+    .success-checkmark .check-icon .icon-line.line-tip {
+      top: 46px;
+      left: 14px;
+      width: 25px;
+      transform: rotate(45deg);
+      animation: icon-line-tip 0.75s;
+    }
+
+    .success-checkmark .check-icon .icon-line.line-long {
+      top: 38px;
+      right: 8px;
+      width: 47px;
+      transform: rotate(-45deg);
+      animation: icon-line-long 0.75s;
+    }
+
+    .success-checkmark .check-icon .icon-circle {
+      top: -4px;
+      left: -4px;
+      z-index: 10;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: absolute;
+      box-sizing: content-box;
+      border: 4px solid rgba(0, 245, 255, 0.5);
+    }
+
+    .success-checkmark .check-icon .icon-fix {
+      top: 8px;
+      width: 5px;
+      left: 26px;
+      z-index: 1;
+      height: 85px;
+      position: absolute;
+      transform: rotate(-45deg);
+    }
+
+    @keyframes rotate-circle {
+      0% {
+        transform: rotate(-45deg);
+      }
+      5% {
+        transform: rotate(-45deg);
+      }
+      12% {
+        transform: rotate(-405deg);
+      }
+      100% {
+        transform: rotate(-405deg);
+      }
+    }
+
+    @keyframes icon-line-tip {
+      0% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      54% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      70% {
+        width: 50px;
+        left: -8px;
+        top: 37px;
+      }
+      84% {
+        width: 17px;
+        left: 21px;
+        top: 48px;
+      }
+      100% {
+        width: 25px;
+        left: 14px;
+        top: 45px;
+      }
+    }
+
+    @keyframes icon-line-long {
+      0% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      65% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      84% {
+        width: 55px;
+        right: 0px;
+        top: 35px;
+      }
+      100% {
+        width: 47px;
+        right: 8px;
+        top: 38px;
+      }
+    }
+
+    .payment-error {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .error-icon {
+      font-size: 80px;
+      color: #ff4757;
+      margin-bottom: 20px;
+    }
+
+    .error-text {
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .error-subtext {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Payment Status Section */
+    .payment-status {
+      display: none;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .payment-status.success {
+      background: rgba(40, 167, 69, 0.1);
+      border: 1px solid rgba(40, 167, 69, 0.3);
+      color: #28a745;
+      display: block;
+    }
+
+    .payment-status.error {
+      background: rgba(255, 71, 87, 0.1);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      color: #ff4757;
+      display: block;
+    }
+
+    .payment-status.processing {
+      background: rgba(67, 97, 238, 0.1);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      color: var(--primary);
+      display: block;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .payment-methods-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .payment-actions {
+        flex-direction: column;
+      }
+    }
     /* Loading State */
     .loading {
       text-align: center;
@@ -2047,6 +2451,102 @@
     </div>
   </div>
   
+  <!-- Payment Modal -->
+  <div class="modal payment-modal" id="paymentModal">
+    <div class="modal-content">
+      <div class="payment-header">
+        <h2 class="payment-title">Complete Payment</h2>
+        <p class="payment-subtitle">Secure payment for course enrollment</p>
+      </div>
+      
+      <div class="payment-body">
+        <div class="payment-info">
+          <div class="course-name-payment" id="paymentCourseName">Course Name</div>
+          <div class="course-price-payment" id="paymentCoursePrice">₹0</div>
+        </div>
+        
+        <div class="payment-methods">
+          <div class="payment-method-title">Select Payment Method</div>
+          <div class="payment-methods-grid">
+            <div class="payment-method" data-method="upi">
+              <div class="payment-method-icon">
+                <i class="fas fa-qrcode"></i>
+              </div>
+              <div class="payment-method-name">UPI QR Code</div>
+            </div>
+            <div class="payment-method" data-method="card">
+              <div class="payment-method-icon">
+                <i class="fas fa-credit-card"></i>
+              </div>
+              <div class="payment-method-name">Credit/Debit Card</div>
+            </div>
+            <div class="payment-method" data-method="netbanking">
+              <div class="payment-method-icon">
+                <i class="fas fa-university"></i>
+              </div>
+              <div class="payment-method-name">Net Banking</div>
+            </div>
+            <div class="payment-method" data-method="wallet">
+              <div class="payment-method-icon">
+                <i class="fas fa-wallet"></i>
+              </div>
+              <div class="payment-method-name">Wallet</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- UPI QR Code Section -->
+        <div class="qr-payment-section" id="qrPaymentSection">
+          <h3>Scan QR Code to Pay</h3>
+          <div class="qr-code-container">
+            <canvas id="qrCodeCanvas"></canvas>
+          </div>
+          <div class="upi-id-display" id="upiIdDisplay">skillup@paytm</div>
+          <div class="qr-instructions">
+            <p>1. Open your UPI app (Google Pay, PhonePe, Paytm, etc.)</p>
+            <p>2. Tap on 'Scan QR Code'</p>
+            <p>3. Scan the code above to complete payment</p>
+            <p>4. Payment will be verified automatically</p>
+          </div>
+        </div>
+        
+        <!-- Payment Processing -->
+        <div class="payment-processing" id="paymentProcessing" style="display: none;">
+          <div class="processing-spinner"></div>
+          <div class="processing-text">Processing Payment</div>
+          <div class="processing-subtext">Please wait while we verify your payment...</div>
+        </div>
+        
+        <!-- Payment Success -->
+        <div class="payment-success" id="paymentSuccess" style="display: none;">
+          <div class="success-checkmark">
+            <div class="check-icon">
+              <span class="icon-line line-tip"></span>
+              <span class="icon-line line-long"></span>
+              <div class="icon-circle"></div>
+              <div class="icon-fix"></div>
+            </div>
+          </div>
+          <div class="processing-text">Payment Successful!</div>
+          <div class="processing-subtext">You have been enrolled in the course</div>
+        </div>
+        
+        <!-- Payment Error -->
+        <div class="payment-error" id="paymentError" style="display: none;">
+          <div class="error-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="error-text">Payment Failed</div>
+          <div class="error-subtext" id="paymentErrorMessage">Please try again or use a different payment method</div>
+        </div>
+        
+        <div class="payment-actions">
+          <button class="modal-btn cancel" id="cancelPayment">Cancel</button>
+          <button class="modal-btn confirm" id="proceedPayment" disabled>Proceed to Pay</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Teacher Selection Modal -->
   <div class="modal" id="teacherModal">
@@ -2121,32 +2621,35 @@
 <script type="module">
     // Firebase SDK imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { 
-  getFirestore, 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  updateDoc,
-  arrayUnion,
-  setDoc,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      collection, 
+      getDocs, 
+      doc, 
+      getDoc, 
+      updateDoc,
+      arrayUnion,
+      setDoc,
+      query,
+      where,
+      onSnapshot,
+      orderBy,
+      serverTimestamp,
+      addDoc
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { 
       getAuth, 
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
     import { 
-  getStorage, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL 
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+      getStorage, 
+      ref, 
+      uploadBytes, 
+      getDownloadURL,
+      uploadString
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBffElX8sXMQdYXOXLjepqd7KYic20D4K8",
@@ -2158,17 +2661,17 @@ import {
       measurementId: "G-FWBKTSQDS9"
     };
 
-// Initialize Firebase with error handling
-let app, db, auth, storage;
-try {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  auth = getAuth(app);
-  storage = getStorage(app);
-  console.log("Firebase initialized successfully");
-} catch (error) {
-  console.error("Firebase initialization error:", error);
-}
+    // Initialize Firebase with error handling
+    let app, db, auth, storage;
+    try {
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      auth = getAuth(app);
+      storage = getStorage(app);
+      console.log("Firebase initialized successfully");
+    } catch (error) {
+      console.error("Firebase initialization error:", error);
+    }
 
     // DOM elements
     const loadingContainer = document.getElementById('loadingContainer');
@@ -2212,6 +2715,20 @@ try {
     const closeSuccessModal = document.getElementById('closeSuccessModal');
     const viewCourseBtn = document.getElementById('viewCourseBtn');
 
+    // Payment modal elements
+    const paymentModal = document.getElementById('paymentModal');
+    const paymentCourseName = document.getElementById('paymentCourseName');
+    const paymentCoursePrice = document.getElementById('paymentCoursePrice');
+    const qrPaymentSection = document.getElementById('qrPaymentSection');
+    const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+    const upiIdDisplay = document.getElementById('upiIdDisplay');
+    const paymentProcessing = document.getElementById('paymentProcessing');
+    const paymentSuccess = document.getElementById('paymentSuccess');
+    const paymentError = document.getElementById('paymentError');
+    const paymentErrorMessage = document.getElementById('paymentErrorMessage');
+    const cancelPayment = document.getElementById('cancelPayment');
+    const proceedPayment = document.getElementById('proceedPayment');
+
     // State
     let courses = [];
     let filteredCourses = [];
@@ -2220,6 +2737,8 @@ try {
     let currentCourseToEnroll = null;
     let selectedTeachers = [];
     let enrolledCourseId = null;
+    let selectedPaymentMethod = null;
+    let paymentStatusCheckInterval = null;
 
     // Initialize the page
     function initPage() {
@@ -2363,6 +2882,43 @@ try {
         });
       }
 
+      // Payment modal functionality
+      if (cancelPayment) {
+        cancelPayment.addEventListener('click', () => {
+          paymentModal.classList.remove('active');
+          resetPaymentModal();
+        });
+      }
+
+      if (proceedPayment) {
+        proceedPayment.addEventListener('click', handlePaymentProceed);
+      }
+
+      // Payment method selection
+      document.querySelectorAll('.payment-method').forEach(method => {
+        method.addEventListener('click', () => {
+          // Remove selected class from all methods
+          document.querySelectorAll('.payment-method').forEach(m => {
+            m.classList.remove('selected');
+          });
+          
+          // Add selected class to clicked method
+          method.classList.add('selected');
+          selectedPaymentMethod = method.dataset.method;
+          
+          // Enable proceed button
+          proceedPayment.disabled = false;
+          
+          // Show appropriate payment section
+          if (selectedPaymentMethod === 'upi') {
+            qrPaymentSection.classList.add('active');
+            generateQRCode();
+          } else {
+            qrPaymentSection.classList.remove('active');
+          }
+        });
+      });
+
       // Search functionality
       if (searchInput) {
         searchInput.addEventListener('input', handleSearch);
@@ -2374,137 +2930,141 @@ try {
           e.target.classList.remove('active');
           if (e.target.id === 'teacherModal') {
             resetTeacherSelection();
+          } else if (e.target.id === 'paymentModal') {
+            resetPaymentModal();
           }
         }
       });
     }
 
-// Set up real-time listeners for updates
-function setupRealtimeListeners(userId) {
-  // Listen for user data changes
-  const userRef = doc(db, "users", userId);
-  onSnapshot(userRef, (doc) => {
-    if (doc.exists()) {
-      fetchCourses();
-    }
-  });
-  
-  // Listen for new student notifications
-  const notificationsQuery = query(
-    collection(db, "studentNotifications"),
-    where("studentId", "==", userId),
-    where("read", "==", false)
-  );
-  
-  onSnapshot(notificationsQuery, (snapshot) => {
-    console.log("Notifications updated");
-    loadNotifications(userId);
-    
-    // Show toast notification for new notifications
-    snapshot.docChanges().forEach(change => {
-      if (change.type === "added") {
-        const notification = change.doc.data();
-        showToastNotification(notification);
-      }
-    });
-  });
-}
-// Show toast notification for real-time updates
-function showToastNotification(notification) {
-  // Don't show if page just loaded (to avoid showing all existing notifications)
-  if (Date.now() - pageLoadTime < 3000) return;
-  
-  let icon = '🔔';
-  if (notification.type === 'enrollment') icon = '📚';
-  else if (notification.type === 'course_update') icon = '📝';
-  else if (notification.type === 'message') icon = '💬';
-  else if (notification.type === 'achievement') icon = '🏆';
-  
-  const toast = document.createElement('div');
-  toast.className = 'message-toast success';
-  toast.style.cssText += `
-    display: flex;
-    align-items: start;
-    gap: 10px;
-  `;
-  
-  toast.innerHTML = `
-    <div style="font-size: 24px;">${icon}</div>
-    <div style="flex: 1;">
-      <div style="font-weight: 600; margin-bottom: 5px;">${notification.title}</div>
-      <div style="font-size: 14px;">${notification.message}</div>
-    </div>
-  `;
-  
-  toast.addEventListener('click', () => {
-    if (notification.courseId) {
-      window.location.href = `coursedetails.html?id=${notification.courseId}`;
-    }
-  });
-  
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    if (toast.parentNode) {
-      toast.remove();
-    }
-  }, 5000);
-}
-
-// Track page load time to avoid showing old notifications as new
-const pageLoadTime = Date.now();
-
-// Setup user information - UPDATED with profile picture support
-async function setupUserInfo(user) {
-  try {
-    const displayName = user.displayName || user.email.split('@')[0];
-    if (userDisplayName) userDisplayName.textContent = displayName;
-    
-    // Handle profile picture or initials
-    const photoURL = user.photoURL;
-    const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
-    
-    if (userInitials) {
-      if (photoURL) {
-        // Display profile picture
-        userInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-        
-        // Add has-image class to show image properly
-        const avatarContainer = userInitials.parentElement;
-        if (avatarContainer && avatarContainer.classList.contains('avatar')) {
-          avatarContainer.classList.add('has-image');
+    // Set up real-time listeners for updates
+    function setupRealtimeListeners(userId) {
+      // Listen for user data changes
+      const userRef = doc(db, "users", userId);
+      onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          fetchCourses();
         }
-      } else {
-        // Display initials
-        userInitials.textContent = initials;
+      });
+      
+      // Listen for new student notifications
+      const notificationsQuery = query(
+        collection(db, "studentNotifications"),
+        where("studentId", "==", userId),
+        where("read", "==", false)
+      );
+      
+      onSnapshot(notificationsQuery, (snapshot) => {
+        console.log("Notifications updated");
+        loadNotifications(userId);
         
-        // Remove has-image class
-        const avatarContainer = userInitials.parentElement;
-        if (avatarContainer && avatarContainer.classList.contains('avatar')) {
-          avatarContainer.classList.remove('has-image');
+        // Show toast notification for new notifications
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added") {
+            const notification = change.doc.data();
+            showToastNotification(notification);
+          }
+        });
+      });
+    }
+
+    // Show toast notification for real-time updates
+    function showToastNotification(notification) {
+      // Don't show if page just loaded (to avoid showing all existing notifications)
+      if (Date.now() - pageLoadTime < 3000) return;
+      
+      let icon = '🔔';
+      if (notification.type === 'enrollment') icon = '📚';
+      else if (notification.type === 'course_update') icon = '📝';
+      else if (notification.type === 'message') icon = '💬';
+      else if (notification.type === 'achievement') icon = '🏆';
+      
+      const toast = document.createElement('div');
+      toast.className = 'message-toast success';
+      toast.style.cssText += `
+        display: flex;
+        align-items: start;
+        gap: 10px;
+      `;
+      
+      toast.innerHTML = `
+        <div style="font-size: 24px;">${icon}</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; margin-bottom: 5px;">${notification.title}</div>
+          <div style="font-size: 14px;">${notification.message}</div>
+        </div>
+      `;
+      
+      toast.addEventListener('click', () => {
+        if (notification.courseId) {
+          window.location.href = `coursedetails.html?id=${notification.courseId}`;
         }
+      });
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.remove();
+        }
+      }, 5000);
+    }
+
+    // Track page load time to avoid showing old notifications as new
+    const pageLoadTime = Date.now();
+
+    // Setup user information - UPDATED with profile picture support
+    async function setupUserInfo(user) {
+      try {
+        const displayName = user.displayName || user.email.split('@')[0];
+        if (userDisplayName) userDisplayName.textContent = displayName;
+        
+        // Handle profile picture or initials
+        const photoURL = user.photoURL;
+        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+        
+        if (userInitials) {
+          if (photoURL) {
+            // Display profile picture
+            userInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            
+            // Add has-image class to show image properly
+            const avatarContainer = userInitials.parentElement;
+            if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+              avatarContainer.classList.add('has-image');
+            }
+          } else {
+            // Display initials
+            userInitials.textContent = initials;
+            
+            // Remove has-image class
+            const avatarContainer = userInitials.parentElement;
+            if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+              avatarContainer.classList.remove('has-image');
+            }
+          }
+        }
+        
+        // Update welcome subtitle based on user data
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          let subtitle = "Discover new skills and advance your career with our comprehensive course library";
+          
+          if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
+            const enrolledCount = Object.keys(userData.enrollments).length;
+            subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Explore more to continue your learning journey!`;
+          }
+          
+          if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
+        }
+      } catch (error) {
+        console.error("Error setting up user info:", error);
       }
     }
-    
-    // Update welcome subtitle based on user data
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      let subtitle = "Discover new skills and advance your career with our comprehensive course library";
-      
-      if (userData.enrollments && Object.keys(userData.enrollments).length > 0) {
-        const enrolledCount = Object.keys(userData.enrollments).length;
-        subtitle = `You're enrolled in ${enrolledCount} course${enrolledCount > 1 ? 's' : ''}. Explore more to continue your learning journey!`;
-      }
-      
-      if (welcomeSubtitle) welcomeSubtitle.textContent = subtitle;
-    }
-  } catch (error) {
-    console.error("Error setting up user info:", error);
-  }
-}
+
     // Handle logout
     function handleLogout() {
       signOut(auth).then(() => {
@@ -2535,188 +3095,188 @@ async function setupUserInfo(user) {
       }
     }
 
-// Load notifications from Firebase - UPDATED to use studentNotifications collection
-async function loadNotifications(userId) {
-  try {
-    if (!notificationList) return;
+    // Load notifications from Firebase - UPDATED to use studentNotifications collection
+    async function loadNotifications(userId) {
+      try {
+        if (!notificationList) return;
 
-    // Add orderBy import at the top if not already present
-    const { orderBy } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
+        // Add orderBy import at the top if not already present
+        const { orderBy } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
 
-    // Query studentNotifications collection for this user
-    const notificationsQuery = query(
-      collection(db, "studentNotifications"),
-      where("studentId", "==", userId),
-      orderBy("timestamp", "desc")
-    );
-    
-    const notificationsSnap = await getDocs(notificationsQuery);
-    
-    notificationList.innerHTML = "";
-
-    if (!notificationsSnap.empty) {
-      const notifications = [];
-      notificationsSnap.forEach(doc => {
-        notifications.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
-
-      const notificationsToShow = notifications.slice(0, 5);
-
-      if (notificationsToShow.length === 0) {
-        notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-        if (notificationBadge) {
-          notificationBadge.textContent = '0';
-          notificationBadge.style.display = 'none';
-        }
-        return;
-      }
-
-      const unreadCount = notifications.filter(n => !n.read).length;
-      if (notificationBadge) {
-        notificationBadge.textContent = unreadCount;
-        notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
-      }
-
-      notificationsToShow.forEach(notification => {
-        const notificationItem = document.createElement("div");
-        notificationItem.classList.add("notification-item");
-        if (!notification.read) {
-          notificationItem.classList.add("unread");
-        }
+        // Query studentNotifications collection for this user
+        const notificationsQuery = query(
+          collection(db, "studentNotifications"),
+          where("studentId", "==", userId),
+          orderBy("timestamp", "desc")
+        );
         
-        let timeDisplay = "Recently";
-        if (notification.timestamp) {
-          const now = new Date();
-          const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
-          const diffMs = now - notificationTime;
-          const diffMins = Math.floor(diffMs / 60000);
-          const diffHours = Math.floor(diffMs / 3600000);
-          const diffDays = Math.floor(diffMs / 86400000);
-          
-          if (diffMins < 1) timeDisplay = "Just now";
-          else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
-          else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
-          else timeDisplay = `${diffDays}d ago`;
-        }
+        const notificationsSnap = await getDocs(notificationsQuery);
         
-        // Add icon based on notification type
-        let icon = '🔔';
-        if (notification.type === 'enrollment') icon = '📚';
-        else if (notification.type === 'course_update') icon = '📝';
-        else if (notification.type === 'message') icon = '💬';
-        else if (notification.type === 'achievement') icon = '🏆';
-        
-        notificationItem.innerHTML = `
-          <div class="notification-title">${icon} ${notification.title}</div>
-          <div class="notification-message">${notification.message}</div>
-          <div class="notification-time">${timeDisplay}</div>
-        `;
-        
-        notificationItem.addEventListener('click', async () => {
-          if (!notification.read) {
-            // Mark as read in studentNotifications collection
-            const notificationRef = doc(db, "studentNotifications", notification.id);
-            await updateDoc(notificationRef, {
-              read: true
+        notificationList.innerHTML = "";
+
+        if (!notificationsSnap.empty) {
+          const notifications = [];
+          notificationsSnap.forEach(doc => {
+            notifications.push({
+              id: doc.id,
+              ...doc.data()
+            });
+          });
+
+          const notificationsToShow = notifications.slice(0, 5);
+
+          if (notificationsToShow.length === 0) {
+            notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+            if (notificationBadge) {
+              notificationBadge.textContent = '0';
+              notificationBadge.style.display = 'none';
+            }
+            return;
+          }
+
+          const unreadCount = notifications.filter(n => !n.read).length;
+          if (notificationBadge) {
+            notificationBadge.textContent = unreadCount;
+            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+          }
+
+          notificationsToShow.forEach(notification => {
+            const notificationItem = document.createElement("div");
+            notificationItem.classList.add("notification-item");
+            if (!notification.read) {
+              notificationItem.classList.add("unread");
+            }
+            
+            let timeDisplay = "Recently";
+            if (notification.timestamp) {
+              const now = new Date();
+              const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
+              const diffMs = now - notificationTime;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffMins < 1) timeDisplay = "Just now";
+              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+              else timeDisplay = `${diffDays}d ago`;
+            }
+            
+            // Add icon based on notification type
+            let icon = '🔔';
+            if (notification.type === 'enrollment') icon = '📚';
+            else if (notification.type === 'course_update') icon = '📝';
+            else if (notification.type === 'message') icon = '💬';
+            else if (notification.type === 'achievement') icon = '🏆';
+            
+            notificationItem.innerHTML = `
+              <div class="notification-title">${icon} ${notification.title}</div>
+              <div class="notification-message">${notification.message}</div>
+              <div class="notification-time">${timeDisplay}</div>
+            `;
+            
+            notificationItem.addEventListener('click', async () => {
+              if (!notification.read) {
+                // Mark as read in studentNotifications collection
+                const notificationRef = doc(db, "studentNotifications", notification.id);
+                await updateDoc(notificationRef, {
+                  read: true
+                });
+                
+                notificationItem.classList.remove('unread');
+                loadNotifications(userId);
+              }
+              
+              // Navigate based on notification type
+              if (notification.courseId) {
+                window.location.href = `coursedetails.html?id=${notification.courseId}`;
+              }
             });
             
-            notificationItem.classList.remove('unread');
-            loadNotifications(userId);
+            notificationList.appendChild(notificationItem);
+          });
+        } else {
+          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+          if (notificationBadge) {
+            notificationBadge.textContent = '0';
+            notificationBadge.style.display = 'none';
           }
-          
-          // Navigate based on notification type
-          if (notification.courseId) {
-            window.location.href = `coursedetails.html?id=${notification.courseId}`;
-          }
+        }
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+        if (notificationList) {
+          notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+        }
+      }
+    }
+
+    // Clear all notifications - UPDATED to work with studentNotifications collection
+    async function clearAllNotifications() {
+      try {
+        if (!currentUser) return;
+        
+        // Query all unread notifications for this student
+        const notificationsQuery = query(
+          collection(db, "studentNotifications"),
+          where("studentId", "==", currentUser.uid),
+          where("read", "==", false)
+        );
+        
+        const notificationsSnap = await getDocs(notificationsQuery);
+        
+        // Batch update all notifications to read
+        const updatePromises = [];
+        notificationsSnap.forEach(docSnap => {
+          const notificationRef = doc(db, "studentNotifications", docSnap.id);
+          updatePromises.push(updateDoc(notificationRef, { read: true }));
         });
         
-        notificationList.appendChild(notificationItem);
-      });
-    } else {
-      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-      if (notificationBadge) {
-        notificationBadge.textContent = '0';
-        notificationBadge.style.display = 'none';
-      }
-    }
-  } catch (error) {
-    console.error("Error loading notifications:", error);
-    if (notificationList) {
-      notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
-    }
-  }
-}
-
-// Clear all notifications - UPDATED to work with studentNotifications collection
-async function clearAllNotifications() {
-  try {
-    if (!currentUser) return;
-    
-    // Query all unread notifications for this student
-    const notificationsQuery = query(
-      collection(db, "studentNotifications"),
-      where("studentId", "==", currentUser.uid),
-      where("read", "==", false)
-    );
-    
-    const notificationsSnap = await getDocs(notificationsQuery);
-    
-    // Batch update all notifications to read
-    const updatePromises = [];
-    notificationsSnap.forEach(docSnap => {
-      const notificationRef = doc(db, "studentNotifications", docSnap.id);
-      updatePromises.push(updateDoc(notificationRef, { read: true }));
-    });
-    
-    await Promise.all(updatePromises);
-    
-    showMessage("✅ All notifications marked as read");
-    loadNotifications(currentUser.uid);
-  } catch (error) {
-    console.error("Error clearing notifications:", error);
-    showMessage("❌ Error clearing notifications", "error");
-  }
-}
-
-// Function to get course image URL from Firebase Storage - CORRECTED
-async function getCourseImageUrl(courseId) {
-  try {
-    // Clean the courseId to remove any "course" prefix if it exists
-    const cleanCourseId = courseId.replace(/^course/, '');
-    
-    // Try different possible image paths and names
-    const possiblePaths = [
-          `coursepic/${courseId}/${courseId}.jpg`,
-          `coursepic/${courseId}/${courseId}.png`,
-          `coursepic/${courseId}/image.jpg`,
-          `coursepic/${courseId}/image.png`,
-    ];
-    
-    console.log(`Looking for course image for ID: ${courseId} (cleaned: ${cleanCourseId})`);
-    
-    for (const path of possiblePaths) {
-      try {
-        const imageRef = ref(storage, path);
-        const url = await getDownloadURL(imageRef);
-        console.log(`Found course image at: ${path}`);
-        return url;
+        await Promise.all(updatePromises);
+        
+        showMessage("✅ All notifications marked as read");
+        loadNotifications(currentUser.uid);
       } catch (error) {
-        // Continue to next path if this one fails
-        continue;
+        console.error("Error clearing notifications:", error);
+        showMessage("❌ Error clearing notifications", "error");
       }
     }
-    
-    // If no image found, return null
-    console.log(`No course image found for ID: ${courseId}`);
-    return null;
-  } catch (error) {
-    console.error(`Error getting course image for ${courseId}:`, error);
-    return null;
-  }
-}
+
+    // Function to get course image URL from Firebase Storage - CORRECTED
+    async function getCourseImageUrl(courseId) {
+      try {
+        // Clean the courseId to remove any "course" prefix if it exists
+        const cleanCourseId = courseId.replace(/^course/, '');
+        
+        // Try different possible image paths and names
+        const possiblePaths = [
+              `coursepic/${courseId}/${courseId}.jpg`,
+              `coursepic/${courseId}/${courseId}.png`,
+              `coursepic/${courseId}/image.jpg`,
+              `coursepic/${courseId}/image.png`,
+        ];
+        
+        console.log(`Looking for course image for ID: ${courseId} (cleaned: ${cleanCourseId})`);
+        
+        for (const path of possiblePaths) {
+          try {
+            const imageRef = ref(storage, path);
+            const url = await getDownloadURL(imageRef);
+            console.log(`Found course image at: ${path}`);
+            return url;
+          } catch (error) {
+            // Continue to next path if this one fails
+            continue;
+          }
+        }
+        
+        // If no image found, return null
+        console.log(`No course image found for ID: ${courseId}`);
+        return null;
+      } catch (error) {
+        console.error(`Error getting course image for ${courseId}:`, error);
+        return null;
+      }
+    }
 
     // Fetch courses from Firestore and check enrollment status
     async function fetchCourses() {
@@ -2755,18 +3315,13 @@ async function getCourseImageUrl(courseId) {
           }
         }
         // Load course images and feedback for all courses
-for (let course of courses) {
-  course.imageUrl = await getCourseImageUrl(course.id);
-  
-  // Load feedback data
-  const feedbackData = await loadCourseFeedback(course.id);
-  course.averageRating = parseFloat(feedbackData.average);
-  course.ratingCount = feedbackData.total;
-}
-
-        // Load course images for all courses
         for (let course of courses) {
           course.imageUrl = await getCourseImageUrl(course.id);
+          
+          // Load feedback data
+          const feedbackData = await loadCourseFeedback(course.id);
+          course.averageRating = parseFloat(feedbackData.average);
+          course.ratingCount = feedbackData.total;
         }
 
         filteredCourses = [...courses];
@@ -2782,510 +3337,781 @@ for (let course of courses) {
       }
     }
 
-// Render courses with proper enrollment status, images, feedback and price
-function renderCourses(coursesToRender) {
-  if (!coursesGrid) return;
-  
-  if (coursesToRender.length === 0) {
-    coursesGrid.innerHTML = "";
-    if (noResults) noResults.classList.add("show");
-    return;
-  }
-
-  if (noResults) noResults.classList.remove("show");
-
-  const coursesHTML = coursesToRender
-    .map((course, index) => {
-      const progress = course.enrollmentData ? course.enrollmentData.progress || 0 : 0;
-      const isCompleted = course.enrollmentData ? (course.enrollmentData.progress === 100 || course.enrollmentData.hasPassedTest) : false;
+    // Render courses with proper enrollment status, images, feedback and price
+    function renderCourses(coursesToRender) {
+      if (!coursesGrid) return;
       
-      // Use cached feedback data if available, otherwise show 0
-      const rating = course.averageRating || 0;
-      const ratingCount = course.ratingCount || 0;
-      const stars = generateStarRating(rating);
-      
-      return `
-      <div class="course-card" style="animation-delay: ${index * 0.1}s">
-        <div class="course-image">
-          ${course.imageUrl ? 
-            `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
-            `<i class="fas fa-book"></i><span>${course.name || course.title || 'Course'}</span>`
-          }
-        </div>
-        <div class="course-content">
-          <div class="course-category">${course.category || "General"}</div>
-          <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
+      if (coursesToRender.length === 0) {
+        coursesGrid.innerHTML = "";
+        if (noResults) noResults.classList.add("show");
+        return;
+      }
+
+      if (noResults) noResults.classList.remove("show");
+
+      const coursesHTML = coursesToRender
+        .map((course, index) => {
+          const progress = course.enrollmentData ? course.enrollmentData.progress || 0 : 0;
+          const isCompleted = course.enrollmentData ? (course.enrollmentData.progress === 100 || course.enrollmentData.hasPassedTest) : false;
           
-          <div class="course-meta">
-            <div class="course-duration" style="color: #ffc107;">
-              ${stars}
-              <span style="color: var(--gray); margin-left: 5px;">(${ratingCount})</span>
+          // Use cached feedback data if available, otherwise show 0
+          const rating = course.averageRating || 0;
+          const ratingCount = course.ratingCount || 0;
+          const stars = generateStarRating(rating);
+          
+          return `
+          <div class="course-card" style="animation-delay: ${index * 0.1}s">
+            <div class="course-image">
+              ${course.imageUrl ? 
+                `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
+                `<i class="fas fa-book"></i><span>${course.name || course.title || 'Course'}</span>`
+              }
             </div>
-            <div class="course-level" style="font-weight: 700; font-size: 18px;">₹${course.price || 0}</div>
-          </div>
-          
-          ${course.isEnrolled ? `
-            <div class="course-progress" style="margin-bottom: 15px; margin-top: 15px;">
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${progress}%"></div>
+            <div class="course-content">
+              <div class="course-category">${course.category || "General"}</div>
+              <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
+              
+              <div class="course-meta">
+                <div class="course-duration" style="color: #ffc107;">
+                  ${stars}
+                  <span style="color: var(--gray); margin-left: 5px;">(${ratingCount})</span>
+                </div>
+                <div class="course-level" style="font-weight: 700; font-size: 18px;">₹${course.price || 0}</div>
               </div>
-              <div class="progress-text" style="margin-top: 8px; color: var(--gray); font-size: 14px;">${progress}% Complete${isCompleted ? ' ✅' : ''}</div>
+              
+              ${course.isEnrolled ? `
+                <div class="course-progress" style="margin-bottom: 15px; margin-top: 15px;">
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progress}%"></div>
+                  </div>
+                  <div class="progress-text" style="margin-top: 8px; color: var(--gray); font-size: 14px;">${progress}% Complete${isCompleted ? ' ✅' : ''}</div>
+                </div>
+              ` : ''}
+              
+              <div class="course-actions" style="display: flex; gap: 10px;">
+                ${course.isEnrolled ? 
+                  `<div class="enrolled-badge" style="flex: 1;">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
+                   <button class="continue-learning-btn" data-course-id="${course.id}" style="flex: 1;">
+                    ${isCompleted ? 'Review' : 'Continue'} →
+                   </button>` 
+                  : 
+                  `<button class="course-button enroll-now-btn" data-course-id="${course.id}" style="flex: 1; background: linear-gradient(45deg, #28a745, #20c997);">
+                    <i class="fas fa-shopping-cart"></i> Enroll Now
+                   </button>
+                   <button class="course-button view-details-btn" data-course-id="${course.id}" style="flex: 1;">
+                    <i class="fas fa-info-circle"></i> View Details
+                   </button>`
+                }
+              </div>
             </div>
-          ` : ''}
-          
-          <div class="course-actions" style="display: flex; gap: 10px;">
-            ${course.isEnrolled ? 
-              `<div class="enrolled-badge" style="flex: 1;">${isCompleted ? 'Completed ✓' : 'Enrolled ✓'}</div>
-               <button class="continue-learning-btn" data-course-id="${course.id}" style="flex: 1;">
-                ${isCompleted ? 'Review' : 'Continue'} →
-               </button>` 
-              : 
-              `<button class="course-button enroll-now-btn" data-course-id="${course.id}" style="flex: 1; background: linear-gradient(45deg, #28a745, #20c997);">
-                <i class="fas fa-shopping-cart"></i> Enroll Now
-               </button>
-               <button class="course-button view-details-btn" data-course-id="${course.id}" style="flex: 1;">
-                <i class="fas fa-info-circle"></i> View Details
-               </button>`
-            }
           </div>
-        </div>
-      </div>
-    `})
-    .join("");
+        `})
+        .join("");
 
-  coursesGrid.innerHTML = coursesHTML;
-  attachCourseButtonListeners();
-}
+      coursesGrid.innerHTML = coursesHTML;
+      attachCourseButtonListeners();
+    }
 
-// Attach event listeners to course buttons
-function attachCourseButtonListeners() {
-  // Enroll Now buttons - Direct enrollment with teacher selection
-  document.querySelectorAll(".enroll-now-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const courseId = e.currentTarget.dataset.courseId;
-      // Skip course details modal and go directly to teacher selection
-      const course = courses.find(c => c.id === courseId);
-      if (course) {
-        currentCourseToEnroll = {
-          id: courseId,
-          name: course.name || course.title || "Course",
-          price: course.price || 0
-        };
-        showTeacherModal();
-      }
-    });
-  });
-
-  // View Details buttons - Show course details modal
-  document.querySelectorAll(".view-details-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const courseId = e.currentTarget.dataset.courseId;
-      const course = courses.find(c => c.id === courseId);
-      if (course) {
-        currentCourseToEnroll = {
-          id: courseId,
-          name: course.name || course.title || "Course",
-          price: course.price || 0
-        };
-        showCourseDetailsModal(course);
-      }
-    });
-  });
-
-  // Continue Learning buttons
-  document.querySelectorAll(".continue-learning-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const courseId = e.currentTarget.dataset.courseId;
-      window.location.href = `coursedetails.html?id=${courseId}`;
-    });
-  });
-
-  // Course card click (optional) - Show details for non-enrolled courses
-  document.querySelectorAll(".course-card").forEach((card) => {
-    card.addEventListener("click", (e) => {
-      // Only trigger if the click wasn't on a button
-      if (!e.target.closest('.course-button') && 
-          !e.target.closest('.continue-learning-btn') &&
-          !e.target.closest('.enroll-now-btn') &&
-          !e.target.closest('.view-details-btn')) {
-        const courseId = card.querySelector('[data-course-id]')?.dataset.courseId;
-        if (courseId) {
+    // Attach event listeners to course buttons
+    function attachCourseButtonListeners() {
+      // Enroll Now buttons - Direct enrollment with payment
+      document.querySelectorAll(".enroll-now-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const courseId = e.currentTarget.dataset.courseId;
+          // Skip course details modal and go directly to payment
           const course = courses.find(c => c.id === courseId);
           if (course) {
-            if (course.isEnrolled) {
-              // If enrolled, go to course details page
-              window.location.href = `coursedetails.html?id=${courseId}`;
-            } else {
-              // If not enrolled, show course details modal
-              currentCourseToEnroll = {
-                id: courseId,
-                name: course.name || course.title || "Course",
-                price: course.price || 0
-              };
-              showCourseDetailsModal(course);
+            currentCourseToEnroll = {
+              id: courseId,
+              name: course.name || course.title || "Course",
+              price: course.price || 0
+            };
+            showPaymentModal();
+          }
+        });
+      });
+
+      // View Details buttons - Show course details modal
+      document.querySelectorAll(".view-details-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const courseId = e.currentTarget.dataset.courseId;
+          const course = courses.find(c => c.id === courseId);
+          if (course) {
+            currentCourseToEnroll = {
+              id: courseId,
+              name: course.name || course.title || "Course",
+              price: course.price || 0
+            };
+            showCourseDetailsModal(course);
+          }
+        });
+      });
+
+      // Continue Learning buttons
+      document.querySelectorAll(".continue-learning-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const courseId = e.currentTarget.dataset.courseId;
+          window.location.href = `coursedetails.html?id=${courseId}`;
+        });
+      });
+
+      // Course card click (optional) - Show details for non-enrolled courses
+      document.querySelectorAll(".course-card").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          // Only trigger if the click wasn't on a button
+          if (!e.target.closest('.course-button') && 
+              !e.target.closest('.continue-learning-btn') &&
+              !e.target.closest('.enroll-now-btn') &&
+              !e.target.closest('.view-details-btn')) {
+            const courseId = card.querySelector('[data-course-id]')?.dataset.courseId;
+            if (courseId) {
+              const course = courses.find(c => c.id === courseId);
+              if (course) {
+                if (course.isEnrolled) {
+                  // If enrolled, go to course details page
+                  window.location.href = `coursedetails.html?id=${courseId}`;
+                } else {
+                  // If not enrolled, show course details modal
+                  currentCourseToEnroll = {
+                    id: courseId,
+                    name: course.name || course.title || "Course",
+                    price: course.price || 0
+                  };
+                  showCourseDetailsModal(course);
+                }
+              }
             }
           }
-        }
-      }
-    });
-  });
-}
-
-// Show course details modal before enrollment
-function enrollInCourse(courseId) {
-  console.log("Showing course details for:", courseId);
-  
-  if (!currentUser) {
-    showMessage("Please log in to enroll in courses", "error");
-    setTimeout(() => {
-      window.location.href = "signin.html";
-    }, 2000);
-    return;
-  }
-
-  const course = courses.find(c => c.id === courseId);
-  if (!course) {
-    showMessage("Course not found", "error");
-    return;
-  }
-
-  currentCourseToEnroll = {
-    id: courseId,
-    name: course.name || course.title || "Course",
-    price: course.price || 0
-  };
-  
-  showCourseDetailsModal(course);
-}
-
-// Show detailed course information modal
-async function showCourseDetailsModal(course) {
-  // Create modal if it doesn't exist
-  let courseDetailsModal = document.getElementById('courseDetailsModal');
-  
-  if (!courseDetailsModal) {
-    courseDetailsModal = document.createElement('div');
-    courseDetailsModal.id = 'courseDetailsModal';
-    courseDetailsModal.className = 'modal course-details-modal';
-    document.body.appendChild(courseDetailsModal);
-  }
-
-  // Load course feedback from Firestore
-  let feedbackData = await loadCourseFeedback(course.id);
-  
-  // Count lectures and assignments
-  const lecturesCount = await countCourseLectures(course.id);
-  const assignmentsCount = await countCourseAssignments(course.id);
-  
-  // Generate feedback HTML
-  const feedbackHTML = generateFeedbackHTML(feedbackData);
-  
-  // Course features
-  const features = [
-    { icon: 'fa-infinity', text: 'Lifetime Access' },
-    { icon: 'fa-mobile-alt', text: 'Access on Mobile & Desktop' },
-    { icon: 'fa-certificate', text: 'Certificate of Completion' },
-    { icon: 'fa-users', text: 'Expert Instructors' },
-    { icon: 'fa-headphones', text: '24/7 Support' },
-    { icon: 'fa-cloud-download-alt', text: 'Downloadable Resources' }
-  ];
-
-  courseDetailsModal.innerHTML = `
-    <div class="modal-content">
-      <!-- Course Header with Image -->
-      <div class="course-details-header">
-        ${course.imageUrl ? 
-          `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
-          `<div class="course-details-image-placeholder">
-            <i class="fas fa-graduation-cap"></i>
-          </div>`
-        }
-        <div class="course-details-overlay">
-          <div class="course-details-category">${course.category || 'General'}</div>
-          <h2 class="course-details-title">${course.name || course.title}</h2>
-          <div class="course-details-meta-row">
-            <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
-            <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
-            <span><i class="fas fa-users"></i> ${course.enrolledCount || 0} students</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Course Body -->
-      <div class="course-details-body">
-        <!-- Course Stats -->
-        <div class="course-stats-grid">
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-video"></i></div>
-            <div class="course-stat-value">${lecturesCount}</div>
-            <div class="course-stat-label">Lectures</div>
-          </div>
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
-            <div class="course-stat-value">${assignmentsCount}</div>
-            <div class="course-stat-label">Assignments</div>
-          </div>
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
-            <div class="course-stat-value">${course.duration || 'N/A'}</div>
-            <div class="course-stat-label">Duration</div>
-          </div>
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
-            <div class="course-stat-value">Yes</div>
-            <div class="course-stat-label">Certificate</div>
-          </div>
-        </div>
-
-        <!-- Price Section -->
-        <div class="course-price-section">
-          <div class="course-price-label">Course Price</div>
-          <div class="course-price">₹${course.price || 0}</div>
-          <div class="course-price-note">One-time payment • Lifetime access</div>
-        </div>
-
-        <!-- Description -->
-        <div class="course-description-section">
-          <h3 class="course-section-title">
-            <i class="fas fa-info-circle"></i>
-            About This Course
-          </h3>
-          <p class="course-description-text">${course.description || 'No description available'}</p>
-        </div>
-
-        <!-- Course Features -->
-        <div class="course-description-section">
-          <h3 class="course-section-title">
-            <i class="fas fa-check-circle"></i>
-            What You'll Get
-          </h3>
-          <div class="course-features-grid">
-            ${features.map(feature => `
-              <div class="course-feature-item">
-                <div class="course-feature-icon">
-                  <i class="fas ${feature.icon}"></i>
-                </div>
-                <div class="course-feature-text">${feature.text}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Student Feedback -->
-        ${feedbackHTML}
-      </div>
-
-      <!-- Footer with Price and Actions -->
-      <div class="course-details-footer">
-        <div class="footer-price-info">
-          <div class="footer-price-label">Total Price</div>
-          <div class="footer-price">₹${course.price || 0}</div>
-        </div>
-        <div class="footer-actions">
-          <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
-            Cancel
-          </button>
-          <button class="modal-btn confirm" onclick="proceedToTeacherSelection()">
-            <i class="fas fa-shopping-cart"></i> Enroll Now
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  courseDetailsModal.classList.add('active');
-
-  // Close on outside click
-  courseDetailsModal.addEventListener('click', (e) => {
-    if (e.target === courseDetailsModal) {
-      closeCourseDetailsModal();
-    }
-  });
-}
-
-// Load course feedback from Firestore
-async function loadCourseFeedback(courseId) {
-  try {
-    const feedbackQuery = query(
-      collection(db, "courseFeedback"),
-      where("courseId", "==", courseId)
-    );
-    
-    const feedbackSnap = await getDocs(feedbackQuery);
-    
-    if (feedbackSnap.empty) {
-      return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+        });
+      });
     }
 
-    const feedbacks = [];
-    let totalRating = 0;
-    const distribution = [0, 0, 0, 0, 0]; // 1-star to 5-star
-
-    feedbackSnap.forEach(doc => {
-      const data = doc.data();
-      feedbacks.push(data);
-      totalRating += data.rating || 0;
-      if (data.rating >= 1 && data.rating <= 5) {
-        distribution[data.rating - 1]++;
-      }
-    });
-
-    const average = totalRating / feedbacks.length;
-
-    return {
-      average: average.toFixed(1),
-      total: feedbacks.length,
-      distribution: distribution,
-      feedbacks: feedbacks.slice(0, 3) // Show top 3 feedbacks
-    };
-  } catch (error) {
-    console.error("Error loading course feedback:", error);
-    return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
-  }
-}
-
-// Generate feedback HTML
-function generateFeedbackHTML(feedbackData) {
-  if (feedbackData.total === 0) {
-    return `
-      <div class="course-feedback-section">
-        <h3 class="course-section-title">
-          <i class="fas fa-star"></i>
-          Student Feedback
-        </h3>
-        <div class="no-feedback-message">
-          <div class="no-feedback-icon">
-            <i class="fas fa-comments"></i>
-          </div>
-          <p>No feedback yet. Be the first to review this course!</p>
-        </div>
-      </div>
-    `;
-  }
-
-  const stars = generateStarRating(feedbackData.average);
-  
-  return `
-    <div class="course-feedback-section">
-      <h3 class="course-section-title">
-        <i class="fas fa-star"></i>
-        Student Feedback
-      </h3>
+    // Show payment modal
+    function showPaymentModal() {
+      if (!paymentModal) return;
       
-      <div class="course-rating-summary">
-        <div class="rating-score-container">
-          <div class="rating-score">${feedbackData.average}</div>
-          <div class="rating-stars">${stars}</div>
-          <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
-        </div>
+      // Update payment modal with course details
+      if (paymentCourseName) {
+        paymentCourseName.textContent = currentCourseToEnroll.name;
+      }
+      if (paymentCoursePrice) {
+        paymentCoursePrice.textContent = `₹${currentCourseToEnroll.price}`;
+      }
+      
+      // Reset payment modal state
+      resetPaymentModal();
+      
+      // Show the modal
+      paymentModal.classList.add('active');
+    }
+
+    // Reset payment modal
+    function resetPaymentModal() {
+      // Reset payment method selection
+      selectedPaymentMethod = null;
+      document.querySelectorAll('.payment-method').forEach(method => {
+        method.classList.remove('selected');
+      });
+      
+      // Hide payment sections
+      qrPaymentSection.classList.remove('active');
+      paymentProcessing.style.display = 'none';
+      paymentSuccess.style.display = 'none';
+      paymentError.style.display = 'none';
+      
+      // Reset proceed button
+      proceedPayment.disabled = true;
+      proceedPayment.textContent = 'Proceed to Pay';
+      
+      // Clear any existing intervals
+      if (paymentStatusCheckInterval) {
+        clearInterval(paymentStatusCheckInterval);
+        paymentStatusCheckInterval = null;
+      }
+    }
+
+    // Generate QR Code for UPI payment
+    function generateQRCode() {
+      if (!qrCodeCanvas) return;
+      
+      // Generate UPI payment URL
+      const upiId = "skillup@paytm"; // This would be your actual UPI ID
+      const amount = currentCourseToEnroll.price;
+      const courseName = encodeURIComponent(currentCourseToEnroll.name);
+      const transactionId = generateTransactionId();
+      
+      const upiUrl = `upi://pay?pa=${upiId}&pn=SkillUp&am=${amount}&tn=Payment for ${courseName}&tr=${transactionId}`;
+      
+      // Display UPI ID
+      if (upiIdDisplay) {
+        upiIdDisplay.textContent = upiId;
+      }
+      
+      // Generate QR code
+      QRCode.toCanvas(qrCodeCanvas, upiUrl, {
+        width: 200,
+        height: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      }, function(error) {
+        if (error) {
+          console.error("Error generating QR code:", error);
+          showMessage("Error generating QR code", "error");
+        } else {
+          console.log("QR code generated successfully");
+          
+          // Store QR code in Firebase Storage
+          storeQRCodeInFirebase(qrCodeCanvas, transactionId);
+        }
+      });
+    }
+
+    // Generate a unique transaction ID
+    function generateTransactionId() {
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      return `SKILLUP_${timestamp}_${random}`.toUpperCase();
+    }
+
+    // Store QR code in Firebase Storage
+    async function storeQRCodeInFirebase(canvas, transactionId) {
+      try {
+        // Convert canvas to data URL
+        const dataURL = canvas.toDataURL('image/png');
         
-        <div class="rating-breakdown">
-          ${[5, 4, 3, 2, 1].map(star => {
-            const count = feedbackData.distribution[star - 1];
-            const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
-            return `
-              <div class="rating-bar-item">
-                <div class="rating-bar-label">
-                  <span>${star}</span>
-                  <i class="fas fa-star" style="color: #ffc107;"></i>
-                </div>
-                <div class="rating-bar">
-                  <div class="rating-bar-fill" style="width: ${percentage}%"></div>
-                </div>
-                <div class="rating-bar-percentage">${percentage}%</div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
+        // Create a reference to the QR code in storage
+        const qrCodeRef = ref(storage, `qrcodes/${transactionId}.png`);
+        
+        // Upload the QR code
+        await uploadString(qrCodeRef, dataURL, 'data_url');
+        
+        console.log("QR code stored in Firebase Storage");
+        
+        // Get the download URL
+        const downloadURL = await getDownloadURL(qrCodeRef);
+        
+        // Store payment record in Firestore
+        await storePaymentRecord(transactionId, downloadURL);
+        
+      } catch (error) {
+        console.error("Error storing QR code:", error);
+      }
+    }
 
-      ${feedbackData.feedbacks.length > 0 ? `
-        <div class="student-feedback-list">
-          ${feedbackData.feedbacks.map(feedback => `
-            <div class="student-feedback-item">
-              <div class="feedback-header">
-                <div class="feedback-student-info">
-                  <div class="feedback-student-avatar">
-                    ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
-                  </div>
-                  <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
-                </div>
-                <div class="feedback-rating">
-                  <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
-                </div>
+    // Store payment record in Firestore
+    async function storePaymentRecord(transactionId, qrCodeUrl) {
+      try {
+        const paymentData = {
+          transactionId: transactionId,
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          courseId: currentCourseToEnroll.id,
+          courseName: currentCourseToEnroll.name,
+          amount: currentCourseToEnroll.price,
+          paymentMethod: selectedPaymentMethod,
+          status: 'pending',
+          qrCodeUrl: qrCodeUrl,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        await addDoc(collection(db, "payments"), paymentData);
+        console.log("Payment record stored in Firestore");
+      } catch (error) {
+        console.error("Error storing payment record:", error);
+      }
+    }
+
+    // Handle payment proceed
+    function handlePaymentProceed() {
+      if (!selectedPaymentMethod) {
+        showMessage("Please select a payment method", "error");
+        return;
+      }
+      
+      // For UPI payments, show processing state
+      if (selectedPaymentMethod === 'upi') {
+        // Show processing state
+        qrPaymentSection.style.display = 'none';
+        paymentProcessing.style.display = 'block';
+        proceedPayment.disabled = true;
+        proceedPayment.textContent = 'Processing...';
+        
+        // Simulate payment verification (in real implementation, this would check with payment gateway)
+        simulatePaymentVerification();
+      } else {
+        // For other payment methods, show message
+        showMessage(`${selectedPaymentMethod.toUpperCase()} payment integration coming soon`, "error");
+      }
+    }
+
+    // Simulate payment verification (replace with actual payment gateway integration)
+    function simulatePaymentVerification() {
+      // In a real implementation, you would:
+      // 1. Send payment details to your payment gateway
+      // 2. Wait for webhook/API callback with payment status
+      // 3. Update payment record in Firestore
+      
+      // For demo purposes, we'll simulate a successful payment after 5 seconds
+      setTimeout(() => {
+        handlePaymentSuccess();
+      }, 5000);
+      
+      // Also set up interval to check payment status (for real implementation)
+      paymentStatusCheckInterval = setInterval(() => {
+        checkPaymentStatus();
+      }, 3000);
+    }
+
+    // Check payment status (for real implementation)
+    async function checkPaymentStatus() {
+      // In a real implementation, you would:
+      // 1. Query your payment gateway API
+      // 2. Check if payment is successful
+      // 3. Update payment record accordingly
+      
+      // For demo, we're using the simulated approach above
+    }
+
+    // Handle successful payment
+    async function handlePaymentSuccess() {
+      // Clear interval
+      if (paymentStatusCheckInterval) {
+        clearInterval(paymentStatusCheckInterval);
+        paymentStatusCheckInterval = null;
+      }
+      
+      // Update payment record in Firestore
+      await updatePaymentRecord('success');
+      
+      // Show success state
+      paymentProcessing.style.display = 'none';
+      paymentSuccess.style.display = 'block';
+      
+      // Update proceed button
+      proceedPayment.disabled = false;
+      proceedPayment.textContent = 'Continue to Teacher Selection';
+      proceedPayment.onclick = proceedToTeacherSelection;
+    }
+
+    // Handle payment failure
+    function handlePaymentFailure(errorMessage) {
+      // Clear interval
+      if (paymentStatusCheckInterval) {
+        clearInterval(paymentStatusCheckInterval);
+        paymentStatusCheckInterval = null;
+      }
+      
+      // Show error state
+      paymentProcessing.style.display = 'none';
+      paymentError.style.display = 'block';
+      
+      if (paymentErrorMessage) {
+        paymentErrorMessage.textContent = errorMessage;
+      }
+      
+      // Update proceed button
+      proceedPayment.disabled = false;
+      proceedPayment.textContent = 'Try Again';
+      proceedPayment.onclick = handlePaymentProceed;
+    }
+
+    // Update payment record in Firestore
+    async function updatePaymentRecord(status) {
+      try {
+        // Find the payment record for this transaction
+        const paymentsQuery = query(
+          collection(db, "payments"),
+          where("studentId", "==", currentUser.uid),
+          where("courseId", "==", currentCourseToEnroll.id),
+          where("status", "==", "pending"),
+          orderBy("createdAt", "desc")
+        );
+        
+        const paymentsSnap = await getDocs(paymentsQuery);
+        
+        if (!paymentsSnap.empty) {
+          const paymentDoc = paymentsSnap.docs[0];
+          const paymentRef = doc(db, "payments", paymentDoc.id);
+          
+          await updateDoc(paymentRef, {
+            status: status,
+            updatedAt: serverTimestamp()
+          });
+          
+          console.log("Payment record updated with status:", status);
+        }
+      } catch (error) {
+        console.error("Error updating payment record:", error);
+      }
+    }
+
+    // Proceed to teacher selection after successful payment
+    function proceedToTeacherSelection() {
+      paymentModal.classList.remove('active');
+      resetPaymentModal();
+      showTeacherModal();
+    }
+
+    // Show course details modal before enrollment
+    function enrollInCourse(courseId) {
+      console.log("Showing course details for:", courseId);
+      
+      if (!currentUser) {
+        showMessage("Please log in to enroll in courses", "error");
+        setTimeout(() => {
+          window.location.href = "signin.html";
+        }, 2000);
+        return;
+      }
+
+      const course = courses.find(c => c.id === courseId);
+      if (!course) {
+        showMessage("Course not found", "error");
+        return;
+      }
+
+      currentCourseToEnroll = {
+        id: courseId,
+        name: course.name || course.title || "Course",
+        price: course.price || 0
+      };
+      
+      showCourseDetailsModal(course);
+    }
+
+    // Show detailed course information modal
+    async function showCourseDetailsModal(course) {
+      // Create modal if it doesn't exist
+      let courseDetailsModal = document.getElementById('courseDetailsModal');
+      
+      if (!courseDetailsModal) {
+        courseDetailsModal = document.createElement('div');
+        courseDetailsModal.id = 'courseDetailsModal';
+        courseDetailsModal.className = 'modal course-details-modal';
+        document.body.appendChild(courseDetailsModal);
+      }
+
+      // Load course feedback from Firestore
+      let feedbackData = await loadCourseFeedback(course.id);
+      
+      // Count lectures and assignments
+      const lecturesCount = await countCourseLectures(course.id);
+      const assignmentsCount = await countCourseAssignments(course.id);
+      
+      // Generate feedback HTML
+      const feedbackHTML = generateFeedbackHTML(feedbackData);
+      
+      // Course features
+      const features = [
+        { icon: 'fa-infinity', text: 'Lifetime Access' },
+        { icon: 'fa-mobile-alt', text: 'Access on Mobile & Desktop' },
+        { icon: 'fa-certificate', text: 'Certificate of Completion' },
+        { icon: 'fa-users', text: 'Expert Instructors' },
+        { icon: 'fa-headphones', text: '24/7 Support' },
+        { icon: 'fa-cloud-download-alt', text: 'Downloadable Resources' }
+      ];
+
+      courseDetailsModal.innerHTML = `
+        <div class="modal-content">
+          <!-- Course Header with Image -->
+          <div class="course-details-header">
+            ${course.imageUrl ? 
+              `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
+              `<div class="course-details-image-placeholder">
+                <i class="fas fa-graduation-cap"></i>
+              </div>`
+            }
+            <div class="course-details-overlay">
+              <div class="course-details-category">${course.category || 'General'}</div>
+              <h2 class="course-details-title">${course.name || course.title}</h2>
+              <div class="course-details-meta-row">
+                <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
+                <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
+                <span><i class="fas fa-users"></i> ${course.enrolledCount || 0} students</span>
               </div>
-              <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
             </div>
-          `).join('')}
+          </div>
+
+          <!-- Course Body -->
+          <div class="course-details-body">
+            <!-- Course Stats -->
+            <div class="course-stats-grid">
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-video"></i></div>
+                <div class="course-stat-value">${lecturesCount}</div>
+                <div class="course-stat-label">Lectures</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
+                <div class="course-stat-value">${assignmentsCount}</div>
+                <div class="course-stat-label">Assignments</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="course-stat-value">${course.duration || 'N/A'}</div>
+                <div class="course-stat-label">Duration</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
+                <div class="course-stat-value">Yes</div>
+                <div class="course-stat-label">Certificate</div>
+              </div>
+            </div>
+
+            <!-- Price Section -->
+            <div class="course-price-section">
+              <div class="course-price-label">Course Price</div>
+              <div class="course-price">₹${course.price || 0}</div>
+              <div class="course-price-note">One-time payment • Lifetime access</div>
+            </div>
+
+            <!-- Description -->
+            <div class="course-description-section">
+              <h3 class="course-section-title">
+                <i class="fas fa-info-circle"></i>
+                About This Course
+              </h3>
+              <p class="course-description-text">${course.description || 'No description available'}</p>
+            </div>
+
+            <!-- Course Features -->
+            <div class="course-description-section">
+              <h3 class="course-section-title">
+                <i class="fas fa-check-circle"></i>
+                What You'll Get
+              </h3>
+              <div class="course-features-grid">
+                ${features.map(feature => `
+                  <div class="course-feature-item">
+                    <div class="course-feature-icon">
+                      <i class="fas ${feature.icon}"></i>
+                    </div>
+                    <div class="course-feature-text">${feature.text}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Student Feedback -->
+            ${feedbackHTML}
+          </div>
+
+          <!-- Footer with Price and Actions -->
+          <div class="course-details-footer">
+            <div class="footer-price-info">
+              <div class="footer-price-label">Total Price</div>
+              <div class="footer-price">₹${course.price || 0}</div>
+            </div>
+            <div class="footer-actions">
+              <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
+                Cancel
+              </button>
+              <button class="modal-btn confirm" onclick="proceedToPayment()">
+                <i class="fas fa-shopping-cart"></i> Enroll Now
+              </button>
+            </div>
+          </div>
         </div>
-        ${feedbackData.total > 3 ? `
-          <button class="view-all-feedback-btn">
-            View all ${feedbackData.total} reviews
-          </button>
-        ` : ''}
-      ` : ''}
-    </div>
-  `;
-}
+      `;
 
-// Generate star rating HTML
-function generateStarRating(rating) {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-  
-  let stars = '';
-  for (let i = 0; i < fullStars; i++) {
-    stars += '<i class="fas fa-star"></i>';
-  }
-  if (hasHalfStar) {
-    stars += '<i class="fas fa-star-half-alt"></i>';
-  }
-  for (let i = 0; i < emptyStars; i++) {
-    stars += '<i class="far fa-star"></i>';
-  }
-  
-  return stars;
-}
+      courseDetailsModal.classList.add('active');
 
-// Count course lectures
-async function countCourseLectures(courseId) {
-  try {
-    const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
-    return lecturesSnap.size;
-  } catch (error) {
-    console.error("Error counting lectures:", error);
-    return 0;
-  }
-}
+      // Close on outside click
+      courseDetailsModal.addEventListener('click', (e) => {
+        if (e.target === courseDetailsModal) {
+          closeCourseDetailsModal();
+        }
+      });
+    }
 
-// Count course assignments
-async function countCourseAssignments(courseId) {
-  try {
-    const assignmentsSnap = await getDocs(collection(db, "courses", courseId, "assignments"));
-    return assignmentsSnap.size;
-  } catch (error) {
-    console.error("Error counting assignments:", error);
-    return 0;
-  }
-}
+    // Load course feedback from Firestore
+    async function loadCourseFeedback(courseId) {
+      try {
+        const feedbackQuery = query(
+          collection(db, "courseFeedback"),
+          where("courseId", "==", courseId)
+        );
+        
+        const feedbackSnap = await getDocs(feedbackQuery);
+        
+        if (feedbackSnap.empty) {
+          return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+        }
 
-// Close course details modal
-window.closeCourseDetailsModal = function() {
-  const modal = document.getElementById('courseDetailsModal');
-  if (modal) {
-    modal.classList.remove('active');
-  }
-};
+        const feedbacks = [];
+        let totalRating = 0;
+        const distribution = [0, 0, 0, 0, 0]; // 1-star to 5-star
 
-// Proceed to teacher selection
-window.proceedToTeacherSelection = function() {
-  closeCourseDetailsModal();
-  showTeacherModal();
-};
+        feedbackSnap.forEach(doc => {
+          const data = doc.data();
+          feedbacks.push(data);
+          totalRating += data.rating || 0;
+          if (data.rating >= 1 && data.rating <= 5) {
+            distribution[data.rating - 1]++;
+          }
+        });
+
+        const average = totalRating / feedbacks.length;
+
+        return {
+          average: average.toFixed(1),
+          total: feedbacks.length,
+          distribution: distribution,
+          feedbacks: feedbacks.slice(0, 3) // Show top 3 feedbacks
+        };
+      } catch (error) {
+        console.error("Error loading course feedback:", error);
+        return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+      }
+    }
+
+    // Generate feedback HTML
+    function generateFeedbackHTML(feedbackData) {
+      if (feedbackData.total === 0) {
+        return `
+          <div class="course-feedback-section">
+            <h3 class="course-section-title">
+              <i class="fas fa-star"></i>
+              Student Feedback
+            </h3>
+            <div class="no-feedback-message">
+              <div class="no-feedback-icon">
+                <i class="fas fa-comments"></i>
+              </div>
+              <p>No feedback yet. Be the first to review this course!</p>
+            </div>
+          </div>
+        `;
+      }
+
+      const stars = generateStarRating(feedbackData.average);
+      
+      return `
+        <div class="course-feedback-section">
+          <h3 class="course-section-title">
+            <i class="fas fa-star"></i>
+            Student Feedback
+          </h3>
+          
+          <div class="course-rating-summary">
+            <div class="rating-score-container">
+              <div class="rating-score">${feedbackData.average}</div>
+              <div class="rating-stars">${stars}</div>
+              <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
+            </div>
+            
+            <div class="rating-breakdown">
+              ${[5, 4, 3, 2, 1].map(star => {
+                const count = feedbackData.distribution[star - 1];
+                const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
+                return `
+                  <div class="rating-bar-item">
+                    <div class="rating-bar-label">
+                      <span>${star}</span>
+                      <i class="fas fa-star" style="color: #ffc107;"></i>
+                    </div>
+                    <div class="rating-bar">
+                      <div class="rating-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="rating-bar-percentage">${percentage}%</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          ${feedbackData.feedbacks.length > 0 ? `
+            <div class="student-feedback-list">
+              ${feedbackData.feedbacks.map(feedback => `
+                <div class="student-feedback-item">
+                  <div class="feedback-header">
+                    <div class="feedback-student-info">
+                      <div class="feedback-student-avatar">
+                        ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
+                      </div>
+                      <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
+                    </div>
+                    <div class="feedback-rating">
+                      <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
+                    </div>
+                  </div>
+                  <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
+                </div>
+              `).join('')}
+            </div>
+            ${feedbackData.total > 3 ? `
+              <button class="view-all-feedback-btn">
+                View all ${feedbackData.total} reviews
+              </button>
+            ` : ''}
+          ` : ''}
+        </div>
+      `;
+    }
+
+    // Generate star rating HTML
+    function generateStarRating(rating) {
+      const fullStars = Math.floor(rating);
+      const hasHalfStar = rating % 1 >= 0.5;
+      const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+      
+      let stars = '';
+      for (let i = 0; i < fullStars; i++) {
+        stars += '<i class="fas fa-star"></i>';
+      }
+      if (hasHalfStar) {
+        stars += '<i class="fas fa-star-half-alt"></i>';
+      }
+      for (let i = 0; i < emptyStars; i++) {
+        stars += '<i class="far fa-star"></i>';
+      }
+      
+      return stars;
+    }
+
+    // Count course lectures
+    async function countCourseLectures(courseId) {
+      try {
+        const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
+        return lecturesSnap.size;
+      } catch (error) {
+        console.error("Error counting lectures:", error);
+        return 0;
+      }
+    }
+
+    // Count course assignments
+    async function countCourseAssignments(courseId) {
+      try {
+        const assignmentsSnap = await getDocs(collection(db, "courses", courseId, "assignments"));
+        return assignmentsSnap.size;
+      } catch (error) {
+        console.error("Error counting assignments:", error);
+        return 0;
+      }
+    }
+
+    // Close course details modal
+    window.closeCourseDetailsModal = function() {
+      const modal = document.getElementById('courseDetailsModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    };
+
+    // Proceed to payment from course details
+    window.proceedToPayment = function() {
+      closeCourseDetailsModal();
+      showPaymentModal();
+    };
 
     // Show teacher selection modal
     function showTeacherModal() {
@@ -3512,124 +4338,124 @@ window.proceedToTeacherSelection = function() {
       successModal.classList.add('active');
     }
 
-// Complete enrollment with assigned teacher - UPDATED with proper notification system
-async function completeEnrollment(teacher) {
-  try {
-    console.log("Completing enrollment with teacher:", teacher);
-    
-    if (!db) {
-      throw new Error("Firestore not available");
+    // Complete enrollment with assigned teacher - UPDATED with proper notification system
+    async function completeEnrollment(teacher) {
+      try {
+        console.log("Completing enrollment with teacher:", teacher);
+        
+        if (!db) {
+          throw new Error("Firestore not available");
+        }
+
+        const userRef = doc(db, "users", currentUser.uid);
+        const courseRef = doc(db, "courses", currentCourseToEnroll.id);
+
+        // Check if user exists, create if not
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          console.log("User document doesn't exist, creating...");
+          await setDoc(userRef, {
+            name: currentUser.displayName || "Student",
+            email: currentUser.email,
+            createdAt: new Date(),
+            enrollments: {},
+            profileComplete: false,
+            role: "student"
+          });
+        }
+
+        // Check if already enrolled
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        if (userData.enrollments && userData.enrollments[currentCourseToEnroll.id]) {
+          console.log("User already enrolled in this course");
+          return true;
+        }
+
+        // Get course data
+        const courseSnap = await getDoc(courseRef);
+        if (!courseSnap.exists()) {
+          throw new Error("Course not found");
+        }
+
+        const courseData = courseSnap.data();
+        const courseName = courseData.name || courseData.title || "Unknown Course";
+
+        console.log("Course data:", courseData);
+
+        // Create enrollment data - MATCHING YOUR EXACT FIRESTORE STRUCTURE
+        const enrollmentData = {
+          progress: 0,
+          completedLessons: [],
+          courseName: courseName,
+          enrolledAt: new Date(),
+          hasPassedTest: false,
+          lastAccessed: new Date(),
+          lectureProgress: 0,
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          testProgress: 0,
+          assignmentProgress: 0
+        };
+
+        console.log("Enrollment data to save:", enrollmentData);
+
+        // Update user document with enrollment
+        await updateDoc(userRef, {
+          [`enrollments.${currentCourseToEnroll.id}`]: enrollmentData
+        });
+
+        console.log("Enrollment saved to user document");
+
+        // Import serverTimestamp
+        const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
+
+        // Create notification in studentNotifications collection
+        const studentNotificationRef = doc(collection(db, "studentNotifications"));
+        await setDoc(studentNotificationRef, {
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          title: "Course Enrolled Successfully!",
+          message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
+          timestamp: serverTimestamp(),
+          type: "enrollment",
+          courseId: currentCourseToEnroll.id,
+          courseName: courseName,
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          read: false
+        });
+
+        // Create notification for teacher in teacherNotifications collection
+        const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
+        await setDoc(teacherNotificationRef, {
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          title: "New Student Enrolled",
+          message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
+          timestamp: serverTimestamp(),
+          type: "enrollment",
+          courseId: currentCourseToEnroll.id,
+          courseName: courseName,
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          read: false
+        });
+
+        console.log("Enrollment and notifications created successfully");
+        return true;
+
+      } catch (error) {
+        console.error("Error in enrollCourse:", error);
+        console.error("Error details:", {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
+        return false;
+      }
     }
-
-    const userRef = doc(db, "users", currentUser.uid);
-    const courseRef = doc(db, "courses", currentCourseToEnroll.id);
-
-    // Check if user exists, create if not
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-      console.log("User document doesn't exist, creating...");
-      await setDoc(userRef, {
-        name: currentUser.displayName || "Student",
-        email: currentUser.email,
-        createdAt: new Date(),
-        enrollments: {},
-        profileComplete: false,
-        role: "student"
-      });
-    }
-
-    // Check if already enrolled
-    const userData = userSnap.exists() ? userSnap.data() : {};
-    if (userData.enrollments && userData.enrollments[currentCourseToEnroll.id]) {
-      console.log("User already enrolled in this course");
-      return true;
-    }
-
-    // Get course data
-    const courseSnap = await getDoc(courseRef);
-    if (!courseSnap.exists()) {
-      throw new Error("Course not found");
-    }
-
-    const courseData = courseSnap.data();
-    const courseName = courseData.name || courseData.title || "Unknown Course";
-
-    console.log("Course data:", courseData);
-
-    // Create enrollment data - MATCHING YOUR EXACT FIRESTORE STRUCTURE
-    const enrollmentData = {
-      progress: 0,
-      completedLessons: [],
-      courseName: courseName,
-      enrolledAt: new Date(),
-      hasPassedTest: false,
-      lastAccessed: new Date(),
-      lectureProgress: 0,
-      teacherId: teacher.id,
-      teacherName: teacher.name,
-      testProgress: 0,
-      assignmentProgress: 0
-    };
-
-    console.log("Enrollment data to save:", enrollmentData);
-
-    // Update user document with enrollment
-    await updateDoc(userRef, {
-      [`enrollments.${currentCourseToEnroll.id}`]: enrollmentData
-    });
-
-    console.log("Enrollment saved to user document");
-
-    // Import serverTimestamp
-    const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
-
-    // Create notification in studentNotifications collection
-    const studentNotificationRef = doc(collection(db, "studentNotifications"));
-    await setDoc(studentNotificationRef, {
-      studentId: currentUser.uid,
-      studentName: currentUser.displayName || "Student",
-      studentEmail: currentUser.email,
-      title: "Course Enrolled Successfully!",
-      message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
-      timestamp: serverTimestamp(),
-      type: "enrollment",
-      courseId: currentCourseToEnroll.id,
-      courseName: courseName,
-      teacherId: teacher.id,
-      teacherName: teacher.name,
-      read: false
-    });
-
-    // Create notification for teacher in teacherNotifications collection
-    const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
-    await setDoc(teacherNotificationRef, {
-      teacherId: teacher.id,
-      teacherName: teacher.name,
-      title: "New Student Enrolled",
-      message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
-      timestamp: serverTimestamp(),
-      type: "enrollment",
-      courseId: currentCourseToEnroll.id,
-      courseName: courseName,
-      studentId: currentUser.uid,
-      studentName: currentUser.displayName || "Student",
-      studentEmail: currentUser.email,
-      read: false
-    });
-
-    console.log("Enrollment and notifications created successfully");
-    return true;
-
-  } catch (error) {
-    console.error("Error in enrollCourse:", error);
-    console.error("Error details:", {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
-    });
-    return false;
-  }
-}
 
     // Handle search
     function handleSearch(e) {
