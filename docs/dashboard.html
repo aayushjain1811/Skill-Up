@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkillUp Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <style>
     :root {
       --primary: #ffffff;
@@ -1507,19 +1508,19 @@
       75% { transform: translateY(-15px) translateX(-10px); }
     }
 
-    /* Course Details Modal Styles */
+    /* Course Details Modal Styles - UPDATED */
     .course-details-modal .modal-content {
-      max-width: 900px;
-      padding: 0;
-      overflow: hidden;
+      max-width: 1000px;
       max-height: 90vh;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      padding: 0;
     }
 
     .course-details-header {
       position: relative;
-      height: 300px;
+      height: 250px;
       overflow: hidden;
       flex-shrink: 0;
     }
@@ -1580,17 +1581,68 @@
     }
 
     .course-details-body {
-      padding: 30px;
+      padding: 20px 30px;
       overflow-y: auto;
       flex: 1;
+    }
+
+    .course-details-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid rgba(67, 97, 238, 0.2);
+      padding-bottom: 10px;
+    }
+
+    .course-tab {
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      color: var(--gray);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .course-tab.active {
+      color: var(--success);
+    }
+
+    .course-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--success);
+    }
+
+    .course-tab:hover {
+      color: var(--primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .course-stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      margin-bottom: 30px;
-      padding: 25px;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 20px;
       background: rgba(67, 97, 238, 0.05);
       border-radius: 15px;
       border: 1px solid rgba(67, 97, 238, 0.1);
@@ -1598,7 +1650,7 @@
 
     .course-stat {
       text-align: center;
-      padding: 15px;
+      padding: 10px;
       background: var(--bg-main);
       border-radius: 10px;
     }
@@ -1682,7 +1734,7 @@
     .course-features-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
+      gap: 10px;
       margin-bottom: 30px;
     }
 
@@ -1690,7 +1742,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px;
+      padding: 10px;
       background: rgba(67, 97, 238, 0.05);
       border-radius: 10px;
       transition: all 0.3s ease;
@@ -1938,7 +1990,7 @@
       opacity: 0.5;
     }
 
-    /* Payment Modal Styles */
+    /* Payment Modal Styles - UPDATED */
     .payment-modal {
       position: fixed;
       top: 0;
@@ -2400,6 +2452,38 @@
       from { opacity: 1; transform: translateX(0); }
       to { opacity: 0; transform: translateX(100%); }
     }
+
+    /* Modal Buttons */
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      flex: 1;
+    }
+
+    .modal-btn.cancel {
+      background: var(--bg-main);
+      color: var(--primary);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+    }
+
+    .modal-btn.confirm {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+    }
+
+    .modal-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .modal-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -2553,9 +2637,9 @@
       <div class="teachers-grid" id="teacherList">
         <!-- Teachers will be loaded here -->
       </div>
-      <div class="course-actions">
-        <button class="btn btn-secondary" id="cancelEnrollment">Cancel</button>
-        <button class="btn btn-primary" id="confirmEnrollment" disabled>Enroll Now</button>
+      <div class="payment-actions">
+        <button class="modal-btn cancel" id="cancelEnrollment">Cancel</button>
+        <button class="modal-btn confirm" id="confirmEnrollment" disabled>Enroll Now</button>
       </div>
     </div>
   </div>
@@ -2583,8 +2667,8 @@
       </div>
       
       <div class="success-actions">
-        <button class="btn btn-secondary" id="closeSuccessModal">Close</button>
-        <button class="btn btn-primary" id="viewCourseBtn">View Course</button>
+        <button class="modal-btn cancel" id="closeSuccessModal">Close</button>
+        <button class="modal-btn confirm" id="viewCourseBtn">View Course</button>
       </div>
     </div>
   </div>
@@ -2603,8 +2687,8 @@
       </div>
       <p class="logout-text">Are you sure you want to logout?</p>
       <div class="logout-actions">
-        <button class="btn btn-secondary" id="cancelLogout">Cancel</button>
-        <button class="btn btn-danger" id="confirmLogout">Yes, Logout</button>
+        <button class="modal-btn cancel" id="cancelLogout">Cancel</button>
+        <button class="modal-btn confirm btn-danger" id="confirmLogout">Yes, Logout</button>
       </div>
     </div>
   </div>
@@ -3229,7 +3313,7 @@
           try {
             // Count students for this teacher by querying user enrollments
             const usersQuery = query(collection(db, "users"));
-            const usersSnap = await getDocs(usersQuery);
+            const usersSnap = await getDocs(usersSnap);
             
             let studentCount = 0;
             usersSnap.forEach(userDoc => {
@@ -3810,7 +3894,7 @@
       }
     }
 
-    // Show detailed course information modal
+    // Show detailed course information modal - UPDATED WITH TABS
     async function showCourseDetailsModal(course) {
       // Create modal if it doesn't exist
       let courseDetailsModal = document.getElementById('courseDetailsModal');
@@ -3828,9 +3912,6 @@
       // Count lectures and assignments
       const lecturesCount = await countCourseLectures(course.id);
       const assignmentsCount = await countCourseAssignments(course.id);
-      
-      // Generate feedback HTML
-      const feedbackHTML = generateFeedbackHTML(feedbackData);
       
       // Course features
       const features = [
@@ -3863,68 +3944,99 @@
             </div>
           </div>
 
-          <!-- Course Body -->
+          <!-- Course Body with Tabs -->
           <div class="course-details-body">
-            <!-- Course Stats -->
-            <div class="course-stats-grid">
-              <div class="course-stat">
-                <div class="course-stat-icon"><i class="fas fa-video"></i></div>
-                <div class="course-stat-value">${lecturesCount}</div>
-                <div class="course-stat-label">Lectures</div>
-              </div>
-              <div class="course-stat">
-                <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
-                <div class="course-stat-value">${assignmentsCount}</div>
-                <div class="course-stat-label">Assignments</div>
-              </div>
-              <div class="course-stat">
-                <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
-                <div class="course-stat-value">${course.duration || 'N/A'}</div>
-                <div class="course-stat-label">Duration</div>
-              </div>
-              <div class="course-stat">
-                <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
-                <div class="course-stat-value">Yes</div>
-                <div class="course-stat-label">Certificate</div>
-              </div>
+            <!-- Tabs Navigation -->
+            <div class="course-details-tabs">
+              <button class="course-tab active" data-tab="overview">
+                <i class="fas fa-info-circle"></i> Overview
+              </button>
+              <button class="course-tab" data-tab="content">
+                <i class="fas fa-list"></i> Content
+              </button>
+              <button class="course-tab" data-tab="reviews">
+                <i class="fas fa-star"></i> Reviews
+              </button>
             </div>
 
-            <!-- Price Section -->
-            <div class="course-price-section">
-              <div class="course-price-label">Course Price</div>
-              <div class="course-price">₹${course.price || 0}</div>
-              <div class="course-price-note">One-time payment • Lifetime access</div>
-            </div>
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+              <!-- Course Stats -->
+              <div class="course-stats-grid">
+                <div class="course-stat">
+                  <div class="course-stat-icon"><i class="fas fa-video"></i></div>
+                  <div class="course-stat-value">${lecturesCount}</div>
+                  <div class="course-stat-label">Lectures</div>
+                </div>
+                <div class="course-stat">
+                  <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
+                  <div class="course-stat-value">${assignmentsCount}</div>
+                  <div class="course-stat-label">Assignments</div>
+                </div>
+                <div class="course-stat">
+                  <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
+                  <div class="course-stat-value">${course.duration || 'N/A'}</div>
+                  <div class="course-stat-label">Duration</div>
+                </div>
+                <div class="course-stat">
+                  <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
+                  <div class="course-stat-value">Yes</div>
+                  <div class="course-stat-label">Certificate</div>
+                </div>
+              </div>
 
-            <!-- Description -->
-            <div class="course-description-section">
-              <h3 class="course-section-title">
-                <i class="fas fa-info-circle"></i>
-                About This Course
-              </h3>
-              <p class="course-description-text">${course.description || 'No description available'}</p>
-            </div>
+              <!-- Price Section -->
+              <div class="course-price-section">
+                <div class="course-price-label">Course Price</div>
+                <div class="course-price">₹${course.price || 0}</div>
+                <div class="course-price-note">One-time payment • Lifetime access</div>
+              </div>
 
-            <!-- Course Features -->
-            <div class="course-description-section">
-              <h3 class="course-section-title">
-                <i class="fas fa-check-circle"></i>
-                What You'll Get
-              </h3>
-              <div class="course-features-grid">
-                ${features.map(feature => `
-                  <div class="course-feature-item">
-                    <div class="course-feature-icon">
-                      <i class="fas ${feature.icon}"></i>
+              <!-- Description -->
+              <div class="course-description-section">
+                <h3 class="course-section-title">
+                  <i class="fas fa-info-circle"></i>
+                  About This Course
+                </h3>
+                <p class="course-description-text">${course.description || 'No description available'}</p>
+              </div>
+
+              <!-- Course Features -->
+              <div class="course-description-section">
+                <h3 class="course-section-title">
+                  <i class="fas fa-check-circle"></i>
+                  What You'll Get
+                </h3>
+                <div class="course-features-grid">
+                  ${features.map(feature => `
+                    <div class="course-feature-item">
+                      <div class="course-feature-icon">
+                        <i class="fas ${feature.icon}"></i>
+                      </div>
+                      <div class="course-feature-text">${feature.text}</div>
                     </div>
-                    <div class="course-feature-text">${feature.text}</div>
-                  </div>
-                `).join('')}
+                  `).join('')}
+                </div>
               </div>
             </div>
 
-            <!-- Student Feedback -->
-            ${feedbackHTML}
+            <!-- Content Tab -->
+            <div class="tab-content" id="content-tab">
+              <div class="course-description-section">
+                <h3 class="course-section-title">
+                  <i class="fas fa-book"></i> Course Content
+                </h3>
+                <p class="course-description-text">
+                  This course includes ${lecturesCount} lectures and ${assignmentsCount} assignments.
+                  You'll get lifetime access to all course materials.
+                </p>
+              </div>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div class="tab-content" id="reviews-tab">
+              ${generateFeedbackHTML(feedbackData)}
+            </div>
           </div>
 
           <!-- Footer with Price and Actions -->
@@ -3934,10 +4046,10 @@
               <div class="footer-price">₹${course.price || 0}</div>
             </div>
             <div class="footer-actions">
-              <button class="btn btn-secondary" onclick="closeCourseDetailsModal()">
+              <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
                 Cancel
               </button>
-              <button class="btn btn-primary" onclick="proceedToPayment()">
+              <button class="modal-btn confirm" onclick="proceedToPayment()">
                 <i class="fas fa-shopping-cart"></i> Enroll Now
               </button>
             </div>
@@ -3946,6 +4058,25 @@
       `;
 
       courseDetailsModal.classList.add('active');
+
+      // Tab switching functionality
+      const tabs = courseDetailsModal.querySelectorAll('.course-tab');
+      const tabContents = courseDetailsModal.querySelectorAll('.tab-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabName = tab.dataset.tab;
+          
+          // Remove active class from all tabs and contents
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(tc => tc.classList.remove('active'));
+          
+          // Add active class to clicked tab and corresponding content
+          tab.classList.add('active');
+          const targetContent = courseDetailsModal.querySelector(`#${tabName}-tab`);
+          if (targetContent) targetContent.classList.add('active');
+        });
+      });
 
       // Close on outside click
       courseDetailsModal.addEventListener('click', (e) => {
