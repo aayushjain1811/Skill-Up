@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Courses - SkillUp</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <style>
     :root {
       --primary: #ffffff;
@@ -1343,6 +1343,9 @@
       padding: 0;
       overflow: hidden;
     }
+    .payment-modal {
+  z-index: 10000 !important;
+}
 
     .payment-header {
       background: linear-gradient(135deg, var(--light), var(--success));
@@ -1848,18 +1851,29 @@
     }
 
     /* Teacher Selection Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-    }
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 20px;
+}
+.course-details-modal {
+  z-index: 10000 !important;
+}
+
+.course-details-modal .modal-content {
+  margin: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
 
     .modal.active {
       display: flex;
@@ -2636,7 +2650,8 @@
       onSnapshot,
       orderBy,
       serverTimestamp,
-      addDoc
+      addDoc,
+      deleteDoc
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { 
       getAuth, 
@@ -3211,36 +3226,43 @@
       }
     }
 
-    // Clear all notifications - UPDATED to work with studentNotifications collection
-    async function clearAllNotifications() {
-      try {
-        if (!currentUser) return;
-        
-        // Query all unread notifications for this student
-        const notificationsQuery = query(
-          collection(db, "studentNotifications"),
-          where("studentId", "==", currentUser.uid),
-          where("read", "==", false)
-        );
-        
-        const notificationsSnap = await getDocs(notificationsQuery);
-        
-        // Batch update all notifications to read
-        const updatePromises = [];
-        notificationsSnap.forEach(docSnap => {
-          const notificationRef = doc(db, "studentNotifications", docSnap.id);
-          updatePromises.push(updateDoc(notificationRef, { read: true }));
-        });
-        
-        await Promise.all(updatePromises);
-        
-        showMessage("✅ All notifications marked as read");
-        loadNotifications(currentUser.uid);
-      } catch (error) {
-        console.error("Error clearing notifications:", error);
-        showMessage("❌ Error clearing notifications", "error");
-      }
+async function clearAllNotifications() {
+  try {
+    if (!currentUser) return;
+    
+    // Query all notifications for this student (both read and unread)
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", currentUser.uid)
+    );
+    
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
+    if (notificationsSnap.empty) {
+      showMessage("No notifications to clear", "error");
+      return;
     }
+    
+    // Delete all notifications
+    const deletePromises = [];
+    notificationsSnap.forEach(docSnap => {
+      deletePromises.push(deleteDoc(doc(db, "studentNotifications", docSnap.id)));
+    });
+    
+    await Promise.all(deletePromises);
+    
+    showMessage("✅ All notifications cleared");
+    loadNotifications(currentUser.uid);
+    
+    // Close dropdown after clearing
+    if (notificationDropdown) {
+      notificationDropdown.classList.remove('active');
+    }
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    showMessage("❌ Error clearing notifications", "error");
+  }
+}
 
     // Function to get course image URL from Firebase Storage - CORRECTED
     async function getCourseImageUrl(courseId) {
@@ -3534,9 +3556,15 @@
       }
     }
 
-// Generate QR Code for UPI payment
 function generateQRCode() {
   if (!qrCodeCanvas) return;
+  
+  // Check if QRCode library is loaded
+  if (typeof QRCode === 'undefined') {
+    console.error("QRCode library not loaded yet");
+    setTimeout(generateQRCode, 500); // Retry after 500ms
+    return;
+  }
   
   // Use your personal UPI ID
   const upiId = "aayushjain1811@okhdfcbank";
@@ -3552,26 +3580,30 @@ function generateQRCode() {
     upiIdDisplay.textContent = upiId;
   }
   
-  // Generate QR code
-  QRCode.toCanvas(qrCodeCanvas, upiUrl, {
-    width: 200,
-    height: 200,
-    margin: 1,
-    color: {
-      dark: '#000000',
-      light: '#FFFFFF'
-    }
-  }, function(error) {
-    if (error) {
-      console.error("Error generating QR code:", error);
-      showMessage("Error generating QR code", "error");
-    } else {
-      console.log("QR code generated successfully");
-      
-      // Store QR code in Firebase Storage as JPG
+  // Clear any existing QR code
+  qrCodeCanvas.innerHTML = '';
+  
+  // Generate QR code using the library
+  try {
+    new QRCode(qrCodeCanvas, {
+      text: upiUrl,
+      width: 200,
+      height: 200,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    console.log("QR code generated successfully");
+    
+    // Store QR code after a short delay to ensure it's rendered
+    setTimeout(() => {
       storeQRCodeInFirebase(qrCodeCanvas, transactionId);
-    }
-  });
+    }, 500);
+  } catch (error) {
+    console.error("Error generating QR code:", error);
+    showMessage("Error generating QR code", "error");
+  }
 }
 
     // Generate a unique transaction ID
@@ -3581,11 +3613,17 @@ function generateQRCode() {
       return `SKILLUP_${timestamp}_${random}`.toUpperCase();
     }
 
-// Store QR code in Firebase Storage
-async function storeQRCodeInFirebase(canvas, transactionId) {
+async function storeQRCodeInFirebase(canvasContainer, transactionId) {
   try {
+    // Get the canvas element from the container
+    const canvas = canvasContainer.querySelector('canvas');
+    if (!canvas) {
+      console.error("Canvas not found in container");
+      return;
+    }
+    
     // Convert canvas to data URL as JPG
-    const dataURL = canvas.toDataURL('image/jpeg', 0.9); // 90% quality
+    const dataURL = canvas.toDataURL('image/jpeg', 0.9);
     
     // Create a reference to the QR code in storage
     const qrCodeRef = ref(storage, `qrcodes/${transactionId}.jpg`);
@@ -3598,7 +3636,7 @@ async function storeQRCodeInFirebase(canvas, transactionId) {
     // Get the download URL
     const downloadURL = await getDownloadURL(qrCodeRef);
     
-    // Store payment record in Firestore with your UPI ID
+    // Store payment record in Firestore
     await storePaymentRecord(transactionId, downloadURL);
     
   } catch (error) {
