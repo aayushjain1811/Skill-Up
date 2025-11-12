@@ -3351,6 +3351,8 @@
     let selectedPaymentMethod = null;
     let paymentInProgress = false;
     let currentPaymentId = null;
+    let coursesCache = null;
+    let teachersCache = null;
 
     // Initialize the dashboard
     function initDashboard() {
@@ -3620,12 +3622,14 @@
         }
       }
       
-      // Load data
-      await updateStatsCards(user.uid);
-      await loadEnrolledCourses(user.uid);
-      await loadRecommendedCourses(user.uid);
-      await loadRecentMessages(user.uid);
-      await loadNotifications(user.uid);
+      // Load data in parallel for faster loading
+      await Promise.all([
+        updateStatsCards(user.uid),
+        loadEnrolledCourses(user.uid),
+        loadRecommendedCourses(user.uid),
+        loadRecentMessages(user.uid),
+        loadNotifications(user.uid)
+      ]);
       
       // Update welcome subtitle based on data
       updateWelcomeSubtitle(user.uid);
@@ -4105,10 +4109,16 @@
 
         recommendedCoursesList.innerHTML = "<div class='loading-text'>Loading recommended courses...</div>";
 
-        // Get all courses
-        const coursesSnap = await getDocs(collection(db, "courses"));
+        // Get all courses from cache or fetch them
+        if (!coursesCache) {
+          const coursesSnap = await getDocs(collection(db, "courses"));
+          coursesCache = coursesSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+        }
         
-        if (coursesSnap.empty) {
+        if (coursesCache.length === 0) {
           recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
           return;
         }
@@ -4124,9 +4134,8 @@
         // Load courses with feedback data
         const coursesWithRatings = [];
         
-        for (const docSnap of coursesSnap.docs) {
-          const course = docSnap.data();
-          const courseId = docSnap.id;
+        for (const course of coursesCache) {
+          const courseId = course.id;
           const isEnrolled = enrolledCourseIds.includes(courseId);
           
           // Load feedback data for rating
@@ -4139,7 +4148,8 @@
             isEnrolled: isEnrolled,
             averageRating: parseFloat(feedbackData.average),
             ratingCount: feedbackData.total,
-            imageUrl: imageUrl
+            imageUrl: imageUrl,
+            price: course.price || 0 // Ensure price is included
           });
         }
 
@@ -4217,9 +4227,8 @@
                 price: course.price || 0
               };
               
-              // Direct enrollment with teacher selection
-              await loadTeachers();
-              if (teacherModal) teacherModal.classList.add("active");
+              // Show payment modal directly
+              showPaymentModal();
               
               enrollBtn.disabled = false;
               enrollBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Enroll Now';
@@ -5419,27 +5428,25 @@ function generateFeedbackHTML(feedbackData) {
               else timeDisplay = `${diffDays}d ago`;
             }
             
-// Inside loadRecentMessages function, replace the messageCard.innerHTML section:
+            const teacherInitials = getInitialsFromName(conversation.teacherName);
 
-const teacherInitials = getInitialsFromName(conversation.teacherName);
-
-messageCard.innerHTML = `
-  <div class="message-header">
-    <div class="message-avatar">
-      ${conversation.teacherProfilePic ? 
-        `<img src="${conversation.teacherProfilePic}" alt="${conversation.teacherName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />` : 
-        teacherInitials
-      }
-    </div>
-    <div class="message-info">
-      <h4>${conversation.teacherName}</h4>
-      <div class="message-time">${timeDisplay}</div>
-    </div>
-  </div>
-  <div class="message-content">
-    <p>${conversation.lastMessage}</p>
-  </div>
-`;
+            messageCard.innerHTML = `
+              <div class="message-header">
+                <div class="message-avatar">
+                  ${conversation.teacherProfilePic ? 
+                    `<img src="${conversation.teacherProfilePic}" alt="${conversation.teacherName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />` : 
+                    teacherInitials
+                  }
+                </div>
+                <div class="message-info">
+                  <h4>${conversation.teacherName}</h4>
+                  <div class="message-time">${timeDisplay}</div>
+                </div>
+              </div>
+              <div class="message-content">
+                <p>${conversation.lastMessage}</p>
+              </div>
+            `;
             
             messageCard.addEventListener('click', () => {
               window.location.href = `studentmessages.html?teacherId=${conversation.teacherId}`;
@@ -5463,38 +5470,38 @@ messageCard.innerHTML = `
         }
       }
     }
-// Get teacher profile picture from Firebase Storage
-async function getTeacherProfilePic(teacherId) {
-  try {
-    // Try different possible image paths and names
-    const possiblePaths = [
-      `teacher-profile-pictures/${teacherId}/${teacherId}.jpg`,
-      `teacher-profile-pictures/${teacherId}/${teacherId}.png`,
-      `teacher-profile-pictures/${teacherId}/profile.jpg`,
-      `teacher-profile-pictures/${teacherId}/profile.png`,
-      `teacher-profile-pictures/${teacherId}/image.jpg`,
-      `teacher-profile-pictures/${teacherId}/image.png`,
-    ];
-    
-    for (const path of possiblePaths) {
+
+    // Get teacher profile picture from Firebase Storage
+    async function getTeacherProfilePic(teacherId) {
       try {
-        const imageRef = ref(storage, path);
-        const url = await getDownloadURL(imageRef);
-        return url;
+        // Try different possible image paths and names
+        const possiblePaths = [
+          `teacher-profile-pictures/${teacherId}/${teacherId}.jpg`,
+          `teacher-profile-pictures/${teacherId}/${teacherId}.png`,
+          `teacher-profile-pictures/${teacherId}/profile.jpg`,
+          `teacher-profile-pictures/${teacherId}/profile.png`,
+          `teacher-profile-pictures/${teacherId}/image.jpg`,
+          `teacher-profile-pictures/${teacherId}/image.png`,
+        ];
+        
+        for (const path of possiblePaths) {
+          try {
+            const imageRef = ref(storage, path);
+            const url = await getDownloadURL(imageRef);
+            return url;
+          } catch (error) {
+            // Continue to next path if this one fails
+            continue;
+          }
+        }
+        
+        // If no image found, return null
+        return null;
       } catch (error) {
-        // Continue to next path if this one fails
-        continue;
+        console.error(`Error getting teacher profile picture for ${teacherId}:`, error);
+        return null;
       }
     }
-    
-    // If no image found, return null
-    return null;
-  } catch (error) {
-    console.error(`Error getting teacher profile picture for ${teacherId}:`, error);
-    return null;
-  }
-}
-
 
     // Helper function to get initials from name
     function getInitialsFromName(name) {
