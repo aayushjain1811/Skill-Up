@@ -3533,44 +3533,45 @@
       }
     }
 
-    // Generate QR Code for UPI payment
-    function generateQRCode() {
-      if (!qrCodeCanvas) return;
-      
-      // Generate UPI payment URL
-      const upiId = "skillup@paytm"; // This would be your actual UPI ID
-      const amount = currentCourseToEnroll.price;
-      const courseName = encodeURIComponent(currentCourseToEnroll.name);
-      const transactionId = generateTransactionId();
-      
-      const upiUrl = `upi://pay?pa=${upiId}&pn=SkillUp&am=${amount}&tn=Payment for ${courseName}&tr=${transactionId}`;
-      
-      // Display UPI ID
-      if (upiIdDisplay) {
-        upiIdDisplay.textContent = upiId;
-      }
-      
-      // Generate QR code
-      QRCode.toCanvas(qrCodeCanvas, upiUrl, {
-        width: 200,
-        height: 200,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      }, function(error) {
-        if (error) {
-          console.error("Error generating QR code:", error);
-          showMessage("Error generating QR code", "error");
-        } else {
-          console.log("QR code generated successfully");
-          
-          // Store QR code in Firebase Storage
-          storeQRCodeInFirebase(qrCodeCanvas, transactionId);
-        }
-      });
+// Generate QR Code for UPI payment
+function generateQRCode() {
+  if (!qrCodeCanvas) return;
+  
+  // Use your personal UPI ID
+  const upiId = "aayushjain1811@okhdfcbank";
+  const amount = currentCourseToEnroll.price;
+  const courseName = encodeURIComponent(currentCourseToEnroll.name);
+  const transactionId = generateTransactionId();
+  
+  // Create UPI payment URL with proper parameters
+  const upiUrl = `upi://pay?pa=${upiId}&pn=Aayush%20Jain&am=${amount}&tn=Payment%20for%20${courseName}&tr=${transactionId}`;
+  
+  // Display UPI ID
+  if (upiIdDisplay) {
+    upiIdDisplay.textContent = upiId;
+  }
+  
+  // Generate QR code
+  QRCode.toCanvas(qrCodeCanvas, upiUrl, {
+    width: 200,
+    height: 200,
+    margin: 1,
+    color: {
+      dark: '#000000',
+      light: '#FFFFFF'
     }
+  }, function(error) {
+    if (error) {
+      console.error("Error generating QR code:", error);
+      showMessage("Error generating QR code", "error");
+    } else {
+      console.log("QR code generated successfully");
+      
+      // Store QR code in Firebase Storage as JPG
+      storeQRCodeInFirebase(qrCodeCanvas, transactionId);
+    }
+  });
+}
 
     // Generate a unique transaction ID
     function generateTransactionId() {
@@ -3579,30 +3580,57 @@
       return `SKILLUP_${timestamp}_${random}`.toUpperCase();
     }
 
-    // Store QR code in Firebase Storage
-    async function storeQRCodeInFirebase(canvas, transactionId) {
-      try {
-        // Convert canvas to data URL
-        const dataURL = canvas.toDataURL('image/png');
-        
-        // Create a reference to the QR code in storage
-        const qrCodeRef = ref(storage, `qrcodes/${transactionId}.png`);
-        
-        // Upload the QR code
-        await uploadString(qrCodeRef, dataURL, 'data_url');
-        
-        console.log("QR code stored in Firebase Storage");
-        
-        // Get the download URL
-        const downloadURL = await getDownloadURL(qrCodeRef);
-        
-        // Store payment record in Firestore
-        await storePaymentRecord(transactionId, downloadURL);
-        
-      } catch (error) {
-        console.error("Error storing QR code:", error);
-      }
-    }
+// Store QR code in Firebase Storage
+async function storeQRCodeInFirebase(canvas, transactionId) {
+  try {
+    // Convert canvas to data URL as JPG
+    const dataURL = canvas.toDataURL('image/jpeg', 0.9); // 90% quality
+    
+    // Create a reference to the QR code in storage
+    const qrCodeRef = ref(storage, `qrcodes/${transactionId}.jpg`);
+    
+    // Upload the QR code
+    await uploadString(qrCodeRef, dataURL, 'data_url');
+    
+    console.log(`QR code stored as: qrcodes/${transactionId}.jpg`);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(qrCodeRef);
+    
+    // Store payment record in Firestore with your UPI ID
+    await storePaymentRecord(transactionId, downloadURL);
+    
+  } catch (error) {
+    console.error("Error storing QR code:", error);
+  }
+}
+
+// Store payment record in Firestore
+async function storePaymentRecord(transactionId, qrCodeUrl) {
+  try {
+    const paymentData = {
+      transactionId: transactionId,
+      studentId: currentUser.uid,
+      studentName: currentUser.displayName || "Student",
+      studentEmail: currentUser.email,
+      courseId: currentCourseToEnroll.id,
+      courseName: currentCourseToEnroll.name,
+      amount: currentCourseToEnroll.price,
+      paymentMethod: selectedPaymentMethod,
+      status: 'pending',
+      qrCodeUrl: qrCodeUrl,
+      upiId: "aayushjain1811@okhdfcbank", // Store your UPI ID in the record
+      merchantName: "Aayush Jain", // Your name for reference
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    
+    await addDoc(collection(db, "payments"), paymentData);
+    console.log("Payment record stored in Firestore with your UPI ID");
+  } catch (error) {
+    console.error("Error storing payment record:", error);
+  }
+}
 
     // Store payment record in Firestore
     async function storePaymentRecord(transactionId, qrCodeUrl) {
