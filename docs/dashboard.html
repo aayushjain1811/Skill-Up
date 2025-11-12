@@ -480,26 +480,27 @@
       position: relative;
       z-index: 2;
     }
+    
     /* Profile picture styling */
-.avatar img,
-.profile-avatar-large img {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
+    .avatar img,
+    .profile-avatar-large img {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
 
-/* Hide the rotating background when image is present */
-.avatar.has-image::before {
-  display: none;
-}
+    /* Hide the rotating background when image is present */
+    .avatar.has-image::before {
+      display: none;
+    }
 
-.avatar {
-  position: relative;
-  overflow: hidden;
-}
+    .avatar {
+      position: relative;
+      overflow: hidden;
+    }
 
     /* Welcome Section */
     .welcome {
@@ -886,6 +887,15 @@
       justify-content: center;
       color: white;
       font-weight: bold;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .message-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
 
     .message-info h4 {
@@ -1004,6 +1014,15 @@
       font-weight: bold;
       font-size: 20px;
       margin: 0 auto 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .teacher-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
 
     .teacher-name {
@@ -1123,6 +1142,15 @@
       color: white;
       font-weight: bold;
       font-size: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .teacher-avatar-small img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
 
     .teacher-details {
@@ -1402,7 +1430,7 @@
     }
 
     .enroll-btn {
-      background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+      background: linear-gradient(45deg, #28a745, #20c997);
       border: none;
       color: white;
       padding: 12px 15px;
@@ -1417,7 +1445,26 @@
 
     .enroll-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+
+    .view-details-btn {
+      background: linear-gradient(45deg, var(--light), var(--success));
+      border: none;
+      color: white;
+      padding: 12px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+      text-align: center;
+      display: block;
+    }
+
+    .view-details-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
     }
 
     .selected-count {
@@ -1458,6 +1505,900 @@
       25% { transform: translateY(-20px) translateX(10px); }
       50% { transform: translateY(-10px) translateX(20px); }
       75% { transform: translateY(-15px) translateX(-10px); }
+    }
+
+    /* Course Details Modal Styles */
+    .course-details-modal .modal-content {
+      max-width: 900px;
+      padding: 0;
+      overflow: hidden;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .course-details-header {
+      position: relative;
+      height: 300px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .course-details-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .course-details-image-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 48px;
+    }
+
+    .course-details-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+      padding: 30px;
+      color: white;
+    }
+
+    .course-details-category {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--light), var(--success));
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .course-details-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .course-details-meta-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .course-details-body {
+      padding: 30px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .course-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+      padding: 25px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 15px;
+      border: 1px solid rgba(67, 97, 238, 0.1);
+    }
+
+    .course-stat {
+      text-align: center;
+      padding: 15px;
+      background: var(--bg-main);
+      border-radius: 10px;
+    }
+
+    .course-stat-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: var(--success);
+    }
+
+    .course-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .course-stat-label {
+      font-size: 12px;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .course-price-section {
+      background: linear-gradient(135deg, rgba(67, 97, 238, 0.1), rgba(0, 245, 255, 0.1));
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      text-align: center;
+      border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+
+    .course-price-label {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .course-price {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .course-price-note {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .course-description-section {
+      margin-bottom: 30px;
+    }
+
+    .course-section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .course-section-title i {
+      color: var(--success);
+    }
+
+    .course-description-text {
+      color: var(--gray);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    .course-features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .course-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .course-feature-item:hover {
+      background: rgba(67, 97, 238, 0.1);
+      transform: translateX(5px);
+    }
+
+    .course-feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .course-feature-text {
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .course-feedback-section {
+      margin-bottom: 30px;
+    }
+
+    .course-rating-summary {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      padding: 25px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    .rating-score-container {
+      text-align: center;
+      padding: 20px;
+      background: var(--bg-main);
+      border-radius: 15px;
+      min-width: 150px;
+    }
+
+    .rating-score {
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .rating-stars {
+      font-size: 20px;
+      color: #ffc107;
+      margin-bottom: 10px;
+    }
+
+    .rating-count {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .rating-breakdown {
+      flex: 1;
+    }
+
+    .rating-bar-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    .rating-bar-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 80px;
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .rating-bar {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .rating-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffc107, #ff9800);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .rating-bar-percentage {
+      min-width: 50px;
+      text-align: right;
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .student-feedback-list {
+      display: grid;
+      gap: 15px;
+    }
+
+    .student-feedback-item {
+      padding: 20px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(67, 97, 238, 0.1);
+    }
+
+    .feedback-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .feedback-student-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .feedback-student-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--light), var(--success));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .feedback-student-name {
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 15px;
+    }
+
+    .feedback-rating {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .feedback-stars {
+      color: #ffc107;
+      font-size: 14px;
+    }
+
+    .feedback-text {
+      color: var(--gray);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .view-all-feedback-btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 2px solid rgba(67, 97, 238, 0.3);
+      border-radius: 10px;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 15px;
+    }
+
+    .view-all-feedback-btn:hover {
+      background: rgba(67, 97, 238, 0.1);
+      border-color: rgba(67, 97, 238, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .course-details-footer {
+      padding: 25px 30px;
+      background: rgba(67, 97, 238, 0.05);
+      border-top: 1px solid rgba(67, 97, 238, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-shrink: 0;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+
+    .footer-price-info {
+      flex: 1;
+    }
+
+    .footer-price-label {
+      font-size: 12px;
+      color: var(--gray);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-price {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .no-feedback-message {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray);
+    }
+
+    .no-feedback-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    /* Payment Modal Styles */
+    .payment-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .payment-modal.active {
+      display: flex;
+    }
+
+    .payment-modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 0;
+      position: relative;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    .payment-header {
+      background: linear-gradient(135deg, var(--light), var(--success));
+      color: white;
+      padding: 25px;
+      text-align: center;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .payment-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .payment-subtitle {
+      opacity: 0.9;
+      font-size: 16px;
+    }
+
+    .payment-body {
+      padding: 25px;
+    }
+
+    .payment-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(67, 97, 238, 0.1);
+    }
+
+    .course-name-payment {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .course-price-payment {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      background: linear-gradient(45deg, var(--primary), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .payment-methods {
+      margin-bottom: 20px;
+    }
+
+    .payment-method-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--primary);
+    }
+
+    .payment-methods-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 2px solid rgba(67, 97, 238, 0.2);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .payment-method:hover {
+      border-color: rgba(67, 97, 238, 0.5);
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .payment-method.selected {
+      border-color: var(--success);
+      background: rgba(0, 245, 255, 0.1);
+    }
+
+    .payment-method-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--bg-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--primary);
+    }
+
+    .payment-method-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .qr-payment-section {
+      text-align: center;
+      padding: 20px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 15px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.1);
+      display: none;
+    }
+
+    .qr-payment-section.active {
+      display: block;
+    }
+
+    .qr-code-container {
+      margin: 20px auto;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #qrCodeCanvas {
+      border-radius: 8px;
+    }
+
+    .qr-instructions {
+      margin-top: 15px;
+      color: var(--gray);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .upi-id-display {
+      margin-top: 15px;
+      padding: 10px;
+      background: var(--bg-main);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 16px;
+      color: var(--primary);
+      border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+
+    .payment-actions {
+      display: flex;
+      gap: 15px;
+      padding: 0 25px 25px;
+    }
+
+    .payment-actions button {
+      flex: 1;
+    }
+
+    .payment-processing {
+      text-align: center;
+      padding: 30px;
+      display: none;
+    }
+
+    .processing-spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(67, 97, 238, 0.3);
+      border-top: 5px solid var(--success);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    .processing-text {
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .processing-subtext {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .payment-success {
+      text-align: center;
+      padding: 30px;
+      display: none;
+    }
+
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .success-checkmark .check-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid var(--success);
+    }
+
+    .success-checkmark .check-icon::before {
+      top: 3px;
+      left: -2px;
+      width: 30px;
+      transform-origin: 100% 50%;
+      border-radius: 100px 0 0 100px;
+    }
+
+    .success-checkmark .check-icon::after {
+      top: 0;
+      left: 30px;
+      width: 60px;
+      transform-origin: 0 50%;
+      border-radius: 0 100px 100px 0;
+      animation: rotate-circle 4.25s ease-in;
+    }
+
+    .success-checkmark .check-icon .icon-line {
+      height: 5px;
+      background-color: var(--success);
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+
+    .success-checkmark .check-icon .icon-line.line-tip {
+      top: 46px;
+      left: 14px;
+      width: 25px;
+      transform: rotate(45deg);
+      animation: icon-line-tip 0.75s;
+    }
+
+    .success-checkmark .check-icon .icon-line.line-long {
+      top: 38px;
+      right: 8px;
+      width: 47px;
+      transform: rotate(-45deg);
+      animation: icon-line-long 0.75s;
+    }
+
+    .success-checkmark .check-icon .icon-circle {
+      top: -4px;
+      left: -4px;
+      z-index: 10;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: absolute;
+      box-sizing: content-box;
+      border: 4px solid rgba(0, 245, 255, 0.5);
+    }
+
+    .success-checkmark .check-icon .icon-fix {
+      top: 8px;
+      width: 5px;
+      left: 26px;
+      z-index: 1;
+      height: 85px;
+      position: absolute;
+      transform: rotate(-45deg);
+    }
+
+    @keyframes rotate-circle {
+      0% {
+        transform: rotate(-45deg);
+      }
+      5% {
+        transform: rotate(-45deg);
+      }
+      12% {
+        transform: rotate(-405deg);
+      }
+      100% {
+        transform: rotate(-405deg);
+      }
+    }
+
+    @keyframes icon-line-tip {
+      0% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      54% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      70% {
+        width: 50px;
+        left: -8px;
+        top: 37px;
+      }
+      84% {
+        width: 17px;
+        left: 21px;
+        top: 48px;
+      }
+      100% {
+        width: 25px;
+        left: 14px;
+        top: 45px;
+      }
+    }
+
+    @keyframes icon-line-long {
+      0% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      65% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      84% {
+        width: 55px;
+        right: 0px;
+        top: 35px;
+      }
+      100% {
+        width: 47px;
+        right: 8px;
+        top: 38px;
+      }
+    }
+
+    .payment-error {
+      text-align: center;
+      padding: 30px;
+      display: none;
+    }
+
+    .error-icon {
+      font-size: 80px;
+      color: #ff4757;
+      margin-bottom: 20px;
+    }
+
+    .error-text {
+      color: var(--primary);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .error-subtext {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Payment Status Indicator */
+    .payment-status-indicator {
+      text-align: center;
+      padding: 30px;
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 15px;
+      margin: 20px 0;
+      border: 2px solid rgba(67, 97, 238, 0.3);
+      animation: pulse 2s infinite;
+    }
+
+    .status-icon {
+      font-size: 48px;
+      color: var(--success);
+      margin-bottom: 15px;
+      animation: rotate 2s linear infinite;
+    }
+
+    .status-text {
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .status-subtext {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Toast notifications */
+    .message-toast {
+      position: fixed;
+      top: 100px;
+      right: 30px;
+      padding: 15px 25px;
+      border-radius: 10px;
+      z-index: 3000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      animation: slideInRight 0.3s ease;
+      max-width: 400px;
+      word-wrap: break-word;
+    }
+
+    .message-toast.success {
+      background: linear-gradient(45deg, #28a745, #20c997);
+      color: white;
+    }
+
+    .message-toast.error {
+      background: linear-gradient(45deg, #ff4757, #ff3742);
+      color: white;
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(100%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(100%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(100%); }
     }
   </style>
 </head>
@@ -1668,6 +2609,113 @@
     </div>
   </div>
 
+  <!-- Course Details Modal -->
+  <div class="modal course-details-modal" id="courseDetailsModal">
+    <!-- Content will be dynamically generated -->
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal payment-modal" id="paymentModal">
+    <div class="payment-modal-content">
+      <div class="payment-header">
+        <h2 class="payment-title">Complete Payment</h2>
+        <p class="payment-subtitle">Secure payment - All transactions are encrypted</p>
+      </div>
+      
+      <div class="payment-body">
+        <div class="payment-info">
+          <div class="course-name-payment" id="paymentCourseName">Course Name</div>
+          <div class="course-price-payment" id="paymentCoursePrice">₹0</div>
+        </div>
+        
+        <!-- Payment Status Indicator -->
+        <div class="payment-status-indicator" id="paymentStatusIndicator" style="display: none;">
+          <div class="status-icon">
+            <i class="fas fa-hourglass-half"></i>
+          </div>
+          <div class="status-text">Waiting for payment confirmation...</div>
+          <div class="status-subtext">Please complete the payment to continue</div>
+        </div>
+        
+        <div class="payment-methods" id="paymentMethodsSection">
+          <h3 class="payment-method-title">Select Payment Method</h3>
+          <div class="payment-methods-grid">
+            <div class="payment-method" data-method="upi">
+              <div class="payment-method-icon">
+                <i class="fas fa-qrcode"></i>
+              </div>
+              <div class="payment-method-name">UPI / QR Code</div>
+            </div>
+            <div class="payment-method" data-method="card">
+              <div class="payment-method-icon">
+                <i class="far fa-credit-card"></i>
+              </div>
+              <div class="payment-method-name">Credit/Debit Card</div>
+            </div>
+            <div class="payment-method" data-method="netbanking">
+              <div class="payment-method-icon">
+                <i class="fas fa-university"></i>
+              </div>
+              <div class="payment-method-name">Net Banking</div>
+            </div>
+            <div class="payment-method" data-method="wallet">
+              <div class="payment-method-icon">
+                <i class="fas fa-wallet"></i>
+              </div>
+              <div class="payment-method-name">Wallets</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- UPI/QR Payment Section -->
+        <div class="qr-payment-section" id="qrPaymentSection">
+          <div class="qr-code-container" id="qrCodeCanvas"></div>
+          <div class="qr-instructions">
+            <p>Scan this QR code with any UPI app to complete payment</p>
+            <div class="upi-id-display" id="upiIdDisplay">aayushjain1811@okhdfcbank</div>
+            <p style="margin-top: 15px; font-size: 12px; color: var(--gray);">
+              Payment ID: <span id="displayPaymentId" style="font-family: monospace;">Generating...</span>
+            </p>
+          </div>
+        </div>
+        
+        <!-- Payment Processing -->
+        <div class="payment-processing" id="paymentProcessing">
+          <div class="processing-spinner"></div>
+          <div class="processing-text">Verifying Payment</div>
+          <div class="processing-subtext">Please wait while we confirm your payment...</div>
+        </div>
+        
+        <!-- Payment Success -->
+        <div class="payment-success" id="paymentSuccess">
+          <div class="success-checkmark">
+            <div class="check-icon">
+              <span class="icon-line line-tip"></span>
+              <span class="icon-line line-long"></span>
+              <div class="icon-circle"></div>
+              <div class="icon-fix"></div>
+            </div>
+          </div>
+          <div class="processing-text">Payment Successful!</div>
+          <div class="processing-subtext">You have been enrolled in the course</div>
+        </div>
+        
+        <!-- Payment Error -->
+        <div class="payment-error" id="paymentError">
+          <div class="error-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="error-text">Payment Failed</div>
+          <div class="error-subtext" id="paymentErrorMessage">Please try again or use a different payment method</div>
+        </div>
+      </div>
+      
+      <div class="payment-actions">
+        <button class="modal-btn cancel" id="cancelPayment" disabled>Cancel</button>
+        <button class="modal-btn confirm" id="proceedPayment" disabled>Proceed to Pay</button>
+      </div>
+    </div>
+  </div>
 
 <script type="module">
     // Firebase Import - Using stable version
@@ -1675,7 +2723,7 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
     import { 
       getFirestore, collection, query, limit, getDocs, doc, getDoc, updateDoc, arrayUnion, setDoc,
-      where, orderBy, arrayRemove, onSnapshot, serverTimestamp
+      where, orderBy, arrayRemove, onSnapshot, serverTimestamp, deleteDoc
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
@@ -1754,12 +2802,29 @@
     const notificationList = getElement('notificationList');
     const clearNotifications = getElement('clearNotifications');
 
+    // Payment modal elements
+    const paymentModal = getElement('paymentModal');
+    const paymentCourseName = getElement('paymentCourseName');
+    const paymentCoursePrice = getElement('paymentCoursePrice');
+    const qrPaymentSection = getElement('qrPaymentSection');
+    const qrCodeCanvas = getElement('qrCodeCanvas');
+    const upiIdDisplay = getElement('upiIdDisplay');
+    const paymentProcessing = getElement('paymentProcessing');
+    const paymentSuccess = getElement('paymentSuccess');
+    const paymentError = getElement('paymentError');
+    const paymentErrorMessage = getElement('paymentErrorMessage');
+    const cancelPayment = getElement('cancelPayment');
+    const proceedPayment = getElement('proceedPayment');
+
     // Track current user and course to enroll
     let currentUser = null;
     let currentCourseToEnroll = null;
     let selectedTeachers = [];
     let enrolledCourseId = null;
     let enrolledCoursesCache = new Set();
+    let selectedPaymentMethod = null;
+    let paymentInProgress = false;
+    let currentPaymentId = null;
 
     // Initialize the dashboard
     function initDashboard() {
@@ -1932,6 +2997,48 @@
         }
       });
 
+      // Payment modal functionality
+      if (cancelPayment) {
+        cancelPayment.addEventListener('click', () => {
+          if (paymentInProgress) {
+            const confirm = window.confirm('Payment is in progress. Are you sure you want to cancel?');
+            if (!confirm) return;
+          }
+          paymentModal.classList.remove('active');
+          resetPaymentModal();
+          unlockNavigation();
+        });
+      }
+
+      if (proceedPayment) {
+        proceedPayment.addEventListener('click', handlePaymentProceed);
+      }
+
+      // Payment method selection
+      document.querySelectorAll('.payment-method').forEach(method => {
+        method.addEventListener('click', () => {
+          // Remove selected class from all methods
+          document.querySelectorAll('.payment-method').forEach(m => {
+            m.classList.remove('selected');
+          });
+          
+          // Add selected class to clicked method
+          method.classList.add('selected');
+          selectedPaymentMethod = method.dataset.method;
+          
+          // Enable proceed button
+          proceedPayment.disabled = false;
+          
+          // Show appropriate payment section
+          if (selectedPaymentMethod === 'upi') {
+            qrPaymentSection.classList.add('active');
+            generateQRCode();
+          } else {
+            qrPaymentSection.classList.remove('active');
+          }
+        });
+      });
+
       // Initialize UI animations
       initUIAnimations();
 
@@ -1954,141 +3061,141 @@
       });
     }
 
-// Load user data - UPDATED with profile picture support
-async function loadUserData(user) {
-  const displayName = user.displayName ? user.displayName : "Learner";
-  
-  if (welcomeMessage) welcomeMessage.textContent = `Welcome back, ${displayName}!`;
-  if (userDisplayName) userDisplayName.textContent = displayName;
-  
-  // Handle profile picture or initials
-  const photoURL = user.photoURL;
-  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
-  
-  if (userInitials) {
-    if (photoURL) {
-      // Display profile picture
-      userInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    // Load user data - UPDATED with profile picture support
+    async function loadUserData(user) {
+      const displayName = user.displayName ? user.displayName : "Learner";
       
-      // Add has-image class to show image properly
-      const avatarContainer = userInitials.parentElement;
-      if (avatarContainer && avatarContainer.classList.contains('avatar')) {
-        avatarContainer.classList.add('has-image');
-      }
-    } else {
-      // Display initials
-      userInitials.textContent = initials;
+      if (welcomeMessage) welcomeMessage.textContent = `Welcome back, ${displayName}!`;
+      if (userDisplayName) userDisplayName.textContent = displayName;
       
-      // Remove has-image class
-      const avatarContainer = userInitials.parentElement;
-      if (avatarContainer && avatarContainer.classList.contains('avatar')) {
-        avatarContainer.classList.remove('has-image');
+      // Handle profile picture or initials
+      const photoURL = user.photoURL;
+      const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+      
+      if (userInitials) {
+        if (photoURL) {
+          // Display profile picture
+          userInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+          
+          // Add has-image class to show image properly
+          const avatarContainer = userInitials.parentElement;
+          if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+            avatarContainer.classList.add('has-image');
+          }
+        } else {
+          // Display initials
+          userInitials.textContent = initials;
+          
+          // Remove has-image class
+          const avatarContainer = userInitials.parentElement;
+          if (avatarContainer && avatarContainer.classList.contains('avatar')) {
+            avatarContainer.classList.remove('has-image');
+          }
+        }
       }
+      
+      // Load data
+      await updateStatsCards(user.uid);
+      await loadEnrolledCourses(user.uid);
+      await loadRecommendedCourses(user.uid);
+      await loadRecentMessages(user.uid);
+      await loadNotifications(user.uid);
+      
+      // Update welcome subtitle based on data
+      updateWelcomeSubtitle(user.uid);
     }
-  }
-  
-  // Load data
-  await updateStatsCards(user.uid);
-  await loadEnrolledCourses(user.uid);
-  await loadRecommendedCourses(user.uid);
-  await loadRecentMessages(user.uid);
-  await loadNotifications(user.uid);
-  
-  // Update welcome subtitle based on data
-  updateWelcomeSubtitle(user.uid);
-}
 
-// Set up real-time listeners for updates
-function setupRealtimeListeners(userId) {
-  // Listen for user data changes
-  const userRef = doc(db, "users", userId);
-  onSnapshot(userRef, (doc) => {
-    if (doc.exists()) {
-      console.log("User data updated, refreshing dashboard...");
-      updateStatsCards(userId);
-      loadEnrolledCourses(userId);
+    // Set up real-time listeners for updates
+    function setupRealtimeListeners(userId) {
+      // Listen for user data changes
+      const userRef = doc(db, "users", userId);
+      onSnapshot(userRef, (doc) => {
+        if (doc.exists()) {
+          console.log("User data updated, refreshing dashboard...");
+          updateStatsCards(userId);
+          loadEnrolledCourses(userId);
+        }
+      });
+      
+      // Listen for new student notifications
+      const notificationsQuery = query(
+        collection(db, "studentNotifications"),
+        where("studentId", "==", userId),
+        where("read", "==", false)
+      );
+      
+      onSnapshot(notificationsQuery, (snapshot) => {
+        console.log("Notifications updated");
+        loadNotifications(userId);
+        
+        // Show toast notification for new notifications
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added") {
+            const notification = change.doc.data();
+            showToastNotification(notification);
+          }
+        });
+      });
     }
-  });
-  
-  // Listen for new student notifications
-  const notificationsQuery = query(
-    collection(db, "studentNotifications"),
-    where("studentId", "==", userId),
-    where("read", "==", false)
-  );
-  
-  onSnapshot(notificationsQuery, (snapshot) => {
-    console.log("Notifications updated");
-    loadNotifications(userId);
-    
-    // Show toast notification for new notifications
-    snapshot.docChanges().forEach(change => {
-      if (change.type === "added") {
-        const notification = change.doc.data();
-        showToastNotification(notification);
-      }
-    });
-  });
-}
 
-// Show toast notification for real-time updates
-function showToastNotification(notification) {
-  // Don't show if page just loaded (to avoid showing all existing notifications)
-  if (Date.now() - pageLoadTime < 3000) return;
-  
-  let icon = '🔔';
-  if (notification.type === 'enrollment') icon = '📚';
-  else if (notification.type === 'course_update') icon = '📝';
-  else if (notification.type === 'message') icon = '💬';
-  else if (notification.type === 'achievement') icon = '🏆';
-  
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    position: fixed;
-    top: 100px;
-    right: 30px;
-    background: var(--bg-secondary);
-    border: 1px solid rgba(67, 97, 238, 0.3);
-    color: white;
-    padding: 20px;
-    border-radius: 15px;
-    z-index: 3000;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    animation: slideIn 0.3s ease;
-    max-width: 350px;
-    cursor: pointer;
-  `;
-  
-  toast.innerHTML = `
-    <div style="display: flex; align-items: start; gap: 15px;">
-      <div style="font-size: 24px;">${icon}</div>
-      <div style="flex: 1;">
-        <div style="font-weight: 600; margin-bottom: 5px; color: var(--primary);">${notification.title}</div>
-        <div style="font-size: 14px; color: var(--gray);">${notification.message}</div>
-      </div>
-    </div>
-  `;
-  
-  toast.addEventListener('click', () => {
-    if (notification.courseId) {
-      window.location.href = `coursedetails.html?id=${notification.courseId}`;
+    // Show toast notification for real-time updates
+    function showToastNotification(notification) {
+      // Don't show if page just loaded (to avoid showing all existing notifications)
+      if (Date.now() - pageLoadTime < 3000) return;
+      
+      let icon = '🔔';
+      if (notification.type === 'enrollment') icon = '📚';
+      else if (notification.type === 'course_update') icon = '📝';
+      else if (notification.type === 'message') icon = '💬';
+      else if (notification.type === 'achievement') icon = '🏆';
+      
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 30px;
+        background: var(--bg-secondary);
+        border: 1px solid rgba(67, 97, 238, 0.3);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        z-index: 3000;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s ease;
+        max-width: 350px;
+        cursor: pointer;
+      `;
+      
+      toast.innerHTML = `
+        <div style="display: flex; align-items: start; gap: 15px;">
+          <div style="font-size: 24px;">${icon}</div>
+          <div style="flex: 1;">
+            <div style="font-weight: 600; margin-bottom: 5px; color: var(--primary);">${notification.title}</div>
+            <div style="font-size: 14px; color: var(--gray);">${notification.message}</div>
+          </div>
+        </div>
+      `;
+      
+      toast.addEventListener('click', () => {
+        if (notification.courseId) {
+          window.location.href = `coursedetails.html?id=${notification.courseId}`;
+        }
+      });
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = "slideOut 0.3s ease";
+        setTimeout(() => {
+          if (toast.parentNode) {
+            document.body.removeChild(toast);
+          }
+        }, 300);
+      }, 5000);
     }
-  });
-  
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.animation = "slideOut 0.3s ease";
-    setTimeout(() => {
-      if (toast.parentNode) {
-        document.body.removeChild(toast);
-      }
-    }, 300);
-  }, 5000);
-}
 
-// Track page load time to avoid showing old notifications as new
-const pageLoadTime = Date.now();
+    // Track page load time to avoid showing old notifications as new
+    const pageLoadTime = Date.now();
 
     // Update welcome subtitle based on user data
     async function updateWelcomeSubtitle(userId) {
@@ -2465,537 +3572,920 @@ const pageLoadTime = Date.now();
       }
     }
 
-    // Function to update student's online status
-    async function updateStudentOnlineStatus(isOnline) {
+    // Fetch recommended courses - Top 6 rated courses
+    async function loadRecommendedCourses(userId) {
       try {
-        const auth = getAuth();
-        const user = auth.currentUser;
+        if (!recommendedCoursesList) return;
+
+        recommendedCoursesList.innerHTML = "<div class='loading-text'>Loading recommended courses...</div>";
+
+        // Get all courses
+        const coursesSnap = await getDocs(collection(db, "courses"));
         
-        if (user) {
-          const db = getFirestore();
-          const statusRef = doc(db, "onlineStatus", user.uid);
+        if (coursesSnap.empty) {
+          recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
+          return;
+        }
+
+        let enrolledCourseIds = [];
+        const userRef = doc(db, "users", userId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().enrollments) {
+          enrolledCourseIds = Object.keys(userSnap.data().enrollments);
+        }
+
+        // Load courses with feedback data
+        const coursesWithRatings = [];
+        
+        for (const docSnap of coursesSnap.docs) {
+          const course = docSnap.data();
+          const courseId = docSnap.id;
+          const isEnrolled = enrolledCourseIds.includes(courseId);
           
-          // Get student data
-          const studentDoc = await getDoc(doc(db, "users", user.uid));
-          if (studentDoc.exists()) {
-            const studentData = studentDoc.data();
-            
-            await setDoc(statusRef, {
-              isOnline: isOnline,
-              lastSeen: serverTimestamp(),
-              userId: user.uid,
-              userType: "student",
-              name: `${studentData.firstName} ${studentData.lastName}`
-            }, { merge: true });
+          // Load feedback data for rating
+          const feedbackData = await loadCourseFeedback(courseId);
+          const imageUrl = await getCourseImageUrl(courseId);
+          
+          coursesWithRatings.push({
+            id: courseId,
+            ...course,
+            isEnrolled: isEnrolled,
+            averageRating: parseFloat(feedbackData.average),
+            ratingCount: feedbackData.total,
+            imageUrl: imageUrl
+          });
+        }
+
+        // Sort by rating (highest first)
+        coursesWithRatings.sort((a, b) => {
+          // If ratings are equal, sort by rating count
+          if (b.averageRating === a.averageRating) {
+            return b.ratingCount - a.ratingCount;
+          }
+          return b.averageRating - a.averageRating;
+        });
+
+        // Get top 6 rated courses
+        const topCourses = coursesWithRatings.slice(0, 6);
+
+        recommendedCoursesList.innerHTML = "";
+
+        if (topCourses.length === 0) {
+          recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
+          return;
+        }
+
+        for (const course of topCourses) {
+          const rating = course.averageRating || 0;
+          const ratingCount = course.ratingCount || 0;
+          const stars = generateStarRating(rating);
+          
+          const card = document.createElement("div");
+          card.classList.add("course-card");
+          card.innerHTML = `
+            <div class="course-image">
+              ${course.imageUrl ? 
+                `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
+                `<i class="fas fa-book"></i>`}
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
+                <div style="display: flex; align-items: center; gap: 5px; color: #ffc107;">
+                  ${stars}
+                  <span style="color: var(--gray); font-size: 14px; margin-left: 5px;">(${ratingCount})</span>
+                </div>
+                <div style="font-weight: 700; font-size: 18px; color: var(--primary);">₹${course.price || 0}</div>
+              </div>
+              
+              <div class="course-actions" style="display: flex; gap: 10px; margin-top: 20px;">
+                ${course.isEnrolled ? 
+                  `<button class="btn btn-primary continue-btn" data-id="${course.id}" style="flex: 1;">
+                    Continue Learning →
+                  </button>` 
+                  : 
+                  `<button class="enroll-btn" data-id="${course.id}" style="flex: 1;">
+                    <i class="fas fa-shopping-cart"></i> Enroll Now
+                  </button>
+                  <button class="view-details-btn" data-id="${course.id}" style="flex: 1;">
+                    <i class="fas fa-info-circle"></i> View Details
+                  </button>`
+                }
+              </div>
+            </div>
+          `;
+          recommendedCoursesList.appendChild(card);
+
+          // Add event listeners
+          const enrollBtn = card.querySelector(".enroll-btn");
+          if (enrollBtn) {
+            enrollBtn.addEventListener("click", async () => {
+              enrollBtn.disabled = true;
+              enrollBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+              
+              currentCourseToEnroll = {
+                id: course.id,
+                name: course.name || course.title || "Untitled Course",
+                price: course.price || 0
+              };
+              
+              // Direct enrollment with teacher selection
+              await loadTeachers();
+              if (teacherModal) teacherModal.classList.add("active");
+              
+              enrollBtn.disabled = false;
+              enrollBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Enroll Now';
+            });
+          }
+          
+          const viewDetailsBtn = card.querySelector(".view-details-btn");
+          if (viewDetailsBtn) {
+            viewDetailsBtn.addEventListener("click", () => {
+              currentCourseToEnroll = {
+                id: course.id,
+                name: course.name || course.title || "Untitled Course",
+                price: course.price || 0
+              };
+              showCourseDetailsModal(course);
+            });
+          }
+          
+          const continueBtn = card.querySelector(".continue-btn");
+          if (continueBtn) {
+            continueBtn.addEventListener("click", () => {
+              window.location.href = `coursedetails.html?id=${course.id}`;
+            });
           }
         }
       } catch (error) {
-        console.error("Error updating student online status:", error);
+        console.error("Error fetching recommended courses:", error);
+        if (recommendedCoursesList) {
+          recommendedCoursesList.innerHTML = "<p class='error-msg'>Error loading recommended courses.</p>";
+        }
       }
     }
 
-    // Call this when student signs in
-    updateStudentOnlineStatus(true);
-
-    // Update status when student is active
-    document.addEventListener('visibilitychange', function() {
-      if (!document.hidden) {
-        updateStudentOnlineStatus(true);
-      }
-    });
-
-    // Update status periodically
-    setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        updateStudentOnlineStatus(true);
-      }
-    }, 30000); // Every 30 seconds
-
-    // Set offline when leaving
-    window.addEventListener('beforeunload', () => {
-      updateStudentOnlineStatus(false);
-    });
-
-// Fetch recommended courses - Top 6 rated courses
-async function loadRecommendedCourses(userId) {
-  try {
-    if (!recommendedCoursesList) return;
-
-    recommendedCoursesList.innerHTML = "<div class='loading-text'>Loading recommended courses...</div>";
-
-    // Get all courses
-    const coursesSnap = await getDocs(collection(db, "courses"));
-    
-    if (coursesSnap.empty) {
-      recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
-      return;
-    }
-
-    let enrolledCourseIds = [];
-    const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
-    
-    if (userSnap.exists() && userSnap.data().enrollments) {
-      enrolledCourseIds = Object.keys(userSnap.data().enrollments);
-    }
-
-    // Load courses with feedback data
-    const coursesWithRatings = [];
-    
-    for (const docSnap of coursesSnap.docs) {
-      const course = docSnap.data();
-      const courseId = docSnap.id;
-      const isEnrolled = enrolledCourseIds.includes(courseId);
+    // Generate star rating HTML
+    function generateStarRating(rating) {
+      const fullStars = Math.floor(rating);
+      const hasHalfStar = rating % 1 >= 0.5;
+      const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
       
-      // Load feedback data for rating
-      const feedbackData = await loadCourseFeedback(courseId);
-      const imageUrl = await getCourseImageUrl(courseId);
-      
-      coursesWithRatings.push({
-        id: courseId,
-        ...course,
-        isEnrolled: isEnrolled,
-        averageRating: parseFloat(feedbackData.average),
-        ratingCount: feedbackData.total,
-        imageUrl: imageUrl
-      });
-    }
-
-    // Sort by rating (highest first)
-    coursesWithRatings.sort((a, b) => {
-      // If ratings are equal, sort by rating count
-      if (b.averageRating === a.averageRating) {
-        return b.ratingCount - a.ratingCount;
+      let stars = '';
+      for (let i = 0; i < fullStars; i++) {
+        stars += '<i class="fas fa-star"></i>';
       }
-      return b.averageRating - a.averageRating;
-    });
-
-    // Get top 6 rated courses
-    const topCourses = coursesWithRatings.slice(0, 6);
-
-    recommendedCoursesList.innerHTML = "";
-
-    if (topCourses.length === 0) {
-      recommendedCoursesList.innerHTML = "<p class='no-courses'>No recommended courses available at the moment.</p>";
-      return;
+      if (hasHalfStar) {
+        stars += '<i class="fas fa-star-half-alt"></i>';
+      }
+      for (let i = 0; i < emptyStars; i++) {
+        stars += '<i class="far fa-star"></i>';
+      }
+      
+      return stars;
     }
 
-    for (const course of topCourses) {
-      const rating = course.averageRating || 0;
-      const ratingCount = course.ratingCount || 0;
-      const stars = generateStarRating(rating);
+    // Load course feedback from Firestore
+    async function loadCourseFeedback(courseId) {
+      try {
+        const feedbackQuery = query(
+          collection(db, "courseFeedback"),
+          where("courseId", "==", courseId)
+        );
+        
+        const feedbackSnap = await getDocs(feedbackQuery);
+        
+        if (feedbackSnap.empty) {
+          return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+        }
+
+        const feedbacks = [];
+        let totalRating = 0;
+        const distribution = [0, 0, 0, 0, 0]; // 1-star to 5-star
+
+        feedbackSnap.forEach(doc => {
+          const data = doc.data();
+          feedbacks.push(data);
+          totalRating += data.rating || 0;
+          if (data.rating >= 1 && data.rating <= 5) {
+            distribution[data.rating - 1]++;
+          }
+        });
+
+        const average = totalRating / feedbacks.length;
+
+        return {
+          average: average.toFixed(1),
+          total: feedbacks.length,
+          distribution: distribution,
+          feedbacks: feedbacks.slice(0, 3)
+        };
+      } catch (error) {
+        console.error("Error loading course feedback:", error);
+        return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
+      }
+    }
+
+    // Count course lectures
+    async function countCourseLectures(courseId) {
+      try {
+        const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
+        return lecturesSnap.size;
+      } catch (error) {
+        console.error("Error counting lectures:", error);
+        return 0;
+      }
+    }
+
+    // Count course assignments
+    async function countCourseAssignments(courseId) {
+      try {
+        const assignmentsSnap = await getDocs(collection(db, "courses", courseId, "assignments"));
+        return assignmentsSnap.size;
+      } catch (error) {
+        console.error("Error counting assignments:", error);
+        return 0;
+      }
+    }
+
+    // Show detailed course information modal
+    async function showCourseDetailsModal(course) {
+      // Create modal if it doesn't exist
+      let courseDetailsModal = document.getElementById('courseDetailsModal');
       
-      const card = document.createElement("div");
-      card.classList.add("course-card");
-      card.innerHTML = `
-        <div class="course-image">
-          ${course.imageUrl ? 
-            `<img src="${course.imageUrl}" alt="${course.name || course.title || 'Course Image'}" />` : 
-            `<i class="fas fa-book"></i>`}
-        </div>
-        <div class="course-content">
-          <h3 class="course-title">${course.name || course.title || "Untitled Course"}</h3>
-          
-          <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
-            <div style="display: flex; align-items: center; gap: 5px; color: #ffc107;">
-              ${stars}
-              <span style="color: var(--gray); font-size: 14px; margin-left: 5px;">(${ratingCount})</span>
+      if (!courseDetailsModal) {
+        courseDetailsModal = document.createElement('div');
+        courseDetailsModal.id = 'courseDetailsModal';
+        courseDetailsModal.className = 'modal course-details-modal';
+        document.body.appendChild(courseDetailsModal);
+      }
+
+      // Load course feedback from Firestore
+      let feedbackData = await loadCourseFeedback(course.id);
+      
+      // Count lectures and assignments
+      const lecturesCount = await countCourseLectures(course.id);
+      const assignmentsCount = await countCourseAssignments(course.id);
+      
+      // Generate feedback HTML
+      const feedbackHTML = generateFeedbackHTML(feedbackData);
+      
+      // Course features
+      const features = [
+        { icon: 'fa-infinity', text: 'Lifetime Access' },
+        { icon: 'fa-mobile-alt', text: 'Access on Mobile & Desktop' },
+        { icon: 'fa-certificate', text: 'Certificate of Completion' },
+        { icon: 'fa-users', text: 'Expert Instructors' },
+        { icon: 'fa-headphones', text: '24/7 Support' },
+        { icon: 'fa-cloud-download-alt', text: 'Downloadable Resources' }
+      ];
+
+      courseDetailsModal.innerHTML = `
+        <div class="modal-content">
+          <!-- Course Header with Image -->
+          <div class="course-details-header">
+            ${course.imageUrl ? 
+              `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
+              `<div class="course-details-image-placeholder">
+                <i class="fas fa-graduation-cap"></i>
+              </div>`
+            }
+            <div class="course-details-overlay">
+              <div class="course-details-category">${course.category || 'General'}</div>
+              <h2 class="course-details-title">${course.name || course.title}</h2>
+              <div class="course-details-meta-row">
+                <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
+                <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
+                <span><i class="fas fa-users"></i> ${course.enrolledCount || 0} students</span>
+              </div>
             </div>
-            <div style="font-weight: 700; font-size: 18px; color: var(--primary);">₹${course.price || 0}</div>
           </div>
-          
-          <div class="course-actions" style="display: flex; gap: 10px; margin-top: 20px;">
-            ${course.isEnrolled ? 
-              `<button class="btn btn-primary continue-btn" data-id="${course.id}" style="flex: 1;">
-                Continue Learning →
-              </button>` 
-              : 
-              `<button class="enroll-btn" data-id="${course.id}" style="flex: 1; background: linear-gradient(45deg, #28a745, #20c997); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+
+          <!-- Course Body -->
+          <div class="course-details-body">
+            <!-- Course Stats -->
+            <div class="course-stats-grid">
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-video"></i></div>
+                <div class="course-stat-value">${lecturesCount}</div>
+                <div class="course-stat-label">Lectures</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
+                <div class="course-stat-value">${assignmentsCount}</div>
+                <div class="course-stat-label">Assignments</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="course-stat-value">${course.duration || 'N/A'}</div>
+                <div class="course-stat-label">Duration</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
+                <div class="course-stat-value">Yes</div>
+                <div class="course-stat-label">Certificate</div>
+              </div>
+            </div>
+
+            <!-- Price Section -->
+            <div class="course-price-section">
+              <div class="course-price-label">Course Price</div>
+              <div class="course-price">₹${course.price || 0}</div>
+              <div class="course-price-note">One-time payment • Lifetime access</div>
+            </div>
+
+            <!-- Description -->
+            <div class="course-description-section">
+              <h3 class="course-section-title">
+                <i class="fas fa-info-circle"></i>
+                About This Course
+              </h3>
+              <p class="course-description-text">${course.description || 'No description available'}</p>
+            </div>
+
+            <!-- Course Features -->
+            <div class="course-description-section">
+              <h3 class="course-section-title">
+                <i class="fas fa-check-circle"></i>
+                What You'll Get
+              </h3>
+              <div class="course-features-grid">
+                ${features.map(feature => `
+                  <div class="course-feature-item">
+                    <div class="course-feature-icon">
+                      <i class="fas ${feature.icon}"></i>
+                    </div>
+                    <div class="course-feature-text">${feature.text}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Student Feedback -->
+            ${feedbackHTML}
+          </div>
+
+          <!-- Footer with Price and Actions -->
+          <div class="course-details-footer">
+            <div class="footer-price-info">
+              <div class="footer-price-label">Total Price</div>
+              <div class="footer-price">₹${course.price || 0}</div>
+            </div>
+            <div class="footer-actions">
+              <button class="btn btn-secondary" onclick="closeCourseDetailsModal()">
+                Cancel
+              </button>
+              <button class="btn btn-primary" onclick="proceedToPayment()">
                 <i class="fas fa-shopping-cart"></i> Enroll Now
               </button>
-              <button class="view-details-btn" data-id="${course.id}" style="flex: 1; background: linear-gradient(45deg, var(--light), var(--success)); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer;">
-                <i class="fas fa-info-circle"></i> View Details
-              </button>`
-            }
+            </div>
           </div>
         </div>
       `;
-      recommendedCoursesList.appendChild(card);
 
-      // Add event listeners
-      const enrollBtn = card.querySelector(".enroll-btn");
-      if (enrollBtn) {
-        enrollBtn.addEventListener("click", async () => {
-          enrollBtn.disabled = true;
-          enrollBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-          
-          currentCourseToEnroll = {
-            id: course.id,
-            name: course.name || course.title || "Untitled Course",
-            price: course.price || 0
-          };
-          
-          // Direct enrollment with teacher selection
-          await loadTeachers();
-          if (teacherModal) teacherModal.classList.add("active");
-          
-          enrollBtn.disabled = false;
-          enrollBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Enroll Now';
-        });
-      }
-      
-      const viewDetailsBtn = card.querySelector(".view-details-btn");
-      if (viewDetailsBtn) {
-        viewDetailsBtn.addEventListener("click", () => {
-          currentCourseToEnroll = {
-            id: course.id,
-            name: course.name || course.title || "Untitled Course",
-            price: course.price || 0
-          };
-          showCourseDetailsModal(course);
-        });
-      }
-      
-      const continueBtn = card.querySelector(".continue-btn");
-      if (continueBtn) {
-        continueBtn.addEventListener("click", () => {
-          window.location.href = `coursedetails.html?id=${course.id}`;
-        });
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching recommended courses:", error);
-    if (recommendedCoursesList) {
-      recommendedCoursesList.innerHTML = "<p class='error-msg'>Error loading recommended courses.</p>";
-    }
-  }
-}
-// Generate star rating HTML
-function generateStarRating(rating) {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-  
-  let stars = '';
-  for (let i = 0; i < fullStars; i++) {
-    stars += '<i class="fas fa-star"></i>';
-  }
-  if (hasHalfStar) {
-    stars += '<i class="fas fa-star-half-alt"></i>';
-  }
-  for (let i = 0; i < emptyStars; i++) {
-    stars += '<i class="far fa-star"></i>';
-  }
-  
-  return stars;
-}
+      courseDetailsModal.classList.add('active');
 
-// Load course feedback from Firestore
-async function loadCourseFeedback(courseId) {
-  try {
-    const feedbackQuery = query(
-      collection(db, "courseFeedback"),
-      where("courseId", "==", courseId)
-    );
-    
-    const feedbackSnap = await getDocs(feedbackQuery);
-    
-    if (feedbackSnap.empty) {
-      return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
-    }
-
-    const feedbacks = [];
-    let totalRating = 0;
-    const distribution = [0, 0, 0, 0, 0]; // 1-star to 5-star
-
-    feedbackSnap.forEach(doc => {
-      const data = doc.data();
-      feedbacks.push(data);
-      totalRating += data.rating || 0;
-      if (data.rating >= 1 && data.rating <= 5) {
-        distribution[data.rating - 1]++;
-      }
-    });
-
-    const average = totalRating / feedbacks.length;
-
-    return {
-      average: average.toFixed(1),
-      total: feedbacks.length,
-      distribution: distribution,
-      feedbacks: feedbacks.slice(0, 3)
-    };
-  } catch (error) {
-    console.error("Error loading course feedback:", error);
-    return { average: 0, total: 0, distribution: [0,0,0,0,0], feedbacks: [] };
-  }
-}
-
-// Count course lectures
-async function countCourseLectures(courseId) {
-  try {
-    const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
-    return lecturesSnap.size;
-  } catch (error) {
-    console.error("Error counting lectures:", error);
-    return 0;
-  }
-}
-
-// Count course assignments
-async function countCourseAssignments(courseId) {
-  try {
-    const assignmentsSnap = await getDocs(collection(db, "courses", courseId, "assignments"));
-    return assignmentsSnap.size;
-  } catch (error) {
-    console.error("Error counting assignments:", error);
-    return 0;
-  }
-}
-
-// Show detailed course information modal (same as courses.html)
-async function showCourseDetailsModal(course) {
-  // Create modal if it doesn't exist
-  let courseDetailsModal = document.getElementById('courseDetailsModal');
-  
-  if (!courseDetailsModal) {
-    courseDetailsModal = document.createElement('div');
-    courseDetailsModal.id = 'courseDetailsModal';
-    courseDetailsModal.className = 'modal course-details-modal';
-    document.body.appendChild(courseDetailsModal);
-  }
-
-  // Load course feedback from Firestore
-  let feedbackData = await loadCourseFeedback(course.id);
-  
-  // Count lectures and assignments
-  const lecturesCount = await countCourseLectures(course.id);
-  const assignmentsCount = await countCourseAssignments(course.id);
-  
-  // Generate feedback HTML
-  const feedbackHTML = generateFeedbackHTML(feedbackData);
-  
-  // Course features
-  const features = [
-    { icon: 'fa-infinity', text: 'Lifetime Access' },
-    { icon: 'fa-mobile-alt', text: 'Access on Mobile & Desktop' },
-    { icon: 'fa-certificate', text: 'Certificate of Completion' },
-    { icon: 'fa-users', text: 'Expert Instructors' },
-    { icon: 'fa-headphones', text: '24/7 Support' },
-    { icon: 'fa-cloud-download-alt', text: 'Downloadable Resources' }
-  ];
-
-  courseDetailsModal.innerHTML = `
-    <div class="modal-content">
-      <!-- Course Header with Image -->
-      <div class="course-details-header">
-        ${course.imageUrl ? 
-          `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
-          `<div class="course-details-image-placeholder">
-            <i class="fas fa-graduation-cap"></i>
-          </div>`
+      // Close on outside click
+      courseDetailsModal.addEventListener('click', (e) => {
+        if (e.target === courseDetailsModal) {
+          closeCourseDetailsModal();
         }
-        <div class="course-details-overlay">
-          <div class="course-details-category">${course.category || 'General'}</div>
-          <h2 class="course-details-title">${course.name || course.title}</h2>
-          <div class="course-details-meta-row">
-            <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
-            <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
-            <span><i class="fas fa-users"></i> ${course.enrolledCount || 0} students</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Course Body -->
-      <div class="course-details-body">
-        <!-- Course Stats -->
-        <div class="course-stats-grid">
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-video"></i></div>
-            <div class="course-stat-value">${lecturesCount}</div>
-            <div class="course-stat-label">Lectures</div>
-          </div>
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
-            <div class="course-stat-value">${assignmentsCount}</div>
-            <div class="course-stat-label">Assignments</div>
-          </div>
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
-            <div class="course-stat-value">${course.duration || 'N/A'}</div>
-            <div class="course-stat-label">Duration</div>
-          </div>
-          <div class="course-stat">
-            <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
-            <div class="course-stat-value">Yes</div>
-            <div class="course-stat-label">Certificate</div>
-          </div>
-        </div>
-
-        <!-- Price Section -->
-        <div class="course-price-section">
-          <div class="course-price-label">Course Price</div>
-          <div class="course-price">₹${course.price || 0}</div>
-          <div class="course-price-note">One-time payment • Lifetime access</div>
-        </div>
-
-        <!-- Description -->
-        <div class="course-description-section">
-          <h3 class="course-section-title">
-            <i class="fas fa-info-circle"></i>
-            About This Course
-          </h3>
-          <p class="course-description-text">${course.description || 'No description available'}</p>
-        </div>
-
-        <!-- Course Features -->
-        <div class="course-description-section">
-          <h3 class="course-section-title">
-            <i class="fas fa-check-circle"></i>
-            What You'll Get
-          </h3>
-          <div class="course-features-grid">
-            ${features.map(feature => `
-              <div class="course-feature-item">
-                <div class="course-feature-icon">
-                  <i class="fas ${feature.icon}"></i>
-                </div>
-                <div class="course-feature-text">${feature.text}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Student Feedback -->
-        ${feedbackHTML}
-      </div>
-
-      <!-- Footer with Price and Actions -->
-      <div class="course-details-footer">
-        <div class="footer-price-info">
-          <div class="footer-price-label">Total Price</div>
-          <div class="footer-price">₹${course.price || 0}</div>
-        </div>
-        <div class="footer-actions">
-          <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
-            Cancel
-          </button>
-          <button class="modal-btn confirm" onclick="proceedToTeacherSelection()">
-            <i class="fas fa-shopping-cart"></i> Enroll Now
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  courseDetailsModal.classList.add('active');
-
-  // Close on outside click
-  courseDetailsModal.addEventListener('click', (e) => {
-    if (e.target === courseDetailsModal) {
-      closeCourseDetailsModal();
+      });
     }
-  });
-}
 
-// Generate feedback HTML
-function generateFeedbackHTML(feedbackData) {
-  if (feedbackData.total === 0) {
-    return `
-      <div class="course-feedback-section">
-        <h3 class="course-section-title">
-          <i class="fas fa-star"></i>
-          Student Feedback
-        </h3>
-        <div class="no-feedback-message">
-          <div class="no-feedback-icon">
-            <i class="fas fa-comments"></i>
-          </div>
-          <p>No feedback yet. Be the first to review this course!</p>
-        </div>
-      </div>
-    `;
-  }
-
-  const stars = generateStarRating(feedbackData.average);
-  
-  return `
-    <div class="course-feedback-section">
-      <h3 class="course-section-title">
-        <i class="fas fa-star"></i>
-        Student Feedback
-      </h3>
-      
-      <div class="course-rating-summary">
-        <div class="rating-score-container">
-          <div class="rating-score">${feedbackData.average}</div>
-          <div class="rating-stars">${stars}</div>
-          <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
-        </div>
-        
-        <div class="rating-breakdown">
-          ${[5, 4, 3, 2, 1].map(star => {
-            const count = feedbackData.distribution[star - 1];
-            const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
-            return `
-              <div class="rating-bar-item">
-                <div class="rating-bar-label">
-                  <span>${star}</span>
-                  <i class="fas fa-star" style="color: #ffc107;"></i>
-                </div>
-                <div class="rating-bar">
-                  <div class="rating-bar-fill" style="width: ${percentage}%"></div>
-                </div>
-                <div class="rating-bar-percentage">${percentage}%</div>
+    // Generate feedback HTML
+    function generateFeedbackHTML(feedbackData) {
+      if (feedbackData.total === 0) {
+        return `
+          <div class="course-feedback-section">
+            <h3 class="course-section-title">
+              <i class="fas fa-star"></i>
+              Student Feedback
+            </h3>
+            <div class="no-feedback-message">
+              <div class="no-feedback-icon">
+                <i class="fas fa-comments"></i>
               </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-
-      ${feedbackData.feedbacks.length > 0 ? `
-        <div class="student-feedback-list">
-          ${feedbackData.feedbacks.map(feedback => `
-            <div class="student-feedback-item">
-              <div class="feedback-header">
-                <div class="feedback-student-info">
-                  <div class="feedback-student-avatar">
-                    ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
-                  </div>
-                  <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
-                </div>
-                <div class="feedback-rating">
-                  <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
-                </div>
-              </div>
-              <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
+              <p>No feedback yet. Be the first to review this course!</p>
             </div>
-          `).join('')}
+          </div>
+        `;
+      }
+
+      const stars = generateStarRating(feedbackData.average);
+      
+      return `
+        <div class="course-feedback-section">
+          <h3 class="course-section-title">
+            <i class="fas fa-star"></i>
+            Student Feedback
+          </h3>
+          
+          <div class="course-rating-summary">
+            <div class="rating-score-container">
+              <div class="rating-score">${feedbackData.average}</div>
+              <div class="rating-stars">${stars}</div>
+              <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
+            </div>
+            
+            <div class="rating-breakdown">
+              ${[5, 4, 3, 2, 1].map(star => {
+                const count = feedbackData.distribution[star - 1];
+                const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
+                return `
+                  <div class="rating-bar-item">
+                    <div class="rating-bar-label">
+                      <span>${star}</span>
+                      <i class="fas fa-star" style="color: #ffc107;"></i>
+                    </div>
+                    <div class="rating-bar">
+                      <div class="rating-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="rating-bar-percentage">${percentage}%</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          ${feedbackData.feedbacks.length > 0 ? `
+            <div class="student-feedback-list">
+              ${feedbackData.feedbacks.map(feedback => `
+                <div class="student-feedback-item">
+                  <div class="feedback-header">
+                    <div class="feedback-student-info">
+                      <div class="feedback-student-avatar">
+                        ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
+                      </div>
+                      <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
+                    </div>
+                    <div class="feedback-rating">
+                      <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
+                    </div>
+                  </div>
+                  <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
+                </div>
+              `).join('')}
+            </div>
+            ${feedbackData.total > 3 ? `
+              <button class="view-all-feedback-btn">
+                View all ${feedbackData.total} reviews
+              </button>
+            ` : ''}
+          ` : ''}
         </div>
-        ${feedbackData.total > 3 ? `
-          <button class="view-all-feedback-btn">
-            View all ${feedbackData.total} reviews
-          </button>
-        ` : ''}
-      ` : ''}
-    </div>
-  `;
-}
+      `;
+    }
 
-// Close course details modal
-window.closeCourseDetailsModal = function() {
-  const modal = document.getElementById('courseDetailsModal');
-  if (modal) {
-    modal.classList.remove('active');
-  }
-};
+    // Close course details modal
+    window.closeCourseDetailsModal = function() {
+      const modal = document.getElementById('courseDetailsModal');
+      if (modal) {
+        modal.classList.remove('active');
+      }
+    };
 
-// Proceed to teacher selection
-window.proceedToTeacherSelection = async function() {
-  closeCourseDetailsModal();
-  await loadTeachers();
-  if (teacherModal) teacherModal.classList.add("active");
-};
+    // Proceed to payment
+    window.proceedToPayment = function() {
+      closeCourseDetailsModal();
+      showPaymentModal();
+    };
+
+    // Show payment modal
+    function showPaymentModal() {
+      if (!paymentModal) return;
+      
+      // Update payment modal with course details
+      if (paymentCourseName) {
+        paymentCourseName.textContent = currentCourseToEnroll.name;
+      }
+      if (paymentCoursePrice) {
+        paymentCoursePrice.textContent = `₹${currentCourseToEnroll.price}`;
+      }
+      
+      // Reset payment modal state
+      resetPaymentModal();
+      
+      // Show the modal
+      paymentModal.classList.add('active');
+      
+      // Lock navigation during payment
+      lockNavigationForPayment();
+    }
+
+    // Reset payment modal
+    function resetPaymentModal() {
+      // Reset payment method selection
+      selectedPaymentMethod = null;
+      document.querySelectorAll('.payment-method').forEach(method => {
+        method.classList.remove('selected');
+      });
+      
+      // Hide all payment sections
+      qrPaymentSection.classList.remove('active');
+      if (paymentProcessing) paymentProcessing.style.display = 'none';
+      if (paymentSuccess) paymentSuccess.style.display = 'none';
+      if (paymentError) paymentError.style.display = 'none';
+      
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
+      
+      const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+      if (paymentMethodsSection) paymentMethodsSection.style.display = 'block';
+      
+      // Reset proceed button
+      if (proceedPayment) {
+        proceedPayment.disabled = true;
+        proceedPayment.textContent = 'Proceed to Pay';
+      }
+      
+      // Enable cancel button
+      if (cancelPayment) {
+        cancelPayment.disabled = false;
+      }
+      
+      paymentInProgress = false;
+      currentPaymentId = null;
+    }
+
+    // Handle payment proceed
+    async function handlePaymentProceed() {
+      if (!selectedPaymentMethod) {
+        showMessage("Please select a payment method", "error");
+        return;
+      }
+      
+      try {
+        // Disable buttons during payment
+        proceedPayment.disabled = true;
+        cancelPayment.disabled = true;
+        
+        // Create payment record first
+        await storePaymentRecord();
+        
+        if (selectedPaymentMethod === 'upi') {
+          await handleUPIPayment();
+        } else {
+          // For other payment methods, simulate success after delay
+          simulatePaymentSuccess();
+        }
+      } catch (error) {
+        console.error("Payment error:", error);
+        showMessage("Payment initialization failed. Please try again.", "error");
+        proceedPayment.disabled = false;
+        cancelPayment.disabled = false;
+      }
+    }
+
+    // Handle UPI Payment
+    async function handleUPIPayment() {
+      // Hide payment methods section
+      const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+      if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
+      
+      // Show QR code
+      qrPaymentSection.classList.add('active');
+      
+      // Generate QR code
+      await generateQRCode();
+      
+      // Show status indicator
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'block';
+      
+      // Simulate payment success after delay for UPI
+      setTimeout(() => {
+        handlePaymentSuccess({});
+      }, 5000);
+    }
+
+    // Store payment record in Firestore
+    async function storePaymentRecord() {
+      try {
+        const transactionId = generateTransactionId();
+        
+        const paymentData = {
+          transactionId: transactionId,
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          courseId: currentCourseToEnroll.id,
+          courseName: currentCourseToEnroll.name,
+          amount: currentCourseToEnroll.price,
+          paymentMethod: selectedPaymentMethod,
+          status: 'pending',
+          upiId: selectedPaymentMethod === 'upi' ? "aayushjain1811@okhdfcbank" : null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        const docRef = await addDoc(collection(db, "payments"), paymentData);
+        currentPaymentId = docRef.id;
+        
+        // Update display
+        const displayPaymentId = document.getElementById('displayPaymentId');
+        if (displayPaymentId) {
+          displayPaymentId.textContent = transactionId;
+        }
+        
+        console.log("Payment record created:", currentPaymentId);
+      } catch (error) {
+        console.error("Error creating payment record:", error);
+        throw error;
+      }
+    }
+
+    // Generate QR Code
+    async function generateQRCode() {
+      if (!qrCodeCanvas) return;
+      
+      if (typeof QRCode === 'undefined') {
+        console.error("QRCode library not loaded");
+        setTimeout(generateQRCode, 500);
+        return;
+      }
+      
+      const upiId = "aayushjain1811@okhdfcbank";
+      const amount = currentCourseToEnroll.price;
+      const courseName = encodeURIComponent(currentCourseToEnroll.name);
+      const transactionId = generateTransactionId();
+      
+      const upiUrl = `upi://pay?pa=${upiId}&pn=Aayush%20Jain&am=${amount}&tn=Payment%20for%20${courseName}&tr=${transactionId}`;
+      
+      if (upiIdDisplay) {
+        upiIdDisplay.textContent = upiId;
+      }
+      
+      qrCodeCanvas.innerHTML = '';
+      
+      try {
+        new QRCode(qrCodeCanvas, {
+          text: upiUrl,
+          width: 200,
+          height: 200,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        console.log("QR code generated");
+      } catch (error) {
+        console.error("QR code generation error:", error);
+      }
+    }
+
+    // Generate transaction ID
+    function generateTransactionId() {
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      return `SKILLUP_${timestamp}_${random}`.toUpperCase();
+    }
+
+    // Simulate payment success
+    function simulatePaymentSuccess() {
+      // Show processing state
+      const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+      if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
+      
+      if (paymentProcessing) paymentProcessing.style.display = 'block';
+      
+      // Simulate payment processing
+      setTimeout(() => {
+        handlePaymentSuccess({});
+      }, 3000);
+    }
+
+    // Handle successful payment
+    async function handlePaymentSuccess(response) {
+      console.log("Payment successful:", response);
+      
+      // Hide all sections
+      qrPaymentSection.classList.remove('active');
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
+      if (paymentProcessing) paymentProcessing.style.display = 'none';
+      
+      // Show success
+      if (paymentSuccess) paymentSuccess.style.display = 'block';
+      
+      // Update payment record
+      if (currentPaymentId) {
+        await updateDoc(doc(db, "payments", currentPaymentId), {
+          status: 'success',
+          updatedAt: serverTimestamp()
+        });
+      }
+      
+      // Enable proceed button
+      if (proceedPayment) {
+        proceedPayment.disabled = false;
+        proceedPayment.textContent = 'Continue to Enrollment';
+        proceedPayment.onclick = proceedToTeacherSelection;
+      }
+      
+      showMessage("✅ Payment successful!", "success");
+    }
+
+    // Handle payment failure
+    async function handlePaymentFailure(errorMessage) {
+      console.error("Payment failed:", errorMessage);
+      
+      // Hide all sections
+      qrPaymentSection.classList.remove('active');
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
+      
+      // Show error
+      if (paymentError) paymentError.style.display = 'block';
+      if (paymentErrorMessage) {
+        paymentErrorMessage.textContent = errorMessage;
+      }
+      
+      // Update payment record
+      if (currentPaymentId) {
+        await updateDoc(doc(db, "payments", currentPaymentId), {
+          status: 'failed',
+          errorMessage: errorMessage,
+          updatedAt: serverTimestamp()
+        });
+      }
+      
+      // Re-enable buttons
+      if (proceedPayment) {
+        proceedPayment.disabled = false;
+        proceedPayment.textContent = 'Try Again';
+        proceedPayment.onclick = () => {
+          resetPaymentModal();
+          showPaymentModal();
+        };
+      }
+      
+      if (cancelPayment) {
+        cancelPayment.disabled = false;
+      }
+      
+      paymentInProgress = false;
+      
+      showMessage("❌ " + errorMessage, "error");
+    }
+
+    // Proceed to teacher selection after successful payment
+    function proceedToTeacherSelection() {
+      paymentModal.classList.remove('active');
+      resetPaymentModal();
+      unlockNavigation();
+      showTeacherModal();
+    }
+
+    // Function to lock navigation during payment
+    function lockNavigationForPayment() {
+      paymentInProgress = true;
+      
+      // Disable all navigation buttons
+      document.querySelectorAll('.nav-btn, .back-btn, .close-btn').forEach(btn => {
+        if (!btn.classList.contains('payment-close')) {
+          btn.style.pointerEvents = 'none';
+          btn.style.opacity = '0.5';
+        }
+      });
+      
+      // Show overlay
+      showPaymentLockOverlay();
+      
+      // Prevent browser back button
+      window.history.pushState(null, null, window.location.href);
+      window.onpopstate = function() {
+        if (paymentInProgress) {
+          window.history.pushState(null, null, window.location.href);
+          alert('Please complete or cancel the payment before navigating away.');
+        }
+      };
+    }
+
+    // Function to unlock navigation after payment
+    function unlockNavigation() {
+      paymentInProgress = false;
+      currentPaymentId = null;
+      
+      // Re-enable navigation buttons
+      document.querySelectorAll('.nav-btn, .back-btn, .close-btn').forEach(btn => {
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+      });
+      
+      // Remove overlay
+      hidePaymentLockOverlay();
+      
+      // Remove back button prevention
+      window.onpopstate = null;
+    }
+
+    // Show payment lock overlay
+    function showPaymentLockOverlay() {
+      const overlay = document.createElement('div');
+      overlay.id = 'payment-lock-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    function hidePaymentLockOverlay() {
+      const overlay = document.getElementById('payment-lock-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    // Show teacher selection modal
+    function showTeacherModal() {
+      if (!teacherModal) return;
+      
+      teacherModal.classList.add('active');
+      resetTeacherSelection();
+      loadTeachersForSelection();
+    }
+
+    // Load teachers for selection modal from Firebase
+    async function loadTeachersForSelection() {
+      if (!teacherList) return;
+      
+      teacherList.innerHTML = "";
+
+      try {
+        let teachers = [];
+        
+        if (!db) {
+          throw new Error("Firestore not available");
+        }
+
+        // Fetch teachers from Firebase and ensure consistent data structure
+        const snapshot = await getDocs(collection(db, "teachers"));
+        teachers = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || data.displayName || "Teacher",
+            displayName: data.displayName || data.name || "Teacher",
+            specialty: data.specialty || data.expertise || "General Education"
+          };
+        });
+
+        teachers.forEach(teacher => {
+          const teacherCard = document.createElement("div");
+          teacherCard.className = "teacher-card";
+          teacherCard.dataset.teacherId = teacher.id;
+          
+          // Generate initials for avatar
+          const teacherName = teacher.name || teacher.displayName || "Teacher";
+          const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase();
+          
+          teacherCard.innerHTML = `
+            <div class="teacher-avatar">${initials}</div>
+            <div class="teacher-name">${teacherName}</div>
+            <div class="teacher-specialty">${teacher.specialty || "General Education"}</div>
+          `;
+          
+          teacherCard.addEventListener("click", () => {
+            if (teacherCard.classList.contains("selected")) {
+              // Deselect teacher
+              teacherCard.classList.remove("selected");
+              selectedTeachers = selectedTeachers.filter(t => t.id !== teacher.id);
+            } else if (selectedTeachers.length < 5) {
+              // Select teacher
+              teacherCard.classList.add("selected");
+              selectedTeachers.push(teacher);
+            } else {
+              showMessage("You can only select up to 5 teachers", "error");
+              return;
+            }
+            
+            // Update selected count and button state
+            if (selectedCount) selectedCount.textContent = selectedTeachers.length;
+            if (confirmEnrollment) confirmEnrollment.disabled = selectedTeachers.length !== 5;
+          });
+          
+          teacherList.appendChild(teacherCard);
+        });
+
+        if (teachers.length === 0) {
+          teacherList.innerHTML = '<p class="no-results">No teachers available at the moment.</p>';
+        }
+      } catch (error) {
+        console.error("Error loading teachers:", error);
+        teacherList.innerHTML = '<p class="no-results">Error loading teachers. Please try again.</p>';
+      }
+    }
 
     // Load teachers for enrollment
     async function loadTeachers() {
@@ -3066,220 +4556,220 @@ window.proceedToTeacherSelection = async function() {
       return ((firstName ? firstName.charAt(0) : "") + (lastName ? lastName.charAt(0) : "")).toUpperCase() || "T";
     }
 
-// Enroll in course - UPDATED with proper notification system
-async function enrollCourse(userId, courseId, teacher) {
-  try {
-    console.log("Starting enrollment process...");
-    
-    const userRef = doc(db, "users", userId);
-    const courseRef = doc(db, "courses", courseId);
+    // Enroll in course - UPDATED with proper notification system
+    async function enrollCourse(userId, courseId, teacher) {
+      try {
+        console.log("Starting enrollment process...");
+        
+        const userRef = doc(db, "users", userId);
+        const courseRef = doc(db, "courses", courseId);
 
-    // Check if user exists
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        name: currentUser.displayName || "Student",
-        email: currentUser.email,
-        createdAt: serverTimestamp(),
-        enrollments: {},
-        profileComplete: false,
-        role: "student"
-      });
-    }
+        // Check if user exists
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            name: currentUser.displayName || "Student",
+            email: currentUser.email,
+            createdAt: serverTimestamp(),
+            enrollments: {},
+            profileComplete: false,
+            role: "student"
+          });
+        }
 
-    // Check if already enrolled
-    const userData = userSnap.exists() ? userSnap.data() : {};
-    if (userData.enrollments && userData.enrollments[courseId]) {
-      console.log("User already enrolled in this course");
-      return true;
-    }
+        // Check if already enrolled
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        if (userData.enrollments && userData.enrollments[courseId]) {
+          console.log("User already enrolled in this course");
+          return true;
+        }
 
-    // Get course data
-    const courseSnap = await getDoc(courseRef);
-    if (!courseSnap.exists()) {
-      throw new Error("Course not found");
-    }
+        // Get course data
+        const courseSnap = await getDoc(courseRef);
+        if (!courseSnap.exists()) {
+          throw new Error("Course not found");
+        }
 
-    const courseData = courseSnap.data();
-    const courseName = courseData.name || courseData.title || "Unknown Course";
+        const courseData = courseSnap.data();
+        const courseName = courseData.name || courseData.title || "Unknown Course";
 
-    // Create enrollment data
-    const enrollmentData = {
-      progress: 0,
-      completedLessons: [],
-      courseName: courseName,
-      enrolledAt: new Date(),
-      hasPassedTest: false,
-      lastAccessed: new Date(),
-      lectureProgress: 0,
-      teacherId: teacher.id,
-      teacherName: teacher.name,
-      testProgress: 0,
-      assignmentProgress: 0
-    };
+        // Create enrollment data
+        const enrollmentData = {
+          progress: 0,
+          completedLessons: [],
+          courseName: courseName,
+          enrolledAt: new Date(),
+          hasPassedTest: false,
+          lastAccessed: new Date(),
+          lectureProgress: 0,
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          testProgress: 0,
+          assignmentProgress: 0
+        };
 
-    // Update user document with enrollment
-    await updateDoc(userRef, {
-      [`enrollments.${courseId}`]: enrollmentData
-    });
-
-    // Create notification in studentNotifications collection
-    const studentNotificationRef = doc(collection(db, "studentNotifications"));
-    await setDoc(studentNotificationRef, {
-      studentId: userId,
-      studentName: currentUser.displayName || "Student",
-      studentEmail: currentUser.email,
-      title: "Course Enrolled Successfully!",
-      message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
-      timestamp: serverTimestamp(),
-      type: "enrollment",
-      courseId: courseId,
-      courseName: courseName,
-      teacherId: teacher.id,
-      teacherName: teacher.name,
-      read: false
-    });
-
-    // Create notification for teacher in teacherNotifications collection
-    const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
-    await setDoc(teacherNotificationRef, {
-      teacherId: teacher.id,
-      teacherName: teacher.name,
-      title: "New Student Enrolled",
-      message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
-      timestamp: serverTimestamp(),
-      type: "enrollment",
-      courseId: courseId,
-      courseName: courseName,
-      studentId: userId,
-      studentName: currentUser.displayName || "Student",
-      studentEmail: currentUser.email,
-      read: false
-    });
-
-    console.log("Enrollment and notifications created successfully");
-    return true;
-
-  } catch (error) {
-    console.error("Error in enrollCourse:", error);
-    return false;
-  }
-}
-
-// Load notifications - UPDATED to use studentNotifications collection
-async function loadNotifications(userId) {
-  try {
-    if (!notificationList) return;
-
-    // Query studentNotifications collection for this user
-    const notificationsQuery = query(
-      collection(db, "studentNotifications"),
-      where("studentId", "==", userId),
-      orderBy("timestamp", "desc"),
-      limit(10)
-    );
-    
-    const notificationsSnap = await getDocs(notificationsQuery);
-    
-    notificationList.innerHTML = "";
-
-    if (!notificationsSnap.empty) {
-      const notifications = [];
-      notificationsSnap.forEach(doc => {
-        notifications.push({
-          id: doc.id,
-          ...doc.data()
+        // Update user document with enrollment
+        await updateDoc(userRef, {
+          [`enrollments.${courseId}`]: enrollmentData
         });
-      });
 
-      const notificationsToShow = notifications.slice(0, 5);
+        // Create notification in studentNotifications collection
+        const studentNotificationRef = doc(collection(db, "studentNotifications"));
+        await setDoc(studentNotificationRef, {
+          studentId: userId,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          title: "Course Enrolled Successfully!",
+          message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
+          timestamp: serverTimestamp(),
+          type: "enrollment",
+          courseId: courseId,
+          courseName: courseName,
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          read: false
+        });
 
-      if (notificationsToShow.length === 0) {
-        notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-        if (notificationBadge) {
-          notificationBadge.textContent = '0';
-          notificationBadge.style.display = 'none';
-        }
-        return;
+        // Create notification for teacher in teacherNotifications collection
+        const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
+        await setDoc(teacherNotificationRef, {
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          title: "New Student Enrolled",
+          message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
+          timestamp: serverTimestamp(),
+          type: "enrollment",
+          courseId: courseId,
+          courseName: courseName,
+          studentId: userId,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          read: false
+        });
+
+        console.log("Enrollment and notifications created successfully");
+        return true;
+
+      } catch (error) {
+        console.error("Error in enrollCourse:", error);
+        return false;
       }
+    }
 
-      const unreadCount = notifications.filter(n => !n.read).length;
-      if (notificationBadge) {
-        notificationBadge.textContent = unreadCount;
-        notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
-      }
+    // Load notifications - UPDATED to use studentNotifications collection
+    async function loadNotifications(userId) {
+      try {
+        if (!notificationList) return;
 
-      notificationsToShow.forEach(notification => {
-        const notificationItem = document.createElement("div");
-        notificationItem.classList.add("notification-item");
-        if (!notification.read) {
-          notificationItem.classList.add("unread");
-        }
+        // Query studentNotifications collection for this user
+        const notificationsQuery = query(
+          collection(db, "studentNotifications"),
+          where("studentId", "==", userId),
+          orderBy("timestamp", "desc"),
+          limit(10)
+        );
         
-        let timeDisplay = "Recently";
-        if (notification.timestamp) {
-          const now = new Date();
-          const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
-          const diffMs = now - notificationTime;
-          const diffMins = Math.floor(diffMs / 60000);
-          const diffHours = Math.floor(diffMs / 3600000);
-          const diffDays = Math.floor(diffMs / 86400000);
-          
-          if (diffMins < 1) timeDisplay = "Just now";
-          else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
-          else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
-          else timeDisplay = `${diffDays}d ago`;
-        }
+        const notificationsSnap = await getDocs(notificationsQuery);
         
-        // Add icon based on notification type
-        let icon = '🔔';
-        if (notification.type === 'enrollment') icon = '📚';
-        else if (notification.type === 'course_update') icon = '📝';
-        else if (notification.type === 'message') icon = '💬';
-        else if (notification.type === 'achievement') icon = '🏆';
-        
-        notificationItem.innerHTML = `
-          <div class="notification-title">${icon} ${notification.title}</div>
-          <div class="notification-message">${notification.message}</div>
-          <div class="notification-time">${timeDisplay}</div>
-        `;
-        
-        notificationItem.addEventListener('click', async () => {
-          if (!notification.read) {
-            // Mark as read in studentNotifications collection
-            const notificationRef = doc(db, "studentNotifications", notification.id);
-            await updateDoc(notificationRef, {
-              read: true
+        notificationList.innerHTML = "";
+
+        if (!notificationsSnap.empty) {
+          const notifications = [];
+          notificationsSnap.forEach(doc => {
+            notifications.push({
+              id: doc.id,
+              ...doc.data()
+            });
+          });
+
+          const notificationsToShow = notifications.slice(0, 5);
+
+          if (notificationsToShow.length === 0) {
+            notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+            if (notificationBadge) {
+              notificationBadge.textContent = '0';
+              notificationBadge.style.display = 'none';
+            }
+            return;
+          }
+
+          const unreadCount = notifications.filter(n => !n.read).length;
+          if (notificationBadge) {
+            notificationBadge.textContent = unreadCount;
+            notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+          }
+
+          notificationsToShow.forEach(notification => {
+            const notificationItem = document.createElement("div");
+            notificationItem.classList.add("notification-item");
+            if (!notification.read) {
+              notificationItem.classList.add("unread");
+            }
+            
+            let timeDisplay = "Recently";
+            if (notification.timestamp) {
+              const now = new Date();
+              const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
+              const diffMs = now - notificationTime;
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const diffDays = Math.floor(diffMs / 86400000);
+              
+              if (diffMins < 1) timeDisplay = "Just now";
+              else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+              else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+              else timeDisplay = `${diffDays}d ago`;
+            }
+            
+            // Add icon based on notification type
+            let icon = '🔔';
+            if (notification.type === 'enrollment') icon = '📚';
+            else if (notification.type === 'course_update') icon = '📝';
+            else if (notification.type === 'message') icon = '💬';
+            else if (notification.type === 'achievement') icon = '🏆';
+            
+            notificationItem.innerHTML = `
+              <div class="notification-title">${icon} ${notification.title}</div>
+              <div class="notification-message">${notification.message}</div>
+              <div class="notification-time">${timeDisplay}</div>
+            `;
+            
+            notificationItem.addEventListener('click', async () => {
+              if (!notification.read) {
+                // Mark as read in studentNotifications collection
+                const notificationRef = doc(db, "studentNotifications", notification.id);
+                await updateDoc(notificationRef, {
+                  read: true
+                });
+                
+                notificationItem.classList.remove('unread');
+                loadNotifications(userId);
+              }
+              
+              // Navigate based on notification type
+              if (notification.courseId) {
+                window.location.href = `coursedetails.html?id=${notification.courseId}`;
+              }
             });
             
-            notificationItem.classList.remove('unread');
-            loadNotifications(userId);
+            notificationList.appendChild(notificationItem);
+          });
+        } else {
+          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+          if (notificationBadge) {
+            notificationBadge.textContent = '0';
+            notificationBadge.style.display = 'none';
           }
-          
-          // Navigate based on notification type
-          if (notification.courseId) {
-            window.location.href = `coursedetails.html?id=${notification.courseId}`;
-          }
-        });
-        
-        notificationList.appendChild(notificationItem);
-      });
-    } else {
-      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-      if (notificationBadge) {
-        notificationBadge.textContent = '0';
-        notificationBadge.style.display = 'none';
+        }
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+        if (notificationList) {
+          notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+        }
       }
     }
-  } catch (error) {
-    console.error("Error loading notifications:", error);
-    if (notificationList) {
-      notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
-    }
-  }
-}
 
-    // Load recent messages - UPDATED to match your conversations structure
+    // Load recent messages - UPDATED with profile pictures
     async function loadRecentMessages(userId) {
       try {
         if (!recentMessagesList) return;
@@ -3320,10 +4810,14 @@ async function loadNotifications(userId) {
               lastMessageTime = lastMessageData.timestamp || lastMessageTime;
             }
             
+            // Get teacher profile picture
+            const teacherProfilePic = await getTeacherProfilePic(conversation.teacherId);
+            
             conversationsData.push({
               id: conversationId,
               teacherId: conversation.teacherId,
               teacherName: conversation.teacherName,
+              teacherProfilePic: teacherProfilePic,
               lastMessage: lastMessage,
               lastMessageTime: lastMessageTime
             });
@@ -3373,7 +4867,12 @@ async function loadNotifications(userId) {
             
             messageCard.innerHTML = `
               <div class="message-header">
-                <div class="message-avatar">${teacherInitials}</div>
+                <div class="message-avatar">
+                  ${conversation.teacherProfilePic ? 
+                    `<img src="${conversation.teacherProfilePic}" alt="${conversation.teacherName}" />` : 
+                    teacherInitials
+                  }
+                </div>
                 <div class="message-info">
                   <h4>${conversation.teacherName}</h4>
                   <div class="message-time">${timeDisplay}</div>
@@ -3407,42 +4906,103 @@ async function loadNotifications(userId) {
       }
     }
 
+    // Get teacher profile picture from Firebase Storage
+    async function getTeacherProfilePic(teacherId) {
+      try {
+        // Try different possible image paths and names
+        const possiblePaths = [
+          `teacher-profile-pictures/${teacherId}/${teacherId}.jpg`,
+          `teacher-profile-pictures/${teacherId}/${teacherId}.png`,
+          `teacher-profile-pictures/${teacherId}/profile.jpg`,
+          `teacher-profile-pictures/${teacherId}/profile.png`,
+          `teacher-profile-pictures/${teacherId}/image.jpg`,
+          `teacher-profile-pictures/${teacherId}/image.png`,
+        ];
+        
+        for (const path of possiblePaths) {
+          try {
+            const imageRef = ref(storage, path);
+            const url = await getDownloadURL(imageRef);
+            return url;
+          } catch (error) {
+            // Continue to next path if this one fails
+            continue;
+          }
+        }
+        
+        // If no image found, return null
+        return null;
+      } catch (error) {
+        console.error(`Error getting teacher profile picture for ${teacherId}:`, error);
+        return null;
+      }
+    }
+
     // Helper function to get initials from name
     function getInitialsFromName(name) {
       if (!name) return "T";
       return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || "T";
     }
 
-// Clear all notifications - UPDATED to work with studentNotifications collection
-async function clearAllNotifications() {
-  try {
-    if (!currentUser) return;
-    
-    // Query all unread notifications for this student
-    const notificationsQuery = query(
-      collection(db, "studentNotifications"),
-      where("studentId", "==", currentUser.uid),
-      where("read", "==", false)
-    );
-    
-    const notificationsSnap = await getDocs(notificationsQuery);
-    
-    // Batch update all notifications to read
-    const updatePromises = [];
-    notificationsSnap.forEach(docSnap => {
-      const notificationRef = doc(db, "studentNotifications", docSnap.id);
-      updatePromises.push(updateDoc(notificationRef, { read: true }));
-    });
-    
-    await Promise.all(updatePromises);
-    
-    showNotification("✅ All notifications marked as read");
-    loadNotifications(currentUser.uid);
-  } catch (error) {
-    console.error("Error clearing notifications:", error);
-    showNotification("❌ Error clearing notifications", "error");
-  }
-}
+    // Clear all notifications - UPDATED to delete from Firebase
+    async function clearAllNotifications() {
+      try {
+        if (!currentUser) return;
+        
+        // Query all notifications for this student (both read and unread)
+        const notificationsQuery = query(
+          collection(db, "studentNotifications"),
+          where("studentId", "==", currentUser.uid)
+        );
+        
+        const notificationsSnap = await getDocs(notificationsQuery);
+        
+        if (notificationsSnap.empty) {
+          showMessage("No notifications to clear", "error");
+          return;
+        }
+        
+        // Delete all notifications
+        const deletePromises = [];
+        notificationsSnap.forEach(docSnap => {
+          deletePromises.push(deleteDoc(doc(db, "studentNotifications", docSnap.id)));
+        });
+        
+        await Promise.all(deletePromises);
+        
+        showMessage("✅ All notifications cleared");
+        loadNotifications(currentUser.uid);
+        
+        // Close dropdown after clearing
+        if (notificationDropdown) {
+          notificationDropdown.classList.remove('active');
+        }
+      } catch (error) {
+        console.error("Error clearing notifications:", error);
+        showMessage("❌ Error clearing notifications", "error");
+      }
+    }
+
+    // Show success/error messages
+    function showMessage(message, type = "success") {
+      // Remove any existing messages
+      const existingMessages = document.querySelectorAll('.message-toast');
+      existingMessages.forEach(msg => msg.remove());
+
+      // Create new message
+      const messageElement = document.createElement('div');
+      messageElement.className = `message-toast ${type}`;
+      messageElement.textContent = message;
+      
+      document.body.appendChild(messageElement);
+      
+      // Remove message after 4 seconds
+      setTimeout(() => {
+        if (messageElement.parentNode) {
+          messageElement.remove();
+        }
+      }, 4000);
+    }
 
     // Initialize the dashboard when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
