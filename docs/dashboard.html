@@ -1265,6 +1265,448 @@
       text-align: center;
       color: var(--gray);
     }
+    /* Course Details Modal Styles - MATCHING COURSES.HTML */
+.course-details-modal .modal-content {
+  max-width: 1000px;
+  max-height: 90vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  padding: 0;
+}
+
+.course-details-header {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.course-details-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.course-details-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+}
+
+.course-details-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+  padding: 30px;
+  color: white;
+}
+
+.course-details-category {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.course-details-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.course-details-meta-row {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.course-details-body {
+  padding: 20px 30px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.course-details-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgba(67, 97, 238, 0.2);
+  padding-bottom: 10px;
+}
+
+.course-tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.course-tab.active {
+  color: var(--success);
+}
+
+.course-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--success);
+}
+
+.course-tab:hover {
+  color: var(--primary);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.course-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(67, 97, 238, 0.1);
+}
+
+.course-stat {
+  text-align: center;
+  padding: 10px;
+  background: var(--bg-main);
+  border-radius: 10px;
+}
+
+.course-stat-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: var(--success);
+}
+
+.course-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 5px;
+}
+
+.course-stat-label {
+  font-size: 12px;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.course-description-section {
+  margin-bottom: 30px;
+}
+
+.course-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-section-title i {
+  color: var(--success);
+}
+
+.course-description-text {
+  color: var(--gray);
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+.course-features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.course-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.course-feature-item:hover {
+  background: rgba(67, 97, 238, 0.1);
+  transform: translateX(5px);
+}
+
+.course-feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.course-feature-text {
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.course-details-footer {
+  padding: 25px 30px;
+  background: rgba(67, 97, 238, 0.05);
+  border-top: 1px solid rgba(67, 97, 238, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-shrink: 0;
+}
+
+.footer-price-info {
+  flex: 1;
+}
+
+.footer-price-label {
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.footer-price {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+  background: linear-gradient(45deg, var(--primary), var(--success));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 15px;
+}
+
+/* Feedback Styles */
+.course-feedback-section {
+  margin-bottom: 30px;
+}
+
+.course-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 25px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.rating-score-container {
+  text-align: center;
+  padding: 20px;
+  background: var(--bg-main);
+  border-radius: 15px;
+  min-width: 150px;
+}
+
+.rating-score {
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 10px;
+  background: linear-gradient(45deg, var(--primary), var(--success));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.rating-stars {
+  font-size: 20px;
+  color: #ffc107;
+  margin-bottom: 10px;
+}
+
+.rating-count {
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.rating-breakdown {
+  flex: 1;
+}
+
+.rating-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.rating-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 80px;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.rating-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rating-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffc107, #ff9800);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.rating-bar-percentage {
+  min-width: 50px;
+  text-align: right;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.student-feedback-list {
+  display: grid;
+  gap: 15px;
+}
+
+.student-feedback-item {
+  padding: 20px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(67, 97, 238, 0.1);
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.feedback-student-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feedback-student-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--light), var(--success));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.feedback-student-name {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 15px;
+}
+
+.feedback-rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.feedback-stars {
+  color: #ffc107;
+  font-size: 14px;
+}
+
+.feedback-text {
+  color: var(--gray);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.no-feedback-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--gray);
+}
+
+.no-feedback-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.view-all-feedback-btn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 2px solid rgba(67, 97, 238, 0.3);
+  border-radius: 10px;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.view-all-feedback-btn:hover {
+  background: rgba(67, 97, 238, 0.1);
+  border-color: rgba(67, 97, 238, 0.5);
+  transform: translateY(-2px);
+}
 
     /* Logout Confirmation Modal */
     .logout-modal .modal-content {
@@ -3894,281 +4336,264 @@
       }
     }
 
-    // Show detailed course information modal - UPDATED WITH TABS
-    async function showCourseDetailsModal(course) {
-      // Create modal if it doesn't exist
-      let courseDetailsModal = document.getElementById('courseDetailsModal');
-      
-      if (!courseDetailsModal) {
-        courseDetailsModal = document.createElement('div');
-        courseDetailsModal.id = 'courseDetailsModal';
-        courseDetailsModal.className = 'modal course-details-modal';
-        document.body.appendChild(courseDetailsModal);
-      }
+// Show detailed course information modal - ENHANCED WITH TABS
+async function showCourseDetailsModal(course) {
+  let courseDetailsModal = document.getElementById('courseDetailsModal');
+  
+  if (!courseDetailsModal) {
+    courseDetailsModal = document.createElement('div');
+    courseDetailsModal.id = 'courseDetailsModal';
+    courseDetailsModal.className = 'modal course-details-modal';
+    document.body.appendChild(courseDetailsModal);
+  }
 
-      // Load course feedback from Firestore
-      let feedbackData = await loadCourseFeedback(course.id);
-      
-      // Count lectures and assignments
-      const lecturesCount = await countCourseLectures(course.id);
-      const assignmentsCount = await countCourseAssignments(course.id);
-      
-      // Course features
-      const features = [
-        { icon: 'fa-infinity', text: 'Lifetime Access' },
-        { icon: 'fa-mobile-alt', text: 'Access on Mobile & Desktop' },
-        { icon: 'fa-certificate', text: 'Certificate of Completion' },
-        { icon: 'fa-users', text: 'Expert Instructors' },
-        { icon: 'fa-headphones', text: '24/7 Support' },
-        { icon: 'fa-cloud-download-alt', text: 'Downloadable Resources' }
-      ];
+  // Load data
+  let feedbackData = await loadCourseFeedback(course.id);
+  const lecturesCount = await countCourseLectures(course.id);
+  const assignmentsCount = await countCourseAssignments(course.id);
+  
+  // Course features
+  const features = [
+    { icon: 'fa-infinity', text: 'Lifetime Access' },
+    { icon: 'fa-mobile-alt', text: 'Mobile & Desktop' },
+    { icon: 'fa-certificate', text: 'Certificate' },
+    { icon: 'fa-users', text: 'Expert Instructors' },
+    { icon: 'fa-headphones', text: '24/7 Support' },
+    { icon: 'fa-cloud-download-alt', text: 'Resources' }
+  ];
 
-      courseDetailsModal.innerHTML = `
-        <div class="modal-content">
-          <!-- Course Header with Image -->
-          <div class="course-details-header">
-            ${course.imageUrl ? 
-              `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
-              `<div class="course-details-image-placeholder">
-                <i class="fas fa-graduation-cap"></i>
-              </div>`
-            }
-            <div class="course-details-overlay">
-              <div class="course-details-category">${course.category || 'General'}</div>
-              <h2 class="course-details-title">${course.name || course.title}</h2>
-              <div class="course-details-meta-row">
-                <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
-                <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
-                <span><i class="fas fa-users"></i> ${course.enrolledCount || 0} students</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Course Body with Tabs -->
-          <div class="course-details-body">
-            <!-- Tabs Navigation -->
-            <div class="course-details-tabs">
-              <button class="course-tab active" data-tab="overview">
-                <i class="fas fa-info-circle"></i> Overview
-              </button>
-              <button class="course-tab" data-tab="content">
-                <i class="fas fa-list"></i> Content
-              </button>
-              <button class="course-tab" data-tab="reviews">
-                <i class="fas fa-star"></i> Reviews
-              </button>
-            </div>
-
-            <!-- Overview Tab -->
-            <div class="tab-content active" id="overview-tab">
-              <!-- Course Stats -->
-              <div class="course-stats-grid">
-                <div class="course-stat">
-                  <div class="course-stat-icon"><i class="fas fa-video"></i></div>
-                  <div class="course-stat-value">${lecturesCount}</div>
-                  <div class="course-stat-label">Lectures</div>
-                </div>
-                <div class="course-stat">
-                  <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
-                  <div class="course-stat-value">${assignmentsCount}</div>
-                  <div class="course-stat-label">Assignments</div>
-                </div>
-                <div class="course-stat">
-                  <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
-                  <div class="course-stat-value">${course.duration || 'N/A'}</div>
-                  <div class="course-stat-label">Duration</div>
-                </div>
-                <div class="course-stat">
-                  <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
-                  <div class="course-stat-value">Yes</div>
-                  <div class="course-stat-label">Certificate</div>
-                </div>
-              </div>
-
-              <!-- Price Section -->
-              <div class="course-price-section">
-                <div class="course-price-label">Course Price</div>
-                <div class="course-price">₹${course.price || 0}</div>
-                <div class="course-price-note">One-time payment • Lifetime access</div>
-              </div>
-
-              <!-- Description -->
-              <div class="course-description-section">
-                <h3 class="course-section-title">
-                  <i class="fas fa-info-circle"></i>
-                  About This Course
-                </h3>
-                <p class="course-description-text">${course.description || 'No description available'}</p>
-              </div>
-
-              <!-- Course Features -->
-              <div class="course-description-section">
-                <h3 class="course-section-title">
-                  <i class="fas fa-check-circle"></i>
-                  What You'll Get
-                </h3>
-                <div class="course-features-grid">
-                  ${features.map(feature => `
-                    <div class="course-feature-item">
-                      <div class="course-feature-icon">
-                        <i class="fas ${feature.icon}"></i>
-                      </div>
-                      <div class="course-feature-text">${feature.text}</div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            </div>
-
-            <!-- Content Tab -->
-            <div class="tab-content" id="content-tab">
-              <div class="course-description-section">
-                <h3 class="course-section-title">
-                  <i class="fas fa-book"></i> Course Content
-                </h3>
-                <p class="course-description-text">
-                  This course includes ${lecturesCount} lectures and ${assignmentsCount} assignments.
-                  You'll get lifetime access to all course materials.
-                </p>
-              </div>
-            </div>
-
-            <!-- Reviews Tab -->
-            <div class="tab-content" id="reviews-tab">
-              ${generateFeedbackHTML(feedbackData)}
-            </div>
-          </div>
-
-          <!-- Footer with Price and Actions -->
-          <div class="course-details-footer">
-            <div class="footer-price-info">
-              <div class="footer-price-label">Total Price</div>
-              <div class="footer-price">₹${course.price || 0}</div>
-            </div>
-            <div class="footer-actions">
-              <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
-                Cancel
-              </button>
-              <button class="modal-btn confirm" onclick="proceedToPayment()">
-                <i class="fas fa-shopping-cart"></i> Enroll Now
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      courseDetailsModal.classList.add('active');
-
-      // Tab switching functionality
-      const tabs = courseDetailsModal.querySelectorAll('.course-tab');
-      const tabContents = courseDetailsModal.querySelectorAll('.tab-content');
-      
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          const tabName = tab.dataset.tab;
-          
-          // Remove active class from all tabs and contents
-          tabs.forEach(t => t.classList.remove('active'));
-          tabContents.forEach(tc => tc.classList.remove('active'));
-          
-          // Add active class to clicked tab and corresponding content
-          tab.classList.add('active');
-          const targetContent = courseDetailsModal.querySelector(`#${tabName}-tab`);
-          if (targetContent) targetContent.classList.add('active');
-        });
-      });
-
-      // Close on outside click
-      courseDetailsModal.addEventListener('click', (e) => {
-        if (e.target === courseDetailsModal) {
-          closeCourseDetailsModal();
+  courseDetailsModal.innerHTML = `
+    <div class="modal-content">
+      <!-- Course Header -->
+      <div class="course-details-header">
+        ${course.imageUrl ? 
+          `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
+          `<div class="course-details-image-placeholder">
+            <i class="fas fa-graduation-cap"></i>
+          </div>`
         }
-      });
-    }
-
-    // Generate feedback HTML
-    function generateFeedbackHTML(feedbackData) {
-      if (feedbackData.total === 0) {
-        return `
-          <div class="course-feedback-section">
-            <h3 class="course-section-title">
-              <i class="fas fa-star"></i>
-              Student Feedback
-            </h3>
-            <div class="no-feedback-message">
-              <div class="no-feedback-icon">
-                <i class="fas fa-comments"></i>
-              </div>
-              <p>No feedback yet. Be the first to review this course!</p>
-            </div>
+        <div class="course-details-overlay">
+          <div class="course-details-category">${course.category || 'General'}</div>
+          <h2 class="course-details-title">${course.name || course.title}</h2>
+          <div class="course-details-meta-row">
+            <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
+            <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
+            <span><i class="fas fa-star"></i> ${feedbackData.average} (${feedbackData.total})</span>
           </div>
-        `;
-      }
-
-      const stars = generateStarRating(feedbackData.average);
-      
-      return `
-        <div class="course-feedback-section">
-          <h3 class="course-section-title">
-            <i class="fas fa-star"></i>
-            Student Feedback
-          </h3>
-          
-          <div class="course-rating-summary">
-            <div class="rating-score-container">
-              <div class="rating-score">${feedbackData.average}</div>
-              <div class="rating-stars">${stars}</div>
-              <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
-            </div>
-            
-            <div class="rating-breakdown">
-              ${[5, 4, 3, 2, 1].map(star => {
-                const count = feedbackData.distribution[star - 1];
-                const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
-                return `
-                  <div class="rating-bar-item">
-                    <div class="rating-bar-label">
-                      <span>${star}</span>
-                      <i class="fas fa-star" style="color: #ffc107;"></i>
-                    </div>
-                    <div class="rating-bar">
-                      <div class="rating-bar-fill" style="width: ${percentage}%"></div>
-                    </div>
-                    <div class="rating-bar-percentage">${percentage}%</div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-
-          ${feedbackData.feedbacks.length > 0 ? `
-            <div class="student-feedback-list">
-              ${feedbackData.feedbacks.map(feedback => `
-                <div class="student-feedback-item">
-                  <div class="feedback-header">
-                    <div class="feedback-student-info">
-                      <div class="feedback-student-avatar">
-                        ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
-                      </div>
-                      <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
-                    </div>
-                    <div class="feedback-rating">
-                      <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
-                    </div>
-                  </div>
-                  <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
-                </div>
-              `).join('')}
-            </div>
-            ${feedbackData.total > 3 ? `
-              <button class="view-all-feedback-btn">
-                View all ${feedbackData.total} reviews
-              </button>
-            ` : ''}
-          ` : ''}
         </div>
-      `;
+      </div>
+
+      <!-- Course Body with Tabs -->
+      <div class="course-details-body">
+        <!-- Tabs Navigation -->
+        <div class="course-details-tabs">
+          <button class="course-tab active" data-tab="overview">
+            <i class="fas fa-info-circle"></i> Overview
+          </button>
+          <button class="course-tab" data-tab="content">
+            <i class="fas fa-list"></i> Content
+          </button>
+          <button class="course-tab" data-tab="reviews">
+            <i class="fas fa-star"></i> Reviews
+          </button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div class="tab-content active" id="overview-tab">
+          <!-- Stats Grid -->
+          <div class="course-stats-grid">
+            <div class="course-stat">
+              <div class="course-stat-icon"><i class="fas fa-video"></i></div>
+              <div class="course-stat-value">${lecturesCount}</div>
+              <div class="course-stat-label">Lectures</div>
+            </div>
+            <div class="course-stat">
+              <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
+              <div class="course-stat-value">${assignmentsCount}</div>
+              <div class="course-stat-label">Assignments</div>
+            </div>
+            <div class="course-stat">
+              <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
+              <div class="course-stat-value">${course.duration || 'N/A'}</div>
+              <div class="course-stat-label">Duration</div>
+            </div>
+            <div class="course-stat">
+              <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
+              <div class="course-stat-value">Yes</div>
+              <div class="course-stat-label">Certificate</div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="course-description-section">
+            <h3 class="course-section-title">
+              <i class="fas fa-align-left"></i> Description
+            </h3>
+            <p class="course-description-text">${course.description || 'No description available'}</p>
+          </div>
+
+          <!-- Features -->
+          <div class="course-features-grid">
+            ${features.map(feature => `
+              <div class="course-feature-item">
+                <div class="course-feature-icon">
+                  <i class="fas ${feature.icon}"></i>
+                </div>
+                <div class="course-feature-text">${feature.text}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Content Tab -->
+        <div class="tab-content" id="content-tab">
+          <div class="course-description-section">
+            <h3 class="course-section-title">
+              <i class="fas fa-book"></i> Course Content
+            </h3>
+            <p class="course-description-text">
+              This course includes ${lecturesCount} lectures and ${assignmentsCount} assignments.
+              You'll get lifetime access to all course materials.
+            </p>
+          </div>
+        </div>
+
+        <!-- Reviews Tab -->
+        <div class="tab-content" id="reviews-tab">
+          ${generateFeedbackHTML(feedbackData)}
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="course-details-footer">
+        <div class="footer-price-info">
+          <div class="footer-price-label">Total Price</div>
+          <div class="footer-price">₹${course.price || 0}</div>
+        </div>
+        <div class="footer-actions">
+          <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
+            Cancel
+          </button>
+          <button class="modal-btn confirm" onclick="proceedToPayment()">
+            <i class="fas fa-shopping-cart"></i> Enroll Now
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  courseDetailsModal.classList.add('active');
+
+  // Tab switching functionality
+  const tabs = courseDetailsModal.querySelectorAll('.course-tab');
+  const tabContents = courseDetailsModal.querySelectorAll('.tab-content');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      
+      // Remove active class from all tabs and contents
+      tabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(tc => tc.classList.remove('active'));
+      
+      // Add active class to clicked tab and corresponding content
+      tab.classList.add('active');
+      const targetContent = courseDetailsModal.querySelector(`#${tabName}-tab`);
+      if (targetContent) targetContent.classList.add('active');
+    });
+  });
+
+  // Close on outside click
+  courseDetailsModal.addEventListener('click', (e) => {
+    if (e.target === courseDetailsModal) {
+      closeCourseDetailsModal();
     }
+  });
+}
+
+// Generate feedback HTML
+function generateFeedbackHTML(feedbackData) {
+  if (feedbackData.total === 0) {
+    return `
+      <div class="course-feedback-section">
+        <h3 class="course-section-title">
+          <i class="fas fa-star"></i>
+          Student Feedback
+        </h3>
+        <div class="no-feedback-message">
+          <div class="no-feedback-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <p>No feedback yet. Be the first to review this course!</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const stars = generateStarRating(feedbackData.average);
+  
+  return `
+    <div class="course-feedback-section">
+      <h3 class="course-section-title">
+        <i class="fas fa-star"></i>
+        Student Feedback
+      </h3>
+      
+      <div class="course-rating-summary">
+        <div class="rating-score-container">
+          <div class="rating-score">${feedbackData.average}</div>
+          <div class="rating-stars">${stars}</div>
+          <div class="rating-count">${feedbackData.total} rating${feedbackData.total !== 1 ? 's' : ''}</div>
+        </div>
+        
+        <div class="rating-breakdown">
+          ${[5, 4, 3, 2, 1].map(star => {
+            const count = feedbackData.distribution[star - 1];
+            const percentage = feedbackData.total > 0 ? (count / feedbackData.total * 100).toFixed(0) : 0;
+            return `
+              <div class="rating-bar-item">
+                <div class="rating-bar-label">
+                  <span>${star}</span>
+                  <i class="fas fa-star" style="color: #ffc107;"></i>
+                </div>
+                <div class="rating-bar">
+                  <div class="rating-bar-fill" style="width: ${percentage}%"></div>
+                </div>
+                <div class="rating-bar-percentage">${percentage}%</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      ${feedbackData.feedbacks.length > 0 ? `
+        <div class="student-feedback-list">
+          ${feedbackData.feedbacks.map(feedback => `
+            <div class="student-feedback-item">
+              <div class="feedback-header">
+                <div class="feedback-student-info">
+                  <div class="feedback-student-avatar">
+                    ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
+                  </div>
+                  <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
+                </div>
+                <div class="feedback-rating">
+                  <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
+                </div>
+              </div>
+              <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
+            </div>
+          `).join('')}
+        </div>
+        ${feedbackData.total > 3 ? `
+          <button class="view-all-feedback-btn">
+            View all ${feedbackData.total} reviews
+          </button>
+        ` : ''}
+      ` : ''}
+    </div>
+  `;
+}
 
     // Close course details modal
     window.closeCourseDetailsModal = function() {
@@ -4994,25 +5419,27 @@
               else timeDisplay = `${diffDays}d ago`;
             }
             
-            const teacherInitials = getInitialsFromName(conversation.teacherName);
-            
-            messageCard.innerHTML = `
-              <div class="message-header">
-                <div class="message-avatar">
-                  ${conversation.teacherProfilePic ? 
-                    `<img src="${conversation.teacherProfilePic}" alt="${conversation.teacherName}" />` : 
-                    teacherInitials
-                  }
-                </div>
-                <div class="message-info">
-                  <h4>${conversation.teacherName}</h4>
-                  <div class="message-time">${timeDisplay}</div>
-                </div>
-              </div>
-              <div class="message-content">
-                <p>${conversation.lastMessage}</p>
-              </div>
-            `;
+// Inside loadRecentMessages function, replace the messageCard.innerHTML section:
+
+const teacherInitials = getInitialsFromName(conversation.teacherName);
+
+messageCard.innerHTML = `
+  <div class="message-header">
+    <div class="message-avatar">
+      ${conversation.teacherProfilePic ? 
+        `<img src="${conversation.teacherProfilePic}" alt="${conversation.teacherName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />` : 
+        teacherInitials
+      }
+    </div>
+    <div class="message-info">
+      <h4>${conversation.teacherName}</h4>
+      <div class="message-time">${timeDisplay}</div>
+    </div>
+  </div>
+  <div class="message-content">
+    <p>${conversation.lastMessage}</p>
+  </div>
+`;
             
             messageCard.addEventListener('click', () => {
               window.location.href = `studentmessages.html?teacherId=${conversation.teacherId}`;
@@ -5036,7 +5463,37 @@
         }
       }
     }
-
+// Get teacher profile picture from Firebase Storage
+async function getTeacherProfilePic(teacherId) {
+  try {
+    // Try different possible image paths and names
+    const possiblePaths = [
+      `teacher-profile-pictures/${teacherId}/${teacherId}.jpg`,
+      `teacher-profile-pictures/${teacherId}/${teacherId}.png`,
+      `teacher-profile-pictures/${teacherId}/profile.jpg`,
+      `teacher-profile-pictures/${teacherId}/profile.png`,
+      `teacher-profile-pictures/${teacherId}/image.jpg`,
+      `teacher-profile-pictures/${teacherId}/image.png`,
+    ];
+    
+    for (const path of possiblePaths) {
+      try {
+        const imageRef = ref(storage, path);
+        const url = await getDownloadURL(imageRef);
+        return url;
+      } catch (error) {
+        // Continue to next path if this one fails
+        continue;
+      }
+    }
+    
+    // If no image found, return null
+    return null;
+  } catch (error) {
+    console.error(`Error getting teacher profile picture for ${teacherId}:`, error);
+    return null;
+  }
+}
     // Get teacher profile picture from Firebase Storage
     async function getTeacherProfilePic(teacherId) {
       try {
