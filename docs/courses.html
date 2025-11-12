@@ -1438,6 +1438,51 @@
       color: var(--primary);
     }
 
+    .qr-payment-section {
+      text-align: center;
+      padding: 20px;
+      background: rgba(67, 97, 238, 0.05);
+      border-radius: 15px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(67, 97, 238, 0.1);
+      display: none;
+    }
+
+    .qr-payment-section.active {
+      display: block;
+    }
+
+    .qr-code-container {
+      margin: 20px auto;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #qrCodeCanvas {
+      border-radius: 8px;
+    }
+
+    .qr-instructions {
+      margin-top: 15px;
+      color: var(--gray);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .upi-id-display {
+      margin-top: 15px;
+      padding: 10px;
+      background: var(--bg-main);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 16px;
+      color: var(--primary);
+      border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+
     .payment-actions {
       display: flex;
       gap: 15px;
@@ -1649,92 +1694,151 @@
       color: var(--gray);
       font-size: 14px;
     }
+    /* Payment Status Indicator */
+.payment-status-indicator {
+  text-align: center;
+  padding: 30px;
+  background: rgba(67, 97, 238, 0.1);
+  border-radius: 15px;
+  margin: 20px 0;
+  border: 2px solid rgba(67, 97, 238, 0.3);
+  animation: pulse 2s infinite;
+}
 
-    /* Enhanced Course Details Modal - No Scroll Version */
-    .course-details-modal .modal-content {
-      max-width: 1000px;
-      max-height: 90vh;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      overflow: hidden;
-    }
+.status-icon {
+  font-size: 48px;
+  color: var(--success);
+  margin-bottom: 15px;
+  animation: rotate 2s linear infinite;
+}
 
-    .course-details-header {
-      height: 250px;
-      flex-shrink: 0;
-    }
+.status-text {
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
 
-    .course-details-body {
-      overflow-y: auto;
-      padding: 20px 30px;
-    }
+.status-subtext {
+  color: var(--gray);
+  font-size: 14px;
+}
 
-    .course-details-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      border-bottom: 2px solid rgba(67, 97, 238, 0.2);
-      padding-bottom: 10px;
-    }
+/* Enhanced Course Details Modal - No Scroll Version */
+.course-details-modal .modal-content {
+  max-width: 1000px;
+  max-height: 90vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
 
-    .course-tab {
-      padding: 10px 20px;
-      background: transparent;
-      border: none;
-      color: var(--gray);
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      position: relative;
-    }
+.course-details-header {
+  height: 250px;
+  flex-shrink: 0;
+}
 
-    .course-tab.active {
-      color: var(--success);
-    }
+.course-details-body {
+  overflow-y: auto;
+  padding: 20px 30px;
+}
 
-    .course-tab.active::after {
-      content: '';
-      position: absolute;
-      bottom: -12px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: var(--success);
-    }
+.course-details-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid rgba(67, 97, 238, 0.2);
+  padding-bottom: 10px;
+}
 
-    .course-tab:hover {
-      color: var(--primary);
-    }
+.course-tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+}
 
-    .tab-content {
+.course-tab.active {
+  color: var(--success);
+}
+
+.course-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--success);
+}
+
+.course-tab:hover {
+  color: var(--primary);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Compact Stats Grid */
+.course-stats-grid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.course-stat {
+  padding: 10px;
+}
+
+/* Compact Features Grid */
+.course-features-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.course-feature-item {
+  padding: 10px;
+}
+
+    /* Payment Status Section */
+    .payment-status {
       display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    /* Compact Stats Grid */
-    .course-stats-grid {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
-      margin-bottom: 20px;
       padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: center;
     }
 
-    .course-stat {
-      padding: 10px;
+    .payment-status.success {
+      background: rgba(40, 167, 69, 0.1);
+      border: 1px solid rgba(40, 167, 69, 0.3);
+      color: #28a745;
+      display: block;
     }
 
-    /* Compact Features Grid */
-    .course-features-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+    .payment-status.error {
+      background: rgba(255, 71, 87, 0.1);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      color: #ff4757;
+      display: block;
     }
 
-    .course-feature-item {
-      padding: 10px;
+    .payment-status.processing {
+      background: rgba(67, 97, 238, 0.1);
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      color: var(--primary);
+      display: block;
     }
 
     /* Loading State */
@@ -2233,6 +2337,21 @@
       100% { transform: scale(1); }
     }
 
+    /* Payment Lock Overlay */
+    #payment-lock-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
     /* Responsive Design */
     @media (max-width: 1024px) {
       .courses-grid {
@@ -2292,6 +2411,14 @@
 
       .success-actions .btn {
         width: 100%;
+      }
+
+      .payment-methods-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .payment-actions {
+        flex-direction: column;
       }
 
       .course-stats-grid {
@@ -2481,87 +2608,108 @@
     </div>
   </div>
 
-  <!-- Payment Modal -->
-  <div class="modal payment-modal" id="paymentModal">
-    <div class="payment-modal-content">
-      <div class="payment-header">
-        <h2 class="payment-title">Complete Payment</h2>
-        <p class="payment-subtitle">Secure payment - All transactions are encrypted</p>
+<!-- Payment Modal -->
+<div class="modal payment-modal" id="paymentModal">
+  <div class="payment-modal-content">
+    <div class="payment-header">
+      <h2 class="payment-title">Complete Payment</h2>
+      <p class="payment-subtitle">Secure payment - All transactions are encrypted</p>
+    </div>
+    
+    <div class="payment-body">
+      <div class="payment-info">
+        <div class="course-name-payment" id="paymentCourseName">Course Name</div>
+        <div class="course-price-payment" id="paymentCoursePrice">₹0</div>
       </div>
       
-      <div class="payment-body">
-        <div class="payment-info">
-          <div class="course-name-payment" id="paymentCourseName">Course Name</div>
-          <div class="course-price-payment" id="paymentCoursePrice">₹0</div>
+      <!-- Payment Status Indicator -->
+      <div class="payment-status-indicator" id="paymentStatusIndicator" style="display: none;">
+        <div class="status-icon">
+          <i class="fas fa-hourglass-half"></i>
         </div>
-        
-        <div class="payment-methods" id="paymentMethodsSection">
-          <h3 class="payment-method-title">Select Payment Method</h3>
-          <div class="payment-methods-grid">
-            <div class="payment-method" data-method="upi">
-              <div class="payment-method-icon">
-                <i class="fas fa-qrcode"></i>
-              </div>
-              <div class="payment-method-name">UPI / QR Code</div>
+        <div class="status-text">Waiting for payment confirmation...</div>
+        <div class="status-subtext">Please complete the payment to continue</div>
+      </div>
+      
+      <div class="payment-methods" id="paymentMethodsSection">
+        <h3 class="payment-method-title">Select Payment Method</h3>
+        <div class="payment-methods-grid">
+          <div class="payment-method" data-method="upi">
+            <div class="payment-method-icon">
+              <i class="fas fa-qrcode"></i>
             </div>
-            <div class="payment-method" data-method="card">
-              <div class="payment-method-icon">
-                <i class="far fa-credit-card"></i>
-              </div>
-              <div class="payment-method-name">Credit/Debit Card</div>
-            </div>
-            <div class="payment-method" data-method="netbanking">
-              <div class="payment-method-icon">
-                <i class="fas fa-university"></i>
-              </div>
-              <div class="payment-method-name">Net Banking</div>
-            </div>
-            <div class="payment-method" data-method="wallet">
-              <div class="payment-method-icon">
-                <i class="fas fa-wallet"></i>
-              </div>
-              <div class="payment-method-name">Wallets</div>
-            </div>
+            <div class="payment-method-name">UPI / QR Code</div>
           </div>
-        </div>
-        
-        <!-- Payment Processing -->
-        <div class="payment-processing" id="paymentProcessing">
-          <div class="processing-spinner"></div>
-          <div class="processing-text">Processing Payment</div>
-          <div class="processing-subtext">Please wait while we process your payment...</div>
-        </div>
-        
-        <!-- Payment Success -->
-        <div class="payment-success" id="paymentSuccess">
-          <div class="success-checkmark">
-            <div class="check-icon">
-              <span class="icon-line line-tip"></span>
-              <span class="icon-line line-long"></span>
-              <div class="icon-circle"></div>
-              <div class="icon-fix"></div>
+          <div class="payment-method" data-method="card">
+            <div class="payment-method-icon">
+              <i class="far fa-credit-card"></i>
             </div>
+            <div class="payment-method-name">Credit/Debit Card</div>
           </div>
-          <div class="processing-text">Payment Successful!</div>
-          <div class="processing-subtext">You have been enrolled in the course</div>
-        </div>
-        
-        <!-- Payment Error -->
-        <div class="payment-error" id="paymentError">
-          <div class="error-icon">
-            <i class="fas fa-times-circle"></i>
+          <div class="payment-method" data-method="netbanking">
+            <div class="payment-method-icon">
+              <i class="fas fa-university"></i>
+            </div>
+            <div class="payment-method-name">Net Banking</div>
           </div>
-          <div class="error-text">Payment Failed</div>
-          <div class="error-subtext" id="paymentErrorMessage">Please try again or use a different payment method</div>
+          <div class="payment-method" data-method="wallet">
+            <div class="payment-method-icon">
+              <i class="fas fa-wallet"></i>
+            </div>
+            <div class="payment-method-name">Wallets</div>
+          </div>
         </div>
       </div>
       
-      <div class="payment-actions">
-        <button class="modal-btn cancel" id="cancelPayment">Cancel</button>
-        <button class="modal-btn confirm" id="proceedPayment">Proceed to Pay</button>
+      <!-- UPI/QR Payment Section -->
+      <div class="qr-payment-section" id="qrPaymentSection">
+        <div class="qr-code-container" id="qrCodeCanvas"></div>
+        <div class="qr-instructions">
+          <p>Scan this QR code with any UPI app to complete payment</p>
+          <div class="upi-id-display" id="upiIdDisplay">aayushjain1811@okhdfcbank</div>
+          <p style="margin-top: 15px; font-size: 12px; color: var(--gray);">
+            Payment ID: <span id="displayPaymentId" style="font-family: monospace;">Generating...</span>
+          </p>
+        </div>
+      </div>
+      
+      <!-- Payment Processing -->
+      <div class="payment-processing" id="paymentProcessing">
+        <div class="processing-spinner"></div>
+        <div class="processing-text">Verifying Payment</div>
+        <div class="processing-subtext">Please wait while we confirm your payment...</div>
+      </div>
+      
+      <!-- Payment Success -->
+      <div class="payment-success" id="paymentSuccess">
+        <div class="success-checkmark">
+          <div class="check-icon">
+            <span class="icon-line line-tip"></span>
+            <span class="icon-line line-long"></span>
+            <div class="icon-circle"></div>
+            <div class="icon-fix"></div>
+          </div>
+        </div>
+        <div class="processing-text">Payment Successful!</div>
+        <div class="processing-subtext">You have been enrolled in the course</div>
+      </div>
+      
+      <!-- Payment Error -->
+      <div class="payment-error" id="paymentError">
+        <div class="error-icon">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="error-text">Payment Failed</div>
+        <div class="error-subtext" id="paymentErrorMessage">Please try again or use a different payment method</div>
       </div>
     </div>
+    
+    <div class="payment-actions">
+      <button class="modal-btn cancel" id="cancelPayment" disabled>Cancel</button>
+      <button class="modal-btn confirm" id="proceedPayment" disabled>Proceed to Pay</button>
+    </div>
   </div>
+</div>
 
   <!-- Course Details Modal -->
   <div class="modal course-details-modal" id="courseDetailsModal">
@@ -2740,6 +2888,9 @@
     const paymentModal = document.getElementById('paymentModal');
     const paymentCourseName = document.getElementById('paymentCourseName');
     const paymentCoursePrice = document.getElementById('paymentCoursePrice');
+    const qrPaymentSection = document.getElementById('qrPaymentSection');
+    const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+    const upiIdDisplay = document.getElementById('upiIdDisplay');
     const paymentProcessing = document.getElementById('paymentProcessing');
     const paymentSuccess = document.getElementById('paymentSuccess');
     const paymentError = document.getElementById('paymentError');
@@ -2756,6 +2907,7 @@
     let selectedTeachers = [];
     let enrolledCourseId = null;
     let selectedPaymentMethod = null;
+    let paymentStatusCheckInterval = null;
     let paymentInProgress = false;
     let currentPaymentId = null;
 
@@ -2910,6 +3062,7 @@
           }
           paymentModal.classList.remove('active');
           resetPaymentModal();
+          unlockNavigation();
         });
       }
 
@@ -2931,6 +3084,14 @@
           
           // Enable proceed button
           proceedPayment.disabled = false;
+          
+          // Show appropriate payment section
+          if (selectedPaymentMethod === 'upi') {
+            qrPaymentSection.classList.add('active');
+            generateQRCode();
+          } else {
+            qrPaymentSection.classList.remove('active');
+          }
         });
       });
 
@@ -2945,6 +3106,7 @@
           if (e.target.id === 'paymentModal' && paymentInProgress) {
             const confirm = window.confirm('Payment is in progress. Are you sure you want to cancel?');
             if (!confirm) return;
+            unlockNavigation();
           }
           
           e.target.classList.remove('active');
@@ -3533,6 +3695,9 @@
       
       // Show the modal
       paymentModal.classList.add('active');
+      
+      // Lock navigation during payment
+      lockNavigationForPayment();
     }
 
     // Reset payment modal
@@ -3544,9 +3709,13 @@
       });
       
       // Hide all payment sections
+      qrPaymentSection.classList.remove('active');
       if (paymentProcessing) paymentProcessing.style.display = 'none';
       if (paymentSuccess) paymentSuccess.style.display = 'none';
       if (paymentError) paymentError.style.display = 'none';
+      
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
       
       const paymentMethodsSection = document.getElementById('paymentMethodsSection');
       if (paymentMethodsSection) paymentMethodsSection.style.display = 'block';
@@ -3578,15 +3747,15 @@
         proceedPayment.disabled = true;
         cancelPayment.disabled = true;
         
-        // Show processing state
-        if (paymentProcessing) paymentProcessing.style.display = 'block';
-        if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
+        // Create payment record first
+        await storePaymentRecord();
         
-        // Simulate payment processing
-        setTimeout(() => {
-          // Simulate successful payment
-          handlePaymentSuccess();
-        }, 2000);
+        if (selectedPaymentMethod === 'upi') {
+          await handleUPIPayment();
+        } else {
+          // For other payment methods, simulate success after delay
+          simulatePaymentSuccess();
+        }
       } catch (error) {
         console.error("Payment error:", error);
         showMessage("Payment initialization failed. Please try again.", "error");
@@ -3595,13 +3764,144 @@
       }
     }
 
-    // Handle successful payment
-    async function handlePaymentSuccess() {
-      console.log("Payment successful");
+    // Handle UPI Payment
+    async function handleUPIPayment() {
+      // Hide payment methods section
+      const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+      if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
       
-      // Hide processing and show success
+      // Show QR code
+      qrPaymentSection.classList.add('active');
+      
+      // Generate QR code
+      await generateQRCode();
+      
+      // Show status indicator
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'block';
+      
+      // Simulate payment success after delay for UPI
+      setTimeout(() => {
+        handlePaymentSuccess({});
+      }, 5000);
+    }
+
+    // Store payment record in Firestore
+    async function storePaymentRecord() {
+      try {
+        const transactionId = generateTransactionId();
+        
+        const paymentData = {
+          transactionId: transactionId,
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          courseId: currentCourseToEnroll.id,
+          courseName: currentCourseToEnroll.name,
+          amount: currentCourseToEnroll.price,
+          paymentMethod: selectedPaymentMethod,
+          status: 'pending',
+          upiId: selectedPaymentMethod === 'upi' ? "aayushjain1811@okhdfcbank" : null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        const docRef = await addDoc(collection(db, "payments"), paymentData);
+        currentPaymentId = docRef.id;
+        
+        // Update display
+        const displayPaymentId = document.getElementById('displayPaymentId');
+        if (displayPaymentId) {
+          displayPaymentId.textContent = transactionId;
+        }
+        
+        console.log("Payment record created:", currentPaymentId);
+      } catch (error) {
+        console.error("Error creating payment record:", error);
+        throw error;
+      }
+    }
+
+    // Generate QR Code
+    async function generateQRCode() {
+      if (!qrCodeCanvas) return;
+      
+      if (typeof QRCode === 'undefined') {
+        console.error("QRCode library not loaded");
+        setTimeout(generateQRCode, 500);
+        return;
+      }
+      
+      const upiId = "aayushjain1811@okhdfcbank";
+      const amount = currentCourseToEnroll.price;
+      const courseName = encodeURIComponent(currentCourseToEnroll.name);
+      const transactionId = generateTransactionId();
+      
+      const upiUrl = `upi://pay?pa=${upiId}&pn=Aayush%20Jain&am=${amount}&tn=Payment%20for%20${courseName}&tr=${transactionId}`;
+      
+      if (upiIdDisplay) {
+        upiIdDisplay.textContent = upiId;
+      }
+      
+      qrCodeCanvas.innerHTML = '';
+      
+      try {
+        new QRCode(qrCodeCanvas, {
+          text: upiUrl,
+          width: 200,
+          height: 200,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        console.log("QR code generated");
+      } catch (error) {
+        console.error("QR code generation error:", error);
+      }
+    }
+
+    // Generate transaction ID
+    function generateTransactionId() {
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      return `SKILLUP_${timestamp}_${random}`.toUpperCase();
+    }
+
+    // Simulate payment success
+    function simulatePaymentSuccess() {
+      // Show processing state
+      const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+      if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
+      
+      if (paymentProcessing) paymentProcessing.style.display = 'block';
+      
+      // Simulate payment processing
+      setTimeout(() => {
+        handlePaymentSuccess({});
+      }, 3000);
+    }
+
+    // Handle successful payment
+    async function handlePaymentSuccess(response) {
+      console.log("Payment successful:", response);
+      
+      // Hide all sections
+      qrPaymentSection.classList.remove('active');
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
       if (paymentProcessing) paymentProcessing.style.display = 'none';
+      
+      // Show success
       if (paymentSuccess) paymentSuccess.style.display = 'block';
+      
+      // Update payment record
+      if (currentPaymentId) {
+        await updateDoc(doc(db, "payments", currentPaymentId), {
+          status: 'success',
+          updatedAt: serverTimestamp()
+        });
+      }
       
       // Enable proceed button
       if (proceedPayment) {
@@ -3617,11 +3917,24 @@
     async function handlePaymentFailure(errorMessage) {
       console.error("Payment failed:", errorMessage);
       
-      // Hide processing and show error
-      if (paymentProcessing) paymentProcessing.style.display = 'none';
+      // Hide all sections
+      qrPaymentSection.classList.remove('active');
+      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
+      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
+      
+      // Show error
       if (paymentError) paymentError.style.display = 'block';
       if (paymentErrorMessage) {
         paymentErrorMessage.textContent = errorMessage;
+      }
+      
+      // Update payment record
+      if (currentPaymentId) {
+        await updateDoc(doc(db, "payments", currentPaymentId), {
+          status: 'failed',
+          errorMessage: errorMessage,
+          updatedAt: serverTimestamp()
+        });
       }
       
       // Re-enable buttons
@@ -3643,10 +3956,97 @@
       showMessage("❌ " + errorMessage, "error");
     }
 
+    // Update payment record in Firestore
+    async function updatePaymentRecord(status) {
+      try {
+        if (currentPaymentId) {
+          const paymentRef = doc(db, "payments", currentPaymentId);
+          
+          await updateDoc(paymentRef, {
+            status: status,
+            updatedAt: serverTimestamp()
+          });
+          
+          console.log("Payment record updated with status:", status);
+        }
+      } catch (error) {
+        console.error("Error updating payment record:", error);
+      }
+    }
+
+    // Function to lock navigation during payment
+    function lockNavigationForPayment() {
+      paymentInProgress = true;
+      
+      // Disable all navigation buttons
+      document.querySelectorAll('.nav-btn, .back-btn, .close-btn').forEach(btn => {
+        if (!btn.classList.contains('payment-close')) {
+          btn.style.pointerEvents = 'none';
+          btn.style.opacity = '0.5';
+        }
+      });
+      
+      // Show overlay
+      showPaymentLockOverlay();
+      
+      // Prevent browser back button
+      window.history.pushState(null, null, window.location.href);
+      window.onpopstate = function() {
+        if (paymentInProgress) {
+          window.history.pushState(null, null, window.location.href);
+          alert('Please complete or cancel the payment before navigating away.');
+        }
+      };
+    }
+
+    // Function to unlock navigation after payment
+    function unlockNavigation() {
+      paymentInProgress = false;
+      currentPaymentId = null;
+      
+      // Re-enable navigation buttons
+      document.querySelectorAll('.nav-btn, .back-btn, .close-btn').forEach(btn => {
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+      });
+      
+      // Remove overlay
+      hidePaymentLockOverlay();
+      
+      // Remove back button prevention
+      window.onpopstate = null;
+    }
+
+    // Show payment lock overlay
+    function showPaymentLockOverlay() {
+      const overlay = document.createElement('div');
+      overlay.id = 'payment-lock-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    function hidePaymentLockOverlay() {
+      const overlay = document.getElementById('payment-lock-overlay');
+      if (overlay) overlay.remove();
+    }
+
     // Proceed to teacher selection after successful payment
     function proceedToTeacherSelection() {
       paymentModal.classList.remove('active');
       resetPaymentModal();
+      unlockNavigation();
       showTeacherModal();
     }
 
