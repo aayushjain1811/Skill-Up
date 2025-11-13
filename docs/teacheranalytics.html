@@ -1446,9 +1446,7 @@
               </div>
             </div>
           </div>
-          <div class="avatar">
-            <span id="userInitials">AJ</span>
-          </div>
+          <div class="student-avatar">${studentAvatarHTML}</div>
         </div>
       </div>
 
@@ -1774,6 +1772,17 @@
       console.log("User authenticated:", user.uid);
       try {
         const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+        // Update teacher avatar
+const teacherInitials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+const teacherAvatarElement = document.getElementById('teacherAvatar');
+
+if (currentTeacher.photoURL) {
+  teacherAvatarElement.classList.add('has-image');
+  userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+} else {
+  teacherAvatarElement.classList.remove('has-image');
+  userInitials.textContent = teacherInitials;
+}
         
         if (teacherDoc.exists()) {
           currentTeacher = { id: user.uid, ...teacherDoc.data() };
@@ -1873,6 +1882,7 @@
                 email: userData.email || "No email",
                 courseId: courseId,
                 courseName: courseName,
+                profilePictureURL: userData.photoURL || null,
                 progress: enrollment.progress || 0,
                 lastActivity: enrollment.lastAccessed ? 
                   formatDate(enrollment.lastAccessed.toDate()) : "Never",
@@ -2365,7 +2375,12 @@ function calculateProgressData() {
     const card = document.createElement('div');
     card.className = 'student-card';
     
-    const initials = getInitials(student.firstName, student.lastName);
+   const initials = getInitials(student.firstName, student.lastName);
+
+// Student avatar HTML - check if profile picture exists
+const studentAvatarHTML = student.profilePictureURL 
+  ? `<img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
+  : `<span style="position: relative; z-index: 2;">${initials}</span>`;
     
     // Determine performance color
     let performanceColor = "#10b981"; // Default green for good
@@ -2438,7 +2453,14 @@ function calculateProgressData() {
     currentStudentDetail = student;
     
     // Update modal content
-    detailStudentAvatar.textContent = getInitials(student.firstName, student.lastName);
+   const initials = getInitials(student.firstName, student.lastName);
+
+// Update avatar with profile picture if available
+if (student.profilePictureURL) {
+  detailStudentAvatar.innerHTML = `<img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+} else {
+  detailStudentAvatar.innerHTML = `<span style="position: relative; z-index: 2;">${initials}</span>`;
+}
     detailStudentName.textContent = `${student.firstName} ${student.lastName}`;
     detailStudentEmail.textContent = student.email;
     detailStudentCourse.textContent = student.courseName;
@@ -2866,91 +2888,138 @@ function calculateConsistencyScore(student) {
     window.location.href = `teachermessages.html?studentId=${studentId}&courseId=${courseId}`;
   };
 
-  // Set up real-time notifications
-  function setupNotifications() {
-    // Generate demo notifications based on students
-    notifications = [];
+// Set up real-time notifications from teacherNotifications collection
+function setupNotifications() {
+  if (!currentTeacher) return;
+  
+  try {
+    const notificationsRef = collection(db, "teacherNotifications");
+    const notificationsQuery = query(
+      notificationsRef,
+      where("teacherId", "==", currentTeacher.id),
+      where("read", "==", false),
+      orderBy("timestamp", "desc"),
+      limit(20)
+    );
     
-    if (allStudents.length > 0) {
-      allStudents.forEach(student => {
-        const notificationTypes = [
-          {
-            type: 'progress',
-            icon: 'fa-chart-line',
-            title: 'Progress Update',
-            message: `${student.firstName} ${student.lastName} reached ${student.progress}% in ${student.courseName}`,
-            time: new Date(),
-            read: false
-          },
-          {
-            type: 'assignment',
-            icon: 'fa-clipboard-check',
-            title: 'Assignment Completed',
-            message: `${student.firstName} ${student.lastName} completed an assignment in ${student.courseName}`,
-            time: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-            read: false
-          }
-        ];
+    // Set up real-time listener
+    const unsubscribeNotifications = onSnapshot(notificationsQuery, 
+      (snapshot) => {
+        notifications = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          notifications.push({ 
+            id: doc.id, 
+            ...data,
+            timestamp: data.timestamp ? data.timestamp.toDate() : new Date()
+          });
+        });
         
-        // Add one random notification per student for demo
-        const randomNotification = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
-        notifications.push(randomNotification);
-      });
-    }
-    
-    // Sort notifications by time (newest first)
-    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
-    
-    // Update notification count and display
-    updateNotificationDisplay();
+        console.log(`Loaded ${notifications.length} notifications`);
+        updateNotificationDisplay();
+      }, 
+      (error) => {
+        console.error("Error listening to notifications:", error);
+      }
+    );
+  } catch (error) {
+    console.error("Error setting up notifications:", error);
+  }
+}
+  
+function updateNotificationDisplay() {
+  const unreadCount = notifications.filter(n => !n.read).length;
+  notificationBadge.textContent = unreadCount;
+  
+  notificationList.innerHTML = '';
+  
+  if (notifications.length === 0) {
+    notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+    return;
   }
   
-  // Update notification display
-  function updateNotificationDisplay() {
-    const unreadCount = notifications.filter(n => !n.read).length;
-    notificationBadge.textContent = unreadCount;
+  notifications.forEach(notification => {
+    const notificationItem = document.createElement('div');
+    notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
     
-    // Update notification dropdown
-    notificationList.innerHTML = '';
+    const timeDisplay = formatDate(notification.timestamp);
+    const icon = getNotificationIcon(notification.type);
     
-    if (notifications.length === 0) {
-      notificationList.innerHTML = `
-        <div class="notification-empty">
-          <i class="fas fa-bell-slash"></i>
-          <p>No notifications</p>
-          <small>You're all caught up!</small>
+    notificationItem.innerHTML = `
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <div style="color: var(--primary-red); font-size: 16px; margin-top: 2px;">
+          ${icon}
         </div>
-      `;
-    } else {
-      notifications.forEach(notification => {
-        const notificationItem = document.createElement('div');
-        notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
-        notificationItem.addEventListener('click', () => markNotificationAsRead(notification));
-        
-        notificationItem.innerHTML = `
+        <div style="flex: 1;">
           <div class="notification-title">${notification.title}</div>
           <div class="notification-message">${notification.message}</div>
-          <div class="notification-time">${formatDate(notification.time)}</div>
-        `;
-        
-        notificationList.appendChild(notificationItem);
-      });
-    }
-  }
-  
-  // Mark notification as read
-  function markNotificationAsRead(notification) {
-    notification.read = true;
-    updateNotificationDisplay();
-  }
+          <div class="notification-time">${timeDisplay}</div>
+        </div>
+      </div>
+    `;
+    
+    notificationList.appendChild(notificationItem);
+  });
+}
 
-  // Clear notifications
-  if (clearNotifications) {
-    clearNotifications.addEventListener('click', () => {
-      notifications = [];
-      updateNotificationDisplay();
-    });
+// Add helper function for notification icons
+function getNotificationIcon(type) {
+  switch(type) {
+    case 'submission':
+      return '<i class="fas fa-file-upload"></i>';
+    case 'enrollment':
+      return '<i class="fas fa-user-plus"></i>';
+    case 'progress':
+      return '<i class="fas fa-chart-line"></i>';
+    case 'message':
+      return '<i class="fas fa-comment"></i>';
+    default:
+      return '<i class="fas fa-bell"></i>';
   }
+}
+async function clearAllNotifications() {
+  try {
+    if (!currentTeacher) return;
+    
+    const notificationsRef = collection(db, "teacherNotifications");
+    const notificationsQuery = query(
+      notificationsRef,
+      where("teacherId", "==", currentTeacher.id),
+      where("read", "==", false)
+    );
+    
+    const snapshot = await getDocs(notificationsQuery);
+    
+    const updatePromises = [];
+    snapshot.forEach((doc) => {
+      updatePromises.push(updateDoc(doc.ref, {
+        read: true,
+        readAt: serverTimestamp()
+      }));
+    });
+    
+    await Promise.all(updatePromises);
+    
+    console.log(`Cleared ${snapshot.size} notifications`);
+    
+    // Update local state
+    notifications.forEach(notification => {
+      notification.read = true;
+    });
+    
+    updateNotificationDisplay();
+    
+    alert("✅ All notifications cleared");
+    
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    alert("❌ Error clearing notifications");
+  }
+}
+clearNotifications.addEventListener('click', (e) => {
+  e.stopPropagation();
+  clearAllNotifications();
+});
 
   // Event listeners
   sidebarToggle.addEventListener('click', () => {
