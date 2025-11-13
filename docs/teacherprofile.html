@@ -466,6 +466,7 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+       line-height: 0;
     }
 
     .avatar::before {
@@ -498,6 +499,7 @@
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+  display: block;
 }
 
 /* Hide the rotating background when image is present */
@@ -2026,10 +2028,17 @@ passwordForm.addEventListener('submit', async (e) => {
       }
     });
 
-    // Modal functions
-    window.openModal = (modalId) => {
-      document.getElementById(modalId).style.display = 'flex';
-    };
+// Modal functions
+window.openModal = (modalId) => {
+  document.getElementById(modalId).style.display = 'flex';
+  
+  // Initialize profile picture when opening edit modal
+  if (modalId === 'editProfileModal') {
+    setTimeout(() => {
+      initEditModalProfilePic();
+    }, 50);
+  }
+};
 
 // Modal functions
 window.closeModal = (modalId) => {
