@@ -1766,57 +1766,57 @@
   let notifications = [];
   let currentStudentDetail = null;
 
-  // Check authentication state
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      console.log("User authenticated:", user.uid);
-      try {
-        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
-        // Update teacher avatar
-const teacherInitials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
-const teacherAvatarElement = document.getElementById('teacherAvatar');
-
-if (currentTeacher.photoURL) {
-  teacherAvatarElement.classList.add('has-image');
-  userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-} else {
-  teacherAvatarElement.classList.remove('has-image');
-  userInitials.textContent = teacherInitials;
-}
+// Check authentication state
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    console.log("User authenticated:", user.uid);
+    try {
+      const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+      
+      if (teacherDoc.exists()) {
+        currentTeacher = { id: user.uid, ...teacherDoc.data() };
+        console.log("Teacher data loaded:", currentTeacher);
         
-        if (teacherDoc.exists()) {
-          currentTeacher = { id: user.uid, ...teacherDoc.data() };
-          console.log("Teacher data loaded:", currentTeacher);
-          
-          // Update UI with teacher info
-          userInitials.textContent = getInitials(currentTeacher.firstName, currentTeacher.lastName);
-          welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
-          welcomeSubtitle.textContent = `Track performance and student engagement`;
-          
-          // Set up real-time notifications
-          setupNotifications();
-          
-          // Load analytics data
-          await loadAnalyticsData();
-          
-          // Hide loading animation
-          setTimeout(() => {
-            if (loadingContainer) loadingContainer.classList.add('hidden');
-          }, 1000);
-          
+        // Update teacher avatar - MOVED THIS INSIDE THE IF BLOCK
+        const teacherInitials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+        const teacherAvatarElement = document.querySelector('.avatar'); // Fixed selector
+        
+        if (currentTeacher.photoURL) {
+          teacherAvatarElement.classList.add('has-image');
+          teacherAvatarElement.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
         } else {
-          console.error("Teacher document not found for user:", user.uid);
-          window.location.href = "teachersignin.html";
+          teacherAvatarElement.classList.remove('has-image');
+          teacherAvatarElement.innerHTML = `<span style="position: relative; z-index: 2;">${teacherInitials}</span>`;
         }
-      } catch (error) {
-        console.error("Error getting teacher document:", error);
-        showError("Authentication error: " + error.message);
+        
+        // Update UI with teacher info
+        welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
+        welcomeSubtitle.textContent = `Track performance and student engagement`;
+        
+        // Set up real-time notifications
+        setupNotifications();
+        
+        // Load analytics data
+        await loadAnalyticsData();
+        
+        // Hide loading animation
+        setTimeout(() => {
+          if (loadingContainer) loadingContainer.classList.add('hidden');
+        }, 1000);
+        
+      } else {
+        console.error("Teacher document not found for user:", user.uid);
+        window.location.href = "teachersignin.html";
       }
-    } else {
-      console.log("User not authenticated, redirecting to login");
-      window.location.href = "teachersignin.html";
+    } catch (error) {
+      console.error("Error getting teacher document:", error);
+      showError("Authentication error: " + error.message);
     }
-  });
+  } else {
+    console.log("User not authenticated, redirecting to login");
+    window.location.href = "teachersignin.html";
+  }
+});
 
   // Helper function to get initials
   function getInitials(firstName, lastName) {
