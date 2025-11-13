@@ -447,22 +447,23 @@
       animation: pulse 2s infinite;
     }
 
-    .avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 18px;
-      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  line-height: 0;  /* ADD THIS LINE */
+}
 
     .avatar::before {
       content: '';
@@ -484,6 +485,36 @@
       position: relative;
       z-index: 2;
     }
+    .avatar img {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* Hide the rotating background when image is present */
+.avatar.has-image::before {
+  display: none;
+}
+/* Avatar image styles */
+.student-avatar img,
+.student-modal-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* Ensure avatar containers maintain aspect ratio */
+.student-avatar,
+.student-modal-avatar {
+  position: relative;
+  overflow: hidden;
+}
 
     /* Stats Cards */
     .stats-container {
@@ -669,6 +700,66 @@
       display: flex;
       align-items: center;
     }
+    /* Course image in student card header */
+.student-header-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.course-thumbnail {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  object-fit: cover;
+  margin-left: auto;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.course-thumbnail-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Course image in modal */
+.student-modal-header-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.course-thumbnail-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 15px;
+  object-fit: cover;
+  border: 3px solid var(--primary-red);
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+}
+
+.course-thumbnail-large-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 15px;
+  background: var(--light-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--primary-red);
+  font-size: 2rem;
+  color: var(--primary-red);
+}
     
     .student-avatar {
       width: 60px;
@@ -1294,29 +1385,29 @@
           <div class="topbar-title">My Students</div>
         </div>
         
-        <div class="user-info">
-          <!-- Single Notification Container -->
-          <div class="notification-container">
-            <button class="notification-icon" id="notificationIcon">
-              <i class="fas fa-bell"></i>
-              <span class="notification-badge" id="notificationBadge">0</span>
-            </button>
-            <!-- Notification Dropdown -->
-            <div class="notification-dropdown" id="notificationDropdown">
-              <div class="notification-header">
-                <h3>Notifications</h3>
-                <button class="notification-clear" id="clearNotifications">Clear All</button>
-              </div>
-              <div class="notification-list" id="notificationList">
-                <!-- Notifications will be populated here -->
-              </div>
-            </div>
-          </div>
-          <div class="avatar">
-            <span id="userInitials">AJ</span>
-          </div>
-        </div>
+ <div class="user-info">
+  <!-- Single Notification Container -->
+  <div class="notification-container">
+    <button class="notification-icon" id="notificationIcon">
+      <i class="fas fa-bell"></i>
+      <span class="notification-badge" id="notificationBadge">0</span>
+    </button>
+    <!-- Notification Dropdown -->
+    <div class="notification-dropdown" id="notificationDropdown">
+      <div class="notification-header">
+        <h3>Notifications</h3>
+        <button class="notification-clear" id="clearNotifications">Clear All</button>
       </div>
+      <div class="notification-list" id="notificationList">
+        <!-- Notifications will be populated here -->
+      </div>
+    </div>
+  </div>
+  <span id="teacherDisplayName">Loading...</span>
+  <div class="avatar" id="teacherAvatar">
+    <span id="userInitials">AJ</span>
+  </div>
+</div>
 
       <!-- Stats Overview -->
       <div class="stats-container">
@@ -1445,6 +1536,11 @@
     addDoc,
     serverTimestamp
   } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  import { 
+  getStorage, 
+  ref, 
+  getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
   // Firebase Config
   const firebaseConfig = {
@@ -1461,6 +1557,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   // DOM elements
   const loadingScreen = document.getElementById('loadingScreen');
@@ -1475,6 +1572,8 @@
   const notificationList = document.getElementById('notificationList');
   const clearNotifications = document.getElementById('clearNotifications');
   const userInitials = document.getElementById('userInitials');
+  const teacherAvatar = document.getElementById('teacherAvatar');  
+  const teacherDisplayName = document.getElementById('teacherDisplayName');  
   const totalStudents = document.getElementById('totalStudents');
   const avgProgress = document.getElementById('avgProgress');
   const topPerformer = document.getElementById('topPerformer');
@@ -1488,6 +1587,7 @@
   const studentModal = document.getElementById('studentModal');
   const studentModalBody = document.getElementById('studentModalBody');
   const closeStudentModalBtn = document.getElementById('closeStudentModal');
+
 
   // Current teacher data and students
   let currentTeacher = null;
@@ -1533,97 +1633,112 @@
     }
   });
 
-  // Populate teacher info
-  function populateTeacherInfo() {
-    const teacher = currentTeacher;
-    const initials = getInitials(teacher.firstName, teacher.lastName);
-    
-    // Navigation
+// Populate teacher info
+function populateTeacherInfo() {
+  const teacher = currentTeacher;
+  const initials = getInitials(teacher.firstName, teacher.lastName);
+  
+  // Update display name
+  if (teacherDisplayName) {
+    teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
+  }
+  
+  // Update avatar with profile picture if available
+  if (teacher.photoURL) {
+    teacherAvatar.classList.add('has-image');
+    userInitials.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.firstName} ${teacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  } else {
+    teacherAvatar.classList.remove('has-image');
     userInitials.textContent = initials;
   }
+}
 
-  // Load teacher's students with assignment data
-  async function loadTeacherStudents() {
-    try {
-      allStudents = [];
+// Load teacher's students with assignment data
+async function loadTeacherStudents() {
+  try {
+    allStudents = [];
+    
+    console.log("Loading students for teacher:", currentTeacher.id);
+    
+    // Get ALL users from the users collection
+    const usersSnapshot = await getDocs(collection(db, "users"));
+    console.log(`Found ${usersSnapshot.size} users in database`);
+    
+    // Get ALL courses for course name mapping
+    const coursesSnapshot = await getDocs(collection(db, "courses"));
+    const courseMap = {};
+    coursesSnapshot.forEach(doc => {
+      courseMap[doc.id] = doc.data().name;
+    });
+    
+    let enrollmentCount = 0;
+    
+    // Process each user to find students enrolled with this teacher
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
       
-      console.log("Loading students for teacher:", currentTeacher.id);
-      
-      // Get ALL users from the users collection
-      const usersSnapshot = await getDocs(collection(db, "users"));
-      console.log(`Found ${usersSnapshot.size} users in database`);
-      
-      // Get ALL courses for course name mapping
-      const coursesSnapshot = await getDocs(collection(db, "courses"));
-      const courseMap = {};
-      coursesSnapshot.forEach(doc => {
-        courseMap[doc.id] = doc.data().name;
-      });
-      
-      let enrollmentCount = 0;
-      
-      // Process each user to find students enrolled with this teacher
-      for (const userDoc of usersSnapshot.docs) {
-        const userData = userDoc.data();
-        
-        // Check if user has enrollments (students will have enrollments)
-        if (userData.enrollments) {
-          // Check each enrollment to see if this teacher is assigned
-          for (const courseId in userData.enrollments) {
-            const enrollment = userData.enrollments[courseId];
+      // Check if user has enrollments (students will have enrollments)
+      if (userData.enrollments) {
+        // Check each enrollment to see if this teacher is assigned
+        for (const courseId in userData.enrollments) {
+          const enrollment = userData.enrollments[courseId];
+          
+          // Check if this enrollment has our teacher assigned
+          if (enrollment.teacherId === currentTeacher.id) {
+            enrollmentCount++;
             
-            // Check if this enrollment has our teacher assigned
-            if (enrollment.teacherId === currentTeacher.id) {
-              enrollmentCount++;
-              
-              const courseName = courseMap[courseId] || "Unknown Course";
-              
-              // Get assignment data for this course and student
-              const assignmentData = await getAssignmentData(courseId, userDoc.id);
-              
-              // Create a separate student record for each course enrollment
-              allStudents.push({
-                id: userDoc.id,
-                enrollmentId: `${userDoc.id}_${courseId}`, // Unique ID for this enrollment
-                firstName: userData.firstName || "Student",
-                lastName: userData.lastName || "User",
-                email: userData.email || "No email",
-                courseId: courseId,
-                courseName: courseName,
-                progress: enrollment.progress || 0,
-                lastActivity: enrollment.lastAccessed ? 
-                  formatDate(enrollment.lastAccessed.toDate()) : "Never",
-                enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
-                assignmentsCompleted: assignmentData.completedAssignments,
-                totalAssignments: assignmentData.totalAssignments,
-                performance: getPerformanceFromProgress(enrollment.progress || 0),
-                teacherName: enrollment.teacherName || `${currentTeacher.firstName} ${currentTeacher.lastName}`
-              });
-              
-              console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}`);
-            }
+            const courseName = courseMap[courseId] || "Unknown Course";
+            
+            // Get assignment data for this course and student
+            const assignmentData = await getAssignmentData(courseId, userDoc.id);
+            const courseImageURL = await getCourseImageURL(courseId);
+            const profilePictureURL = await getStudentProfilePicture(userDoc.id);
+            
+            // Create a separate student record for each course enrollment
+            allStudents.push({
+              id: userDoc.id,
+              enrollmentId: `${userDoc.id}_${courseId}`, // Unique ID for this enrollment
+              firstName: userData.firstName || "Student",
+              lastName: userData.lastName || "User",
+              email: userData.email || "No email",
+              courseId: courseId,
+              courseName: courseName,
+              courseImageURL: courseImageURL,
+              profilePictureURL: profilePictureURL, // Add profile picture URL
+              progress: enrollment.progress || 0,
+              lastActivity: enrollment.lastAccessed ? 
+                formatDate(enrollment.lastAccessed.toDate()) : "Never",
+              enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
+              assignmentsCompleted: assignmentData.completedAssignments,
+              totalAssignments: assignmentData.totalAssignments,
+              performance: getPerformanceFromProgress(enrollment.progress || 0),
+              teacherName: enrollment.teacherName || `${currentTeacher.firstName} ${currentTeacher.lastName}`
+            });
+            
+            console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}`);
           }
         }
       }
-      
-      console.log(`Found ${enrollmentCount} student-course enrollments with teacher ${currentTeacher.id}`);
-      
-      filteredStudents = [...allStudents];
-      
-      // Update stats
-      updateStats();
-      
-      // Render students
-      renderStudents();
-      
-    } catch (error) {
-      console.error("Error loading teacher students:", error);
-      // Show error state
-      emptyState.style.display = "block";
-      studentsList.style.display = "none";
-      emptyDescription.textContent = `Error loading students: ${error.message}. Please try refreshing the page.`;
     }
+    
+    console.log(`Found ${enrollmentCount} student-course enrollments with teacher ${currentTeacher.id}`);
+    
+    filteredStudents = [...allStudents];
+    
+    // Update stats
+    updateStats();
+    
+    // Render students
+    renderStudents();
+    
+  } catch (error) {
+    console.error("Error loading teacher students:", error);
+    // Show error state
+    emptyState.style.display = "block";
+    studentsList.style.display = "none";
+    emptyDescription.textContent = `Error loading students: ${error.message}. Please try refreshing the page.`;
   }
+}
 
   // Get assignment data for a student in a course
   async function getAssignmentData(courseId, studentId) {
@@ -1656,7 +1771,17 @@
       };
     }
   }
-
+// Get course image URL from Firebase Storage
+async function getCourseImageURL(courseId) {
+  try {
+    const imageRef = ref(storage, `coursepic/${courseId}/${courseId}.png`);
+    const url = await getDownloadURL(imageRef);
+    return url;
+  } catch (error) {
+    console.log(`No image found for course ${courseId}:`, error.code);
+    return null;
+  }
+}
   // Update statistics
   function updateStats() {
     if (allStudents.length === 0) {
@@ -1718,21 +1843,32 @@
     });
   }
 
-  // Create student card element
-  function createStudentCard(student) {
-    const card = document.createElement('div');
-    card.className = 'student-card';
-    
-    const initials = getInitials(student.firstName, student.lastName);
-    
-    // Determine performance color
-    let performanceColor = "#10b981"; // Default green for good
-    if (student.performance === "Needs Improvement") performanceColor = "#f59e0b"; // Yellow
-    if (student.performance === "Needs Attention") performanceColor = "#ef4444"; // Red
-    
-    card.innerHTML = `
-      <div class="student-header">
-        <div class="student-avatar">${initials}</div>
+// Create student card element
+function createStudentCard(student) {
+  const card = document.createElement('div');
+  card.className = 'student-card';
+  
+  const initials = getInitials(student.firstName, student.lastName);
+  
+  // Determine performance color
+  let performanceColor = "#10b981";
+  if (student.performance === "Needs Improvement") performanceColor = "#f59e0b";
+  if (student.performance === "Needs Attention") performanceColor = "#ef4444";
+  
+  // Course image HTML
+  const courseImageHTML = student.courseImageURL 
+    ? `<img src="${student.courseImageURL}" alt="${student.courseName}" class="course-thumbnail">`
+    : `<div class="course-thumbnail-placeholder"><i class="fas fa-book"></i></div>`;
+  
+  // Student avatar HTML - check if profile picture exists
+  const studentAvatarHTML = student.profilePictureURL 
+    ? `<div class="student-avatar"><img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`
+    : `<div class="student-avatar">${initials}</div>`;
+  
+  card.innerHTML = `
+    <div class="student-header">
+      <div class="student-header-content">
+        ${studentAvatarHTML}
         <div class="student-info">
           <div class="student-name">${student.firstName} ${student.lastName}</div>
           <div class="student-email">${student.email}</div>
@@ -1740,54 +1876,55 @@
             <i class="fas fa-book"></i> ${student.courseName}
           </div>
         </div>
+        ${courseImageHTML}
+      </div>
+    </div>
+    
+    <div class="student-body">
+      <div class="student-details">
+        <div class="detail-item">
+          <div class="detail-label">Course</div>
+          <div class="detail-value">${student.courseName}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Enrolled</div>
+          <div class="detail-value">${student.enrolledDate.toLocaleDateString()}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Assignments</div>
+          <div class="detail-value">${student.assignmentsCompleted}/${student.totalAssignments}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Performance</div>
+          <div class="detail-value" style="color: ${performanceColor}">${student.performance}</div>
+        </div>
       </div>
       
-      <div class="student-body">
-        <div class="student-details">
-          <div class="detail-item">
-            <div class="detail-label">Course</div>
-            <div class="detail-value">${student.courseName}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Enrolled</div>
-            <div class="detail-value">${student.enrolledDate.toLocaleDateString()}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Assignments</div>
-            <div class="detail-value">${student.assignmentsCompleted}/${student.totalAssignments}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Performance</div>
-            <div class="detail-value" style="color: ${performanceColor}">${student.performance}</div>
-          </div>
+      <div class="progress-section">
+        <div class="progress-header">
+          <div class="progress-label">Course Progress</div>
+          <div class="progress-percentage">${student.progress}%</div>
         </div>
-        
-        <div class="progress-section">
-          <div class="progress-header">
-            <div class="progress-label">Course Progress</div>
-            <div class="progress-percentage">${student.progress}%</div>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${student.progress}%"></div>
-          </div>
-        </div>
-        
-        <div class="student-actions">
-          <button class="btn btn-primary" onclick="viewStudentDetails('${student.enrollmentId}')">
-            <i class="fas fa-eye"></i>
-            <span>View Details</span>
-          </button>
-          <button class="btn btn-secondary" onclick="messageStudent('${student.id}', '${student.courseId}')">
-            <i class="fas fa-comment"></i>
-            <span>Message</span>
-          </button>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${student.progress}%"></div>
         </div>
       </div>
-    `;
-    
-    return card;
-  }
-
+      
+      <div class="student-actions">
+        <button class="btn btn-primary" onclick="viewStudentDetails('${student.enrollmentId}')">
+          <i class="fas fa-eye"></i>
+          <span>View Details</span>
+        </button>
+        <button class="btn btn-secondary" onclick="messageStudent('${student.id}', '${student.courseId}')">
+          <i class="fas fa-comment"></i>
+          <span>Message</span>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  return card;
+}
   // Search students
   function searchStudents() {
     const searchTerm = searchInput.value.trim().toLowerCase();
@@ -1808,45 +1945,48 @@
     renderStudents();
   }
 
-  // Set up real-time notifications from teacher's notifications subcollection
-  function setupRealtimeNotifications() {
-    if (!currentTeacher) return;
+// Set up real-time notifications from teacherNotifications collection
+function setupRealtimeNotifications() {
+  if (!currentTeacher) return;
+  
+  try {
+    // Query teacherNotifications collection for this teacher
+    const notificationsRef = collection(db, "teacherNotifications");
+    const notificationsQuery = query(
+      notificationsRef,
+      where("teacherId", "==", currentTeacher.id),
+      where("read", "==", false),
+      orderBy("timestamp", "desc"),
+      limit(20)
+    );
     
-    try {
-      // Use the teacher's notifications subcollection as defined in your rules
-      const notificationsRef = collection(db, "teachers", currentTeacher.id, "notifications");
-      const notificationsQuery = query(
-        notificationsRef,
-        orderBy("timestamp", "desc"),
-        limit(20)
-      );
-      
-      // Set up real-time listener
-      unsubscribeNotifications = onSnapshot(notificationsQuery, 
-        (snapshot) => {
-          notifications = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            notifications.push({ 
-              id: doc.id, 
-              ...data,
-              timestamp: data.timestamp ? data.timestamp.toDate() : new Date()
-            });
+    // Set up real-time listener
+    unsubscribeNotifications = onSnapshot(notificationsQuery, 
+      (snapshot) => {
+        notifications = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          notifications.push({ 
+            id: doc.id, 
+            ...data,
+            timestamp: data.timestamp ? data.timestamp.toDate() : new Date()
           });
-          
-          updateNotificationUI();
-        }, 
-        (error) => {
-          console.error("Error listening to teacher notifications:", error);
-          // Try alternative approach with main notifications collection
-          setupAlternativeNotifications();
-        }
-      );
-    } catch (error) {
-      console.error("Error setting up teacher notifications:", error);
-      setupAlternativeNotifications();
-    }
+        });
+        
+        console.log(`Loaded ${notifications.length} notifications from teacherNotifications`);
+        updateNotificationUI();
+      }, 
+      (error) => {
+        console.error("Error listening to teacherNotifications:", error);
+        // Fallback to sample notifications
+        setupSampleNotifications();
+      }
+    );
+  } catch (error) {
+    console.error("Error setting up teacherNotifications:", error);
+    setupSampleNotifications();
   }
+}
 
   // Alternative approach using main notifications collection
   function setupAlternativeNotifications() {
@@ -2018,60 +2158,31 @@
     }
   }
 
-  // Clear all notifications
-  async function clearAllNotifications() {
-    try {
-      // For teacher's notifications subcollection
-      const notificationsRef = collection(db, "teachers", currentTeacher.id, "notifications");
-      const notificationsQuery = query(
-        notificationsRef,
-        where("read", "==", false)
-      );
-      
-      const snapshot = await getDocs(notificationsQuery);
-      
-      const updatePromises = [];
-      snapshot.forEach((doc) => {
-        updatePromises.push(updateDoc(doc.ref, {
-          read: true,
-          readAt: serverTimestamp()
-        }));
-      });
-      
-      await Promise.all(updatePromises);
-    } catch (error) {
-      console.error("Error clearing notifications from teacher subcollection:", error);
-      
-      try {
-        // Try main notifications collection
-        const notificationsRef = collection(db, "notifications");
-        const notificationsQuery = query(
-          notificationsRef,
-          where("teacherId", "==", currentTeacher.id),
-          where("read", "==", false)
-        );
-        
-        const snapshot = await getDocs(notificationsQuery);
-        
-        const updatePromises = [];
-        snapshot.forEach((doc) => {
-          updatePromises.push(updateDoc(doc.ref, {
-            read: true,
-            readAt: serverTimestamp()
-          }));
-        });
-        
-        await Promise.all(updatePromises);
-      } catch (secondError) {
-        console.error("Error clearing notifications from main collection:", secondError);
-        // Fallback: clear locally
-        notifications.forEach(notification => {
-          notification.read = true;
-        });
-        updateNotificationUI();
-        return;
-      }
-    }
+// Clear all notifications from teacherNotifications collection
+async function clearAllNotifications() {
+  try {
+    if (!currentTeacher) return;
+    
+    const notificationsRef = collection(db, "teacherNotifications");
+    const notificationsQuery = query(
+      notificationsRef,
+      where("teacherId", "==", currentTeacher.id),
+      where("read", "==", false)
+    );
+    
+    const snapshot = await getDocs(notificationsQuery);
+    
+    const updatePromises = [];
+    snapshot.forEach((doc) => {
+      updatePromises.push(updateDoc(doc.ref, {
+        read: true,
+        readAt: serverTimestamp()
+      }));
+    });
+    
+    await Promise.all(updatePromises);
+    
+    console.log(`Cleared ${snapshot.size} notifications`);
     
     // Update local state
     notifications.forEach(notification => {
@@ -2081,7 +2192,21 @@
     });
     
     updateNotificationUI();
+    
+    showNotification("✅ All notifications cleared");
+    
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    showNotification("❌ Error clearing notifications", "error");
+    
+    // Fallback: clear locally
+    notifications.forEach(notification => {
+      notification.read = true;
+    });
+    updateNotificationUI();
   }
+}
+    
 
   // View student details - show modal
   async function viewStudentDetails(enrollmentId) {
@@ -2115,73 +2240,86 @@
         submissions.push({ id: doc.id, ...doc.data() });
       });
       
-      // Populate modal
-      const initials = getInitials(student.firstName, student.lastName);
-      
-      studentModalBody.innerHTML = `
-        <div class="student-modal-header">
-          <div class="student-modal-avatar">${initials}</div>
-          <div class="student-modal-info">
-            <div class="student-modal-name">${student.firstName} ${student.lastName}</div>
-            <div class="student-modal-email">${student.email}</div>
-            <div class="student-modal-course">${student.courseName}</div>
-          </div>
-        </div>
-        
-        <div class="modal-stats">
-          <div class="modal-stat">
-            <div class="modal-stat-value">${student.progress}%</div>
-            <div class="modal-stat-label">Course Progress</div>
-          </div>
-          <div class="modal-stat">
-            <div class="modal-stat-value">${student.assignmentsCompleted}</div>
-            <div class="modal-stat-label">Assignments Done</div>
-          </div>
-          <div class="modal-stat">
-            <div class="modal-stat-value">${student.totalAssignments}</div>
-            <div class="modal-stat-label">Total Assignments</div>
-          </div>
-          <div class="modal-stat">
-            <div class="modal-stat-value" style="color: ${getPerformanceColor(student.performance)}">${student.performance}</div>
-            <div class="modal-stat-label">Performance</div>
-          </div>
-        </div>
-        
-        <div class="modal-progress-section">
-          <div class="modal-progress-header">
-            <div class="modal-progress-title">Course Progress</div>
-            <div class="modal-progress-value">${student.progress}%</div>
-          </div>
-          <div class="modal-progress-bar">
-            <div class="modal-progress-fill" style="width: ${student.progress}%"></div>
-          </div>
-          <div class="modal-progress-text">${student.assignmentsCompleted} of ${student.totalAssignments} assignments completed</div>
-        </div>
-        
-        <div class="student-details">
-          <div class="detail-item">
-            <div class="detail-label">Enrollment Date</div>
-            <div class="detail-value">${student.enrolledDate.toLocaleDateString()}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Last Activity</div>
-            <div class="detail-value">${student.lastActivity}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Course</div>
-            <div class="detail-value">${student.courseName}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Teacher</div>
-            <div class="detail-value">${student.teacherName}</div>
-          </div>
-        </div>
-        
-        <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeStudentModal()">Close</button>
-          <button class="btn btn-primary" onclick="messageStudent('${student.id}', '${student.courseId}')">Send Message</button>
-        </div>
-      `;
+// Populate modal
+const initials = getInitials(student.firstName, student.lastName);
+
+// Student avatar HTML for modal - check if profile picture exists
+const studentAvatarModalHTML = student.profilePictureURL 
+  ? `<div class="student-modal-avatar"><img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`
+  : `<div class="student-modal-avatar">${initials}</div>`;
+
+// Course image HTML for modal
+const courseImageModalHTML = student.courseImageURL 
+  ? `<img src="${student.courseImageURL}" alt="${student.courseName}" class="course-thumbnail-large">`
+  : `<div class="course-thumbnail-large-placeholder"><i class="fas fa-book"></i></div>`;
+
+studentModalBody.innerHTML = `
+  <div class="student-modal-header">
+    <div class="student-modal-header-wrapper">
+      ${studentAvatarModalHTML}
+      <div class="student-modal-info">
+        <div class="student-modal-name">${student.firstName} ${student.lastName}</div>
+        <div class="student-modal-email">${student.email}</div>
+        <div class="student-modal-course">${student.courseName}</div>
+      </div>
+      ${courseImageModalHTML}
+    </div>
+  </div>
+  
+  <div class="modal-stats">
+    <div class="modal-stat">
+      <div class="modal-stat-value">${student.progress}%</div>
+      <div class="modal-stat-label">Course Progress</div>
+    </div>
+    <div class="modal-stat">
+      <div class="modal-stat-value">${student.assignmentsCompleted}</div>
+      <div class="modal-stat-label">Assignments Done</div>
+    </div>
+    <div class="modal-stat">
+      <div class="modal-stat-value">${student.totalAssignments}</div>
+      <div class="modal-stat-label">Total Assignments</div>
+    </div>
+    <div class="modal-stat">
+      <div class="modal-stat-value" style="color: ${getPerformanceColor(student.performance)}">${student.performance}</div>
+      <div class="modal-stat-label">Performance</div>
+    </div>
+  </div>
+  
+  <div class="modal-progress-section">
+    <div class="modal-progress-header">
+      <div class="modal-progress-title">Course Progress</div>
+      <div class="modal-progress-value">${student.progress}%</div>
+    </div>
+    <div class="modal-progress-bar">
+      <div class="modal-progress-fill" style="width: ${student.progress}%"></div>
+    </div>
+    <div class="modal-progress-text">${student.assignmentsCompleted} of ${student.totalAssignments} assignments completed</div>
+  </div>
+  
+  <div class="student-details">
+    <div class="detail-item">
+      <div class="detail-label">Enrollment Date</div>
+      <div class="detail-value">${student.enrolledDate.toLocaleDateString()}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Last Activity</div>
+      <div class="detail-value">${student.lastActivity}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Course</div>
+      <div class="detail-value">${student.courseName}</div>
+    </div>
+    <div class="detail-item">
+      <div class="detail-label">Teacher</div>
+      <div class="detail-value">${student.teacherName}</div>
+    </div>
+  </div>
+  
+  <div class="modal-actions">
+    <button class="btn btn-secondary" onclick="closeStudentModal()">Close</button>
+    <button class="btn btn-primary" onclick="messageStudent('${student.id}', '${student.courseId}')">Send Message</button>
+  </div>
+`;
       
       // Show modal
       studentModal.classList.add('active');
@@ -2191,6 +2329,17 @@
       alert("Error loading student details. Please try again.");
     }
   }
+  // Get student profile picture URL
+async function getStudentProfilePicture(studentId) {
+  try {
+    const imageRef = ref(storage, `profile-pictures/${studentId}`);
+    const url = await getDownloadURL(imageRef);
+    return url;
+  } catch (error) {
+    console.log(`No profile picture found for student ${studentId}:`, error.code);
+    return null;
+  }
+}
 
   // Helper function to get performance color
   function getPerformanceColor(performance) {
