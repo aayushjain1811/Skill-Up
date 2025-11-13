@@ -489,13 +489,10 @@
       z-index: 2;
     }
 
-    
-/* Profile picture styling */
+    /* Profile picture styling */
 .avatar img,
 .profile-avatar-large img {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   z-index: 2;
   width: 100%;
   height: 100%;
@@ -701,7 +698,6 @@
       position: relative;
       cursor: pointer;
       transition: all 0.3s ease;
-      overflow: hidden;
     }
     
     .profile-avatar-large:hover {
@@ -965,34 +961,32 @@
   vertical-align: middle;
 }
     
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 2000;
-  backdrop-filter: blur(5px);
-  overflow-y: auto;
-  padding: 20px 0;
-}
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
     
- .modal-content {
-  background: var(--bg-secondary);
-  border-radius: 20px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  position: relative;
-  border: 1px solid var(--dark-red);
-  margin: auto;
-  top: 50%;
-  transform: translateY(-50%);
-}
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      position: relative;
+      border: 1px solid var(--dark-red);
+    }
     
     .modal-header {
       padding: 1.5rem 2rem;
@@ -1122,10 +1116,12 @@
       padding: 15px 20px;
       border-bottom: 1px solid var(--dark-red);
       transition: all 0.3s ease;
-      /*cursor: pointer;*/
+      cursor: pointer;
     }
 
-
+    .notification-item:hover {
+      background: var(--light-red);
+    }
 
     .notification-item.unread {
       background: var(--light-red);
@@ -1436,31 +1432,6 @@
       <div class="modal-body">
         <div id="personalInfoAlert"></div>
         
-        <!-- Profile Picture Section -->
-        <div class="form-group" style="text-align: center; margin-bottom: 2rem;">
-          <label class="form-label">Profile Picture</label>
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-            <div id="editProfileAvatar" class="profile-avatar-large" style="margin: 0;">
-              <span id="editAvatarInitials">AJ</span>
-            </div>
-            
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
-              <label for="profilePicInput" class="btn btn-primary" style="margin: 0; cursor: pointer; padding: 0.7rem 1.5rem;">
-                <i class="fas fa-upload"></i> Upload Picture
-              </label>
-              <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
-              
-              <button type="button" class="btn btn-secondary" id="removeProfilePicBtn" style="display: none; padding: 0.7rem 1.5rem;">
-                <i class="fas fa-trash"></i> Remove
-              </button>
-            </div>
-            
-            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
-              Square image recommended, max 5MB
-            </p>
-          </div>
-        </div>
-
         <form id="personalInfoForm">
           <div class="form-grid">
             <div class="form-group">
@@ -1475,7 +1446,7 @@
             
             <div class="form-group">
               <label class="form-label" for="email">Email Address</label>
-              <input type="email" class="form-input" id="email" name="email" required disabled style="background: var(--bg-main);">
+              <input type="email" class="form-input" id="email" name="email" required>
             </div>
             
             <div class="form-group">
@@ -1573,79 +1544,32 @@
       </div>
     </div>
   </div>
-<!-- Image Crop Modal -->
-<div class="modal" id="imageCropModal">
-  <div class="modal-content" style="max-width: 700px;">
-    <div class="modal-header">
-      <h2 class="modal-title">Crop Profile Picture</h2>
-      <button class="close-modal" onclick="closeCropModal()">&times;</button>
-    </div>
-    
-    <div style="margin-bottom: 1.5rem;">
-      <div id="imageCropContainer" style="max-height: 400px; overflow: hidden; background: #000; border-radius: 10px;">
-        <img id="imageToCrop" style="max-width: 100%; display: block;">
-      </div>
-    </div>
-    
-    <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
-      <button type="button" class="btn btn-secondary" onclick="rotateCropImage(-90)" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-undo"></i> Rotate Left
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="rotateCropImage(90)" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-redo"></i> Rotate Right
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="flipCropImage('horizontal')" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-arrows-alt-h"></i> Flip H
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="flipCropImage('vertical')" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-arrows-alt-v"></i> Flip V
-      </button>
-    </div>
-    
-    <div style="display: flex; gap: 1rem;">
-      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeCropModal()">
-        Cancel
-      </button>
-      <button type="button" class="btn btn-primary" style="flex: 1;" id="applyCropBtn" onclick="applyCrop()">
-        <i class="fas fa-check"></i> Apply & Upload
-      </button>
-    </div>
-  </div>
-</div>
+
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { 
-  getAuth, 
-  onAuthStateChanged,
-  updatePassword,
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  deleteUser,
-  signOut,
-  updateProfile  // Add this
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  orderBy,
-  serverTimestamp,
-  onSnapshot  // Add this
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
     import { 
-  getStorage, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL,
-  deleteObject
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+      getAuth, 
+      onAuthStateChanged,
+      updatePassword,
+      reauthenticateWithCredential,
+      EmailAuthProvider,
+      deleteUser,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      query, 
+      where, 
+      getDocs,
+      doc,
+      getDoc,
+      updateDoc,
+      deleteDoc,
+      orderBy,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
     // Firebase config
     const firebaseConfig = {
@@ -1662,7 +1586,6 @@ import {
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     // DOM Elements
     const loadingContainer = document.getElementById('loadingContainer');
@@ -1735,70 +1658,48 @@ import {
       }
     });
 
-// Populate profile data
-function populateProfileData() {
-  const teacher = currentTeacher;
-  const initials = teacher.firstName.charAt(0) + teacher.lastName.charAt(0);
-  
- const teacherAvatar = document.getElementById('teacherAvatar');
-  const teacherDisplayName = document.getElementById('teacherDisplayName');
-  
-  // Update navbar avatar
-  if (teacher.photoURL) {
-    userInitials.innerHTML = `<img src="${teacher.photoURL}" alt="Profile">`;
-    teacherAvatar.classList.add('has-image');
-  } else {
-    userInitials.innerHTML = initials;
-    teacherAvatar.classList.remove('has-image');
-  }
-  
-  if (teacherDisplayName) {
-    teacherDisplayName.textContent = `${teacher.firstName} ${teacher.lastName}`;
-  }
-  
-  // Profile card - large avatar
-  if (teacher.photoURL) {
-    profileAvatar.innerHTML = `<img src="${teacher.photoURL}" alt="Profile">
-      <div class="avatar-upload" onclick="openEditProfileForPicture()">
-        <i class="fas fa-edit"></i>
-      </div>`;
-  } else {
-    profileAvatar.innerHTML = `${initials}
-      <div class="avatar-upload" onclick="openEditProfileForPicture()">
-        <i class="fas fa-edit"></i>
-      </div>`;
-  }
-  
-  profileName.textContent = `${teacher.firstName} ${teacher.lastName}`;
-  profileTitle.textContent = `${teacher.expertise} Professor`;
-  profileEmail.textContent = teacher.email;
-  
-  // Account info
-  if (teacher.createdAt) {
-    const createdDate = teacher.createdAt.toDate();
-    memberSince.textContent = createdDate.toLocaleDateString();
-  } else {
-    memberSince.textContent = "Unknown";
-  }
-  
-  verificationStatus.textContent = teacher.verified ? '✓ Verified' : '⚠ Pending Verification';
-  verificationStatus.style.background = teacher.verified ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)';
-  verificationStatus.style.color = teacher.verified ? '#10b981' : '#f59e0b';
-  
-  expertiseDisplay.textContent = teacher.expertise || "Not specified";
-  
-  // Form fields
-  document.getElementById('firstName').value = teacher.firstName;
-  document.getElementById('lastName').value = teacher.lastName;
-  document.getElementById('email').value = teacher.email;
-  document.getElementById('expertise').value = teacher.expertise;
-  document.getElementById('bio').value = teacher.bio || '';
-  
-  // Settings
-  document.getElementById('emailNotifications').checked = teacher.emailNotifications !== false;
-  document.getElementById('courseUpdates').checked = teacher.courseUpdates !== false;
-  document.getElementById('publicProfile').checked = teacher.publicProfile !== false;
-}
+    // Populate profile data
+    function populateProfileData() {
+      const teacher = currentTeacher;
+      const initials = teacher.firstName.charAt(0) + teacher.lastName.charAt(0);
+      
+      // Navigation
+      userInitials.textContent = initials;
+      welcomeMessage.textContent = `My Profile`;
+      welcomeSubtitle.textContent = `Manage your account settings and preferences`;
+      
+      // Profile card
+      profileAvatar.firstChild.textContent = initials;
+      profileName.textContent = `${teacher.firstName} ${teacher.lastName}`;
+      profileTitle.textContent = `${teacher.expertise} Professor`;
+      profileEmail.textContent = teacher.email;
+      
+      // Account info
+      if (teacher.createdAt) {
+        const createdDate = teacher.createdAt.toDate();
+        memberSince.textContent = createdDate.toLocaleDateString();
+      } else {
+        memberSince.textContent = "Unknown";
+      }
+      
+      verificationStatus.textContent = teacher.verified ? '✓ Verified' : '⚠ Pending Verification';
+      verificationStatus.style.background = teacher.verified ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)';
+      verificationStatus.style.color = teacher.verified ? '#10b981' : '#f59e0b';
+      
+      expertiseDisplay.textContent = teacher.expertise || "Not specified";
+      
+      // Form fields
+      document.getElementById('firstName').value = teacher.firstName;
+      document.getElementById('lastName').value = teacher.lastName;
+      document.getElementById('email').value = teacher.email;
+      document.getElementById('expertise').value = teacher.expertise;
+      document.getElementById('bio').value = teacher.bio || '';
+      
+      // Settings
+      document.getElementById('emailNotifications').checked = teacher.emailNotifications !== false;
+      document.getElementById('courseUpdates').checked = teacher.courseUpdates !== false;
+      document.getElementById('publicProfile').checked = teacher.publicProfile !== false;
+    }
     // Real-time Password Validation
 function validatePasswordRequirements(password) {
   const requirements = {
@@ -2033,17 +1934,10 @@ passwordForm.addEventListener('submit', async (e) => {
       }
     });
 
-// Modal functions
-window.openModal = (modalId) => {
-  document.getElementById(modalId).style.display = 'flex';
-  
-  // Initialize profile picture when opening edit modal
-  if (modalId === 'editProfileModal') {
-    setTimeout(() => {
-      initEditModalProfilePic();
-    }, 50);
-  }
-};
+    // Modal functions
+    window.openModal = (modalId) => {
+      document.getElementById(modalId).style.display = 'flex';
+    };
 
 // Modal functions
 window.closeModal = (modalId) => {
@@ -2162,142 +2056,34 @@ window.closeModal = (modalId) => {
       }
     }
 
-// Set up real-time notifications for teacher
-function setupNotifications() {
-  if (!currentTeacher) return;
-  
-  // Query teacherNotifications collection for this teacher
-  const notificationsQuery = query(
-    collection(db, "teacherNotifications"),
-    where("teacherId", "==", currentTeacher.id),
-    orderBy("timestamp", "desc")
-  );
-  
-  // Listen to notifications in real-time
-  onSnapshot(notificationsQuery, (snapshot) => {
-    const notifications = [];
-    snapshot.forEach((doc) => {
-      notifications.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
-    loadTeacherNotifications(notifications);
-  }, (error) => {
-    console.error("Error listening to notifications:", error);
-  });
-}
-
-// Load teacher notifications
-function loadTeacherNotifications(notifications) {
-  if (!notificationList) return;
-  
-  notificationList.innerHTML = '';
-  
-  // Filter unread notifications only
-  const unreadNotifications = notifications.filter(n => !n.read);
-  
-  if (unreadNotifications.length === 0) {
-    notificationList.innerHTML = '<div class="notification-empty">No unread notifications</div>';
-    notificationBadge.textContent = '0';
-    notificationBadge.style.display = 'none';
-    return;
-  }
-  
-  // Update badge
-  notificationBadge.textContent = unreadNotifications.length;
-  notificationBadge.style.display = 'flex';
-  
-  // Show only first 10
-  unreadNotifications.slice(0, 10).forEach(notification => {
-    const notificationItem = document.createElement('div');
-    notificationItem.className = 'notification-item unread';
-    
-    let timeDisplay = 'Recently';
-    if (notification.timestamp) {
-      const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
-      const diffMs = new Date() - notificationTime;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
+    // Set up real-time notifications
+    function setupNotifications() {
+      // Generate demo notifications
+      notifications = [
+        {
+          type: 'profile',
+          icon: 'fa-user',
+          title: 'Profile Updated',
+          message: 'Your profile information has been successfully updated',
+          time: new Date(),
+          read: false
+        },
+        {
+          type: 'system',
+          icon: 'fa-cog',
+          title: 'System Update',
+          message: 'New features are available in your dashboard',
+          time: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          read: false
+        }
+      ];
       
-      if (diffMins < 1) timeDisplay = 'Just now';
-      else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
-      else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
-      else timeDisplay = `${diffDays}d ago`;
+      // Sort notifications by time (newest first)
+      notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+      
+      // Update notification count and display
+      updateNotificationDisplay();
     }
-    
-    // Add icon based on notification type
-    let icon = '🔔';
-    if (notification.type === 'enrollment') icon = '👨‍🎓';
-    else if (notification.type === 'message') icon = '💬';
-    else if (notification.type === 'submission') icon = '📝';
-    else if (notification.type === 'system') icon = '⚙️';
-    
-    notificationItem.innerHTML = `
-      <div class="notification-title">${icon} ${notification.title}</div>
-      <div class="notification-message">${notification.message}</div>
-      <div class="notification-time">${timeDisplay}</div>
-    `;
-    
-    // REMOVED: Click event listener for marking as read
-    
-    notificationList.appendChild(notificationItem);
-  });
-}
-
-
-
-// Clear all notifications
-if (clearNotifications) {
-  clearNotifications.addEventListener('click', async () => {
-    try {
-      if (!currentTeacher) return;
-      
-      // Query all unread notifications for this teacher
-      const notificationsQuery = query(
-        collection(db, "teacherNotifications"),
-        where("teacherId", "==", currentTeacher.id),
-        where("read", "==", false)
-      );
-      
-      const snapshot = await getDocs(notificationsQuery);
-      
-      // Mark all as read
-      const updatePromises = [];
-      snapshot.forEach((docSnap) => {
-        updatePromises.push(
-          updateDoc(doc(db, "teacherNotifications", docSnap.id), {
-            read: true,
-            readAt: serverTimestamp()
-          })
-        );
-      });
-      
-      await Promise.all(updatePromises);
-      
-      showMessage("✅ All notifications cleared");
-    } catch (error) {
-      console.error("Error clearing notifications:", error);
-      showMessage("❌ Error clearing notifications", "error");
-    }
-  });
-}
-
-// Show success/error messages
-function showMessage(message, type = "success") {
-  const messageElement = document.createElement('div');
-  messageElement.className = `message-toast ${type}`;
-  messageElement.textContent = message;
-  
-  document.body.appendChild(messageElement);
-  
-  setTimeout(() => {
-    if (messageElement.parentNode) {
-      messageElement.remove();
-    }
-  }, 4000);
-}
     
     // Update notification display
     function updateNotificationDisplay() {
@@ -2332,6 +2118,11 @@ function showMessage(message, type = "success") {
       }
     }
     
+    // Mark notification as read
+    function markNotificationAsRead(notification) {
+      notification.read = true;
+      updateNotificationDisplay();
+    }
     
     // Helper function to format date
     function formatDate(date) {
@@ -2346,7 +2137,13 @@ function showMessage(message, type = "success") {
       return `${Math.floor(diffInSeconds / 86400)}d ago`;
     }
 
-
+    // Clear notifications
+    if (clearNotifications) {
+      clearNotifications.addEventListener('click', () => {
+        notifications = [];
+        updateNotificationDisplay();
+      });
+    }
 
     // Notification bell toggle
     if (notificationIcon) {
@@ -2425,285 +2222,6 @@ function showMessage(message, type = "success") {
     document.addEventListener('DOMContentLoaded', function() {
       createParticles();
     });
-    // Global variables for cropper
-let cropper = null;
-let selectedImageFile = null;
-
-// Open edit profile modal specifically for picture upload
-window.openEditProfileForPicture = function() {
-  openModal('editProfileModal');
-  setTimeout(() => {
-    initEditModalProfilePic();
-    const editProfileAvatar = document.getElementById('editProfileAvatar');
-    if (editProfileAvatar) {
-      editProfileAvatar.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, 100);
-};
-
-// Initialize profile picture in edit modal
-function initEditModalProfilePic() {
-  if (!currentTeacher) return;
-  
-  const editAvatarInitials = document.getElementById('editAvatarInitials');
-  const editProfileAvatar = document.getElementById('editProfileAvatar');
-  const removeBtn = document.getElementById('removeProfilePicBtn');
-  
-  if (!editAvatarInitials || !removeBtn) return;
-  
-  if (currentTeacher.photoURL) {
-    editAvatarInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    removeBtn.style.display = 'inline-flex';
-  } else {
-    const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
-    editAvatarInitials.textContent = initials;
-    removeBtn.style.display = 'none';
-  }
-}
-
-// Handle profile picture upload
-const profilePicInput = document.getElementById('profilePicInput');
-if (profilePicInput) {
-  profilePicInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showMessage("❌ Image size should be less than 5MB", "error");
-      this.value = '';
-      return;
-    }
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      showMessage("❌ Please select an image file", "error");
-      this.value = '';
-      return;
-    }
-    
-    selectedImageFile = file;
-    
-    // Read and display image for cropping
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const imageToCrop = document.getElementById('imageToCrop');
-      imageToCrop.src = event.target.result;
-      
-      // Open crop modal
-      document.getElementById('imageCropModal').style.display = 'flex';
-      
-      // Initialize cropper
-      setTimeout(() => {
-        if (cropper) {
-          cropper.destroy();
-        }
-        
-        cropper = new Cropper(imageToCrop, {
-          aspectRatio: 1,
-          viewMode: 1,
-          dragMode: 'move',
-          autoCropArea: 1,
-          restore: false,
-          guides: true,
-          center: true,
-          highlight: false,
-          cropBoxMovable: true,
-          cropBoxResizable: true,
-          toggleDragModeOnDblclick: false,
-          responsive: true,
-          background: false,
-        });
-      }, 100);
-    };
-    
-    reader.readAsDataURL(file);
-    this.value = '';
-  });
-}
-
-// Close crop modal
-window.closeCropModal = function() {
-  const cropModal = document.getElementById('imageCropModal');
-  if (cropModal) cropModal.style.display = 'none';
-  if (cropper) {
-    cropper.destroy();
-    cropper = null;
-  }
-  selectedImageFile = null;
-};
-
-// Rotate crop image
-window.rotateCropImage = function(degree) {
-  if (cropper) {
-    cropper.rotate(degree);
-  }
-};
-
-// Flip crop image
-window.flipCropImage = function(direction) {
-  if (!cropper) return;
-  
-  if (direction === 'horizontal') {
-    const scaleX = cropper.getData().scaleX || 1;
-    cropper.scaleX(-scaleX);
-  } else if (direction === 'vertical') {
-    const scaleY = cropper.getData().scaleY || 1;
-    cropper.scaleY(-scaleY);
-  }
-};
-
-// Apply crop and upload
-window.applyCrop = async function() {
-  if (!cropper) return;
-  
-  try {
-    if (!currentTeacher) return;
-    
-    // Show loading
-    const applyBtn = document.getElementById('applyCropBtn');
-    const originalText = applyBtn.innerHTML;
-    applyBtn.innerHTML = '<span class="spinner"></span> Uploading...';
-    applyBtn.disabled = true;
-    
-    // Get cropped canvas
-    const canvas = cropper.getCroppedCanvas({
-      width: 400,
-      height: 400,
-      imageSmoothingEnabled: true,
-      imageSmoothingQuality: 'high',
-    });
-    
-    // Convert canvas to blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-    
-    // Create storage reference
-    const storageRef = ref(storage, `teacher-profile-pictures/${currentTeacher.id}/${Date.now()}.jpg`);
-    
-    // Upload file
-    await uploadBytes(storageRef, blob);
-    
-    // Get download URL
-    const photoURL = await getDownloadURL(storageRef);
-    
-    // Update teacher profile in Auth
-    await updateProfile(auth.currentUser, { photoURL });
-    
-    // Update Firestore
-    const teacherRef = doc(db, "teachers", currentTeacher.id);
-    await updateDoc(teacherRef, { 
-      photoURL: photoURL,
-      updatedAt: serverTimestamp()
-    });
-    
-    // Update current teacher object
-    currentTeacher.photoURL = photoURL;
-    
-    // Update edit modal preview
-    const editAvatarInitials = document.getElementById('editAvatarInitials');
-    if (editAvatarInitials) {
-      editAvatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    }
-    
-    const removeBtn = document.getElementById('removeProfilePicBtn');
-    if (removeBtn) removeBtn.style.display = 'inline-flex';
-    
-    // Close crop modal
-    closeCropModal();
-    
-    showMessage("✅ Profile picture uploaded successfully!");
-    
- // Update main profile display
-populateProfileData();
-
-// Specifically update navbar avatar
-const teacherAvatar = document.getElementById('teacherAvatar');
-const userInitials = document.getElementById('userInitials');
-if (teacherAvatar && userInitials) {
-  if (photoURL) {
-    userInitials.innerHTML = `<img src="${photoURL}" alt="Profile">`;
-    teacherAvatar.classList.add('has-image');
-  } else {
-    const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
-    userInitials.innerHTML = initials;
-    teacherAvatar.classList.remove('has-image');
-  }
-}
-    
-    // Restore button
-    applyBtn.innerHTML = originalText;
-    applyBtn.disabled = false;
-    
-  } catch (error) {
-    console.error("Error uploading avatar:", error);
-    showMessage("❌ Error uploading image: " + error.message, "error");
-    
-    const applyBtn = document.getElementById('applyCropBtn');
-    if (applyBtn) {
-      applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply & Upload';
-      applyBtn.disabled = false;
-    }
-  }
-};
-
-// Remove profile picture
-const removeProfilePicBtn = document.getElementById('removeProfilePicBtn');
-if (removeProfilePicBtn) {
-  removeProfilePicBtn.addEventListener('click', async function() {
-    if (!confirm('Are you sure you want to remove your profile picture?')) {
-      return;
-    }
-    
-    try {
-      if (!currentTeacher) return;
-      
-      // Show loading
-      this.innerHTML = '<span class="spinner"></span>';
-      this.disabled = true;
-      
-      // Update Auth
-      await updateProfile(auth.currentUser, { photoURL: null });
-      
-      // Update Firestore
-      const teacherRef = doc(db, "teachers", currentTeacher.id);
-      await updateDoc(teacherRef, { 
-        photoURL: null,
-        updatedAt: serverTimestamp()
-      });
-      
-      // Update current teacher object
-      currentTeacher.photoURL = null;
-      
-      // Update edit modal
-      const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
-      const editAvatarInitials = document.getElementById('editAvatarInitials');
-      if (editAvatarInitials) {
-        editAvatarInitials.textContent = initials;
-      }
-      this.style.display = 'none';
-      
-// Update main profile display
-populateProfileData();
-
-// Specifically update navbar avatar
-const teacherAvatar = document.getElementById('teacherAvatar');
-const userInitials = document.getElementById('userInitials');
-if (teacherAvatar && userInitials) {
-  const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
-  userInitials.innerHTML = initials;
-  teacherAvatar.classList.remove('has-image');
-}
-      
-      showMessage("✅ Profile picture removed successfully!");
-    } catch (error) {
-      console.error("Error removing profile picture:", error);
-      showMessage("❌ Error removing picture: " + error.message, "error");
-    } finally {
-      this.innerHTML = '<i class="fas fa-trash"></i> Remove';
-      this.disabled = false;
-    }
-  });
-}
   </script>
 </body>
 </html>
