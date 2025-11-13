@@ -1691,25 +1691,22 @@ import {
     }
   });
 
-  // Update teacher profile in the navigation bar
-  function updateTeacherProfile(teacher) {
-    const initials = getInitials(teacher.firstName, teacher.lastName);
+function updateTeacherProfile(teacher) {
+  const initials = getInitials(teacher.firstName, teacher.lastName);
+  userInitials.textContent = initials;
+  teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
+  welcomeMessage.textContent = `Welcome back, Professor ${teacher.lastName}!`;
+  welcomeSubtitle.textContent = `Here's what's happening in your ${teacher.expertise} classroom today`;
+  
+  // Update avatar with profile picture if available
+  if (teacher.photoURL) {
+    teacherAvatar.classList.add('has-image');
+    userInitials.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.firstName} ${teacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  } else {
+    teacherAvatar.classList.remove('has-image');
     userInitials.textContent = initials;
-    teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
-    welcomeMessage.textContent = `Welcome back, Professor ${teacher.lastName}!`;
-    welcomeSubtitle.textContent = `Here's what's happening in your ${teacher.expertise} classroom today`;
-    
-    // Update avatar with profile picture if available
-    if (teacher.profilePicture) {
-      teacherAvatar.classList.add('has-image');
-      userInitials.style.display = 'none';
-      
-      const img = document.createElement('img');
-      img.src = teacher.profilePicture;
-      img.alt = `${teacher.firstName} ${teacher.lastName}`;
-      teacherAvatar.appendChild(img);
-    }
   }
+}
 
   // Load teacher's students
   async function loadTeacherStudents() {
