@@ -466,6 +466,7 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      line-height: 0;
     }
 
     .avatar::before {
@@ -487,6 +488,38 @@
     .avatar span {
       position: relative;
       z-index: 2;
+    }
+    
+    .avatar img {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* Hide the rotating background when image is present */
+    .avatar.has-image::before {
+      display: none;
+    }
+
+    /* Avatar image styles */
+    .student-avatar img,
+    .student-modal-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* Ensure avatar containers maintain aspect ratio */
+    .student-avatar,
+    .student-modal-avatar {
+      position: relative;
+      overflow: hidden;
     }
 
     /* Welcome Section */
@@ -1377,6 +1410,41 @@
         max-width: 95%;
       }
     }
+
+    /* Notification Toast */
+    .notification-toast {
+      position: fixed;
+      top: 100px;
+      right: 30px;
+      padding: 15px 20px;
+      border-radius: 10px;
+      z-index: 3000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s ease;
+      max-width: 400px;
+      word-wrap: break-word;
+      font-weight: 500;
+    }
+
+    .notification-toast.success {
+      background: #2ed573;
+      color: white;
+    }
+
+    .notification-toast.error {
+      background: #ff4757;
+      color: white;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -1446,7 +1514,9 @@
               </div>
             </div>
           </div>
-          <div class="student-avatar">${studentAvatarHTML}</div>
+          <div class="avatar" id="teacherAvatar">
+            <span id="userInitials">AJ</span>
+          </div>
         </div>
       </div>
 
@@ -1686,8 +1756,17 @@
     getDocs,
     doc,
     getDoc,
-    orderBy
+    orderBy,
+    updateDoc,
+    serverTimestamp,
+    onSnapshot,
+    limit
   } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  import { 
+    getStorage, 
+    ref, 
+    getDownloadURL 
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
   // Firebase config
   const firebaseConfig = {
@@ -1704,6 +1783,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   // DOM Elements
   const loadingContainer = document.getElementById('loadingContainer');
@@ -1718,6 +1798,7 @@
   const notificationList = document.getElementById('notificationList');
   const clearNotifications = document.getElementById('clearNotifications');
   const userInitials = document.getElementById('userInitials');
+  const teacherAvatar = document.getElementById('teacherAvatar');
   const welcomeMessage = document.getElementById('welcomeMessage');
   const welcomeSubtitle = document.getElementById('welcomeSubtitle');
   const totalStudents = document.getElementById('totalStudents');
@@ -1765,58 +1846,58 @@
   let studentProgressData = [];
   let notifications = [];
   let currentStudentDetail = null;
+  let unsubscribeNotifications = null;
 
-// Check authentication state
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    console.log("User authenticated:", user.uid);
-    try {
-      const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
-      
-      if (teacherDoc.exists()) {
-        currentTeacher = { id: user.uid, ...teacherDoc.data() };
-        console.log("Teacher data loaded:", currentTeacher);
+  // Check authentication state
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("User authenticated:", user.uid);
+      try {
+        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
         
-        // Update teacher avatar - MOVED THIS INSIDE THE IF BLOCK
-        const teacherInitials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
-        const teacherAvatarElement = document.querySelector('.avatar'); // Fixed selector
-        
-        if (currentTeacher.photoURL) {
-          teacherAvatarElement.classList.add('has-image');
-          teacherAvatarElement.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+        if (teacherDoc.exists()) {
+          currentTeacher = { id: user.uid, ...teacherDoc.data() };
+          console.log("Teacher data loaded:", currentTeacher);
+          
+          // Update teacher avatar
+          const teacherInitials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+          
+          if (currentTeacher.photoURL) {
+            teacherAvatar.classList.add('has-image');
+            userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+          } else {
+            teacherAvatar.classList.remove('has-image');
+            userInitials.textContent = teacherInitials;
+          }
+          
+          // Update UI with teacher info
+          welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
+          welcomeSubtitle.textContent = `Track performance and student engagement`;
+          
+          // Set up real-time notifications
+          setupNotifications();
+          
+          // Load analytics data
+          await loadAnalyticsData();
+          
+          // Hide loading animation
+          setTimeout(() => {
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+          }, 1000);
+          
         } else {
-          teacherAvatarElement.classList.remove('has-image');
-          teacherAvatarElement.innerHTML = `<span style="position: relative; z-index: 2;">${teacherInitials}</span>`;
+          console.error("Teacher document not found for user:", user.uid);
+          window.location.href = "teachersignin.html";
         }
-        
-        // Update UI with teacher info
-        welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
-        welcomeSubtitle.textContent = `Track performance and student engagement`;
-        
-        // Set up real-time notifications
-        setupNotifications();
-        
-        // Load analytics data
-        await loadAnalyticsData();
-        
-        // Hide loading animation
-        setTimeout(() => {
-          if (loadingContainer) loadingContainer.classList.add('hidden');
-        }, 1000);
-        
-      } else {
-        console.error("Teacher document not found for user:", user.uid);
-        window.location.href = "teachersignin.html";
+      } catch (error) {
+        console.error("Error getting teacher document:", error);
+        showError("Authentication error: " + error.message);
       }
-    } catch (error) {
-      console.error("Error getting teacher document:", error);
-      showError("Authentication error: " + error.message);
+    } else {
+      console.log("User not authenticated, redirecting to login");
+      window.location.href = "teachersignin.html";
     }
-  } else {
-    console.log("User not authenticated, redirecting to login");
-    window.location.href = "teachersignin.html";
-  }
-});
+  });
 
   // Helper function to get initials
   function getInitials(firstName, lastName) {
@@ -1873,6 +1954,9 @@ onAuthStateChanged(auth, async (user) => {
               // Generate weekly progress data
               const weeklyProgress = await generateWeeklyProgress(userDoc.id, courseId, enrollment);
               
+              // Get student profile picture URL
+              const profilePictureURL = userData.photoURL || null;
+              
               // Create a separate student record for each course enrollment
               allStudents.push({
                 id: userDoc.id,
@@ -1882,7 +1966,7 @@ onAuthStateChanged(auth, async (user) => {
                 email: userData.email || "No email",
                 courseId: courseId,
                 courseName: courseName,
-                profilePictureURL: userData.photoURL || null,
+                profilePictureURL: profilePictureURL,
                 progress: enrollment.progress || 0,
                 lastActivity: enrollment.lastAccessed ? 
                   formatDate(enrollment.lastAccessed.toDate()) : "Never",
@@ -1927,166 +2011,166 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   // Get student assignment data from Firebase
-async function getStudentAssignmentData(studentId, courseId) {
-  try {
-    const submissionsQuery = query(
-      collection(db, "submissions"),
-      where("studentId", "==", studentId),
-      where("courseId", "==", courseId)
-    );
-    
-    const submissionsSnapshot = await getDocs(submissionsQuery);
-    const assignments = [];
-    let completedAssignments = 0;
-    
-    // Get total assignments from course
-    let totalAssignments = 0;
+  async function getStudentAssignmentData(studentId, courseId) {
     try {
-      const assignmentsRef = collection(db, "courses", courseId, "assignments");
-      const assignmentsSnapshot = await getDocs(assignmentsRef);
-      totalAssignments = assignmentsSnapshot.size;
-    } catch (error) {
-      // Fallback to main assignments collection
-      const assignmentsQuery = query(
-        collection(db, "assignments"),
+      const submissionsQuery = query(
+        collection(db, "submissions"),
+        where("studentId", "==", studentId),
         where("courseId", "==", courseId)
       );
-      const assignmentsSnapshot = await getDocs(assignmentsQuery);
-      totalAssignments = assignmentsSnapshot.size;
-    }
-    
-    // Ensure we have at least 1 assignment to prevent division by zero
-    totalAssignments = Math.max(totalAssignments, 1);
-    
-    // Process submissions
-    submissionsSnapshot.forEach(doc => {
-      const submission = doc.data();
       
-      // Count as completed if: status is completed, submitted is true, OR has a grade
-      const isCompleted = (
-        submission.status === 'completed' || 
-        submission.status === 'graded' ||
-        submission.submitted === true || 
-        (submission.grade !== undefined && submission.grade !== null)
-      );
+      const submissionsSnapshot = await getDocs(submissionsQuery);
+      const assignments = [];
+      let completedAssignments = 0;
       
-      if (isCompleted) {
-        completedAssignments++;
+      // Get total assignments from course
+      let totalAssignments = 0;
+      try {
+        const assignmentsRef = collection(db, "courses", courseId, "assignments");
+        const assignmentsSnapshot = await getDocs(assignmentsRef);
+        totalAssignments = assignmentsSnapshot.size;
+      } catch (error) {
+        // Fallback to main assignments collection
+        const assignmentsQuery = query(
+          collection(db, "assignments"),
+          where("courseId", "==", courseId)
+        );
+        const assignmentsSnapshot = await getDocs(assignmentsQuery);
+        totalAssignments = assignmentsSnapshot.size;
       }
       
-      assignments.push({
-        id: doc.id,
-        ...submission,
-        assignmentTitle: submission.assignmentTitle || submission.title || "Assignment",
-        submittedAt: submission.submittedAt ? submission.submittedAt.toDate() : null,
-        grade: submission.grade || 0,
-        maxScore: submission.maxScore || 100,
-        isCompleted: isCompleted
+      // Ensure we have at least 1 assignment to prevent division by zero
+      totalAssignments = Math.max(totalAssignments, 1);
+      
+      // Process submissions
+      submissionsSnapshot.forEach(doc => {
+        const submission = doc.data();
+        
+        // Count as completed if: status is completed, submitted is true, OR has a grade
+        const isCompleted = (
+          submission.status === 'completed' || 
+          submission.status === 'graded' ||
+          submission.submitted === true || 
+          (submission.grade !== undefined && submission.grade !== null)
+        );
+        
+        if (isCompleted) {
+          completedAssignments++;
+        }
+        
+        assignments.push({
+          id: doc.id,
+          ...submission,
+          assignmentTitle: submission.assignmentTitle || submission.title || "Assignment",
+          submittedAt: submission.submittedAt ? submission.submittedAt.toDate() : null,
+          grade: submission.grade || 0,
+          maxScore: submission.maxScore || 100,
+          isCompleted: isCompleted
+        });
       });
-    });
-    
-    return {
-      totalAssignments,
-      completedAssignments: Math.min(completedAssignments, totalAssignments),
-      assignments
-    };
-    
-  } catch (error) {
-    console.error("Error getting assignment data:", error);
-    return {
-      totalAssignments: 1,
-      completedAssignments: 0,
-      assignments: []
-    };
+      
+      return {
+        totalAssignments,
+        completedAssignments: Math.min(completedAssignments, totalAssignments),
+        assignments
+      };
+      
+    } catch (error) {
+      console.error("Error getting assignment data:", error);
+      return {
+        totalAssignments: 1,
+        completedAssignments: 0,
+        assignments: []
+      };
+    }
   }
-}
 
   // Generate weekly progress data from actual submission history
-async function generateWeeklyProgress(studentId, courseId, enrollment) {
-  try {
-    const enrolledDate = enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date();
-    const currentDate = new Date();
-    
-    const submissionsQuery = query(
-      collection(db, "submissions"),
-      where("studentId", "==", studentId),
-      where("courseId", "==", courseId),
-      orderBy("submittedAt", "asc")
-    );
-    
-    const submissionsSnapshot = await getDocs(submissionsQuery);
-    const submissions = [];
-    
-    submissionsSnapshot.forEach(doc => {
-      const submission = doc.data();
-      if (submission.submittedAt) {
-        submissions.push({
-          submittedAt: submission.submittedAt.toDate(),
-          grade: submission.grade || 0,
-          maxScore: submission.maxScore || 100
+  async function generateWeeklyProgress(studentId, courseId, enrollment) {
+    try {
+      const enrolledDate = enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date();
+      const currentDate = new Date();
+      
+      const submissionsQuery = query(
+        collection(db, "submissions"),
+        where("studentId", "==", studentId),
+        where("courseId", "==", courseId),
+        orderBy("submittedAt", "asc")
+      );
+      
+      const submissionsSnapshot = await getDocs(submissionsQuery);
+      const submissions = [];
+      
+      submissionsSnapshot.forEach(doc => {
+        const submission = doc.data();
+        if (submission.submittedAt) {
+          submissions.push({
+            submittedAt: submission.submittedAt.toDate(),
+            grade: submission.grade || 0,
+            maxScore: submission.maxScore || 100
+          });
+        }
+      });
+      
+      // Get total assignments for accurate progress calculation
+      let totalAssignments = 10; // Default
+      try {
+        const assignmentsRef = collection(db, "courses", courseId, "assignments");
+        const assignmentsSnapshot = await getDocs(assignmentsRef);
+        totalAssignments = Math.max(assignmentsSnapshot.size, 1);
+      } catch (error) {
+        console.warn("Using default assignment count");
+      }
+      
+      const weeklyData = [];
+      let cumulativeCompleted = 0;
+      
+      // Calculate for each week since enrollment (max 12 weeks)
+      const maxWeeks = 12;
+      const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+      
+      for (let week = 1; week <= maxWeeks; week++) {
+        const weekStart = new Date(enrolledDate.getTime() + (week - 1) * msPerWeek);
+        const weekEnd = new Date(weekStart.getTime() + msPerWeek);
+        
+        if (weekStart > currentDate) break;
+        
+        // Count submissions completed up to this week
+        const submissionsUpToWeek = submissions.filter(sub => 
+          sub.submittedAt <= weekEnd
+        );
+        
+        cumulativeCompleted = submissionsUpToWeek.length;
+        const progressPercentage = Math.min(
+          Math.round((cumulativeCompleted / totalAssignments) * 100),
+          100
+        );
+        
+        weeklyData.push({
+          week: week,
+          progress: progressPercentage,
+          assignmentsCompleted: cumulativeCompleted,
+          totalAssignments: totalAssignments
         });
       }
-    });
-    
-    // Get total assignments for accurate progress calculation
-    let totalAssignments = 10; // Default
-    try {
-      const assignmentsRef = collection(db, "courses", courseId, "assignments");
-      const assignmentsSnapshot = await getDocs(assignmentsRef);
-      totalAssignments = Math.max(assignmentsSnapshot.size, 1);
+      
+      // If no data, return current progress
+      if (weeklyData.length === 0) {
+        weeklyData.push({
+          week: 1,
+          progress: enrollment.progress || 0,
+          assignmentsCompleted: 0,
+          totalAssignments: totalAssignments
+        });
+      }
+      
+      return weeklyData;
+      
     } catch (error) {
-      console.warn("Using default assignment count");
+      console.error("Error generating weekly progress:", error);
+      return generateFallbackWeeklyProgress(enrollment);
     }
-    
-    const weeklyData = [];
-    let cumulativeCompleted = 0;
-    
-    // Calculate for each week since enrollment (max 12 weeks)
-    const maxWeeks = 12;
-    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-    
-    for (let week = 1; week <= maxWeeks; week++) {
-      const weekStart = new Date(enrolledDate.getTime() + (week - 1) * msPerWeek);
-      const weekEnd = new Date(weekStart.getTime() + msPerWeek);
-      
-      if (weekStart > currentDate) break;
-      
-      // Count submissions completed up to this week
-      const submissionsUpToWeek = submissions.filter(sub => 
-        sub.submittedAt <= weekEnd
-      );
-      
-      cumulativeCompleted = submissionsUpToWeek.length;
-      const progressPercentage = Math.min(
-        Math.round((cumulativeCompleted / totalAssignments) * 100),
-        100
-      );
-      
-      weeklyData.push({
-        week: week,
-        progress: progressPercentage,
-        assignmentsCompleted: cumulativeCompleted,
-        totalAssignments: totalAssignments
-      });
-    }
-    
-    // If no data, return current progress
-    if (weeklyData.length === 0) {
-      weeklyData.push({
-        week: 1,
-        progress: enrollment.progress || 0,
-        assignmentsCompleted: 0,
-        totalAssignments: totalAssignments
-      });
-    }
-    
-    return weeklyData;
-    
-  } catch (error) {
-    console.error("Error generating weekly progress:", error);
-    return generateFallbackWeeklyProgress(enrollment);
   }
-}
 
   // Fallback weekly progress calculation
   function generateFallbackWeeklyProgress(enrollment) {
@@ -2130,45 +2214,45 @@ async function generateWeeklyProgress(studentId, courseId, enrollment) {
   }
 
   // Update statistics - UPDATED FOR MULTIPLE COURSES
-function updateStats() {
-  if (allStudents.length === 0) {
-    totalStudents.textContent = "0";
-    totalCourses.textContent = "0";
-    avgProgress.textContent = "0%";
-    completionRate.textContent = "0%";
-    studentCount.textContent = "0 students";
-    return;
-  }
-  
-  // Count unique students (not enrollments)
-  const uniqueStudentIds = [...new Set(allStudents.map(s => s.id))];
-  const uniqueStudentCount = uniqueStudentIds.length;
-  
-  totalStudents.textContent = uniqueStudentCount;
-  studentCount.textContent = `${uniqueStudentCount} student${uniqueStudentCount !== 1 ? 's' : ''}`;
-  
-  // Count unique courses
-  const uniqueCourses = new Set(allStudents.map(s => s.courseId));
-  totalCourses.textContent = uniqueCourses.size;
-  
-  // Average progress across ALL enrollments
-  const totalProgress = allStudents.reduce((sum, s) => sum + (s.progress || 0), 0);
-  const averageProgress = Math.round(totalProgress / allStudents.length);
-  avgProgress.textContent = `${averageProgress}%`;
-  
-  // Completion rate: percentage of unique students with at least one course >= 90%
-  const studentsWithCompletion = new Set();
-  allStudents.forEach(student => {
-    if ((student.progress || 0) >= 90) {
-      studentsWithCompletion.add(student.id);
+  function updateStats() {
+    if (allStudents.length === 0) {
+      totalStudents.textContent = "0";
+      totalCourses.textContent = "0";
+      avgProgress.textContent = "0%";
+      completionRate.textContent = "0%";
+      studentCount.textContent = "0 students";
+      return;
     }
-  });
-  
-  const completionRateValue = uniqueStudentCount > 0 
-    ? Math.round((studentsWithCompletion.size / uniqueStudentCount) * 100)
-    : 0;
-  completionRate.textContent = `${completionRateValue}%`;
-}
+    
+    // Count unique students (not enrollments)
+    const uniqueStudentIds = [...new Set(allStudents.map(s => s.id))];
+    const uniqueStudentCount = uniqueStudentIds.length;
+    
+    totalStudents.textContent = uniqueStudentCount;
+    studentCount.textContent = `${uniqueStudentCount} student${uniqueStudentCount !== 1 ? 's' : ''}`;
+    
+    // Count unique courses
+    const uniqueCourses = new Set(allStudents.map(s => s.courseId));
+    totalCourses.textContent = uniqueCourses.size;
+    
+    // Average progress across ALL enrollments
+    const totalProgress = allStudents.reduce((sum, s) => sum + (s.progress || 0), 0);
+    const averageProgress = Math.round(totalProgress / allStudents.length);
+    avgProgress.textContent = `${averageProgress}%`;
+    
+    // Completion rate: percentage of unique students with at least one course >= 90%
+    const studentsWithCompletion = new Set();
+    allStudents.forEach(student => {
+      if ((student.progress || 0) >= 90) {
+        studentsWithCompletion.add(student.id);
+      }
+    });
+    
+    const completionRateValue = uniqueStudentCount > 0 
+      ? Math.round((studentsWithCompletion.size / uniqueStudentCount) * 100)
+      : 0;
+    completionRate.textContent = `${completionRateValue}%`;
+  }
 
   // Initialize charts with real data
   function initializeCharts() {
@@ -2301,44 +2385,44 @@ function updateStats() {
   }
 
   // Calculate real progress data based on student enrollment dates
-function calculateProgressData() {
-  if (allStudents.length === 0) {
-    return { labels: [], values: [] };
-  }
-  
-  const now = new Date();
-  const labels = [];
-  const values = [];
-  
-  // Calculate for last 6 months
-  for (let i = 5; i >= 0; i--) {
-    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
-    labels.push(`${monthName}`);
-    
-    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
-    
-    // Get students enrolled before this month ended
-    const enrolledStudents = allStudents.filter(student => 
-      student.enrolledDate <= monthEnd
-    );
-    
-    if (enrolledStudents.length > 0) {
-      // Calculate average progress for students at this point in time
-      const totalProgress = enrolledStudents.reduce((sum, student) => {
-        // Use the progress they would have had at this month
-        // For simplicity, use current progress if enrolled before month end
-        return sum + (student.progress || 0);
-      }, 0);
-      
-      values.push(Math.round(totalProgress / enrolledStudents.length));
-    } else {
-      values.push(0);
+  function calculateProgressData() {
+    if (allStudents.length === 0) {
+      return { labels: [], values: [] };
     }
+    
+    const now = new Date();
+    const labels = [];
+    const values = [];
+    
+    // Calculate for last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' });
+      labels.push(`${monthName}`);
+      
+      const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+      
+      // Get students enrolled before this month ended
+      const enrolledStudents = allStudents.filter(student => 
+        student.enrolledDate <= monthEnd
+      );
+      
+      if (enrolledStudents.length > 0) {
+        // Calculate average progress for students at this point in time
+        const totalProgress = enrolledStudents.reduce((sum, student) => {
+          // Use the progress they would have had at this month
+          // For simplicity, use current progress if enrolled before month end
+          return sum + (student.progress || 0);
+        }, 0);
+        
+        values.push(Math.round(totalProgress / enrolledStudents.length));
+      } else {
+        values.push(0);
+      }
+    }
+    
+    return { labels, values };
   }
-  
-  return { labels, values };
-}
 
   // Render students analytics - UPDATED FOR MULTIPLE COURSES
   function renderStudents() {
@@ -2375,12 +2459,12 @@ function calculateProgressData() {
     const card = document.createElement('div');
     card.className = 'student-card';
     
-   const initials = getInitials(student.firstName, student.lastName);
+    const initials = getInitials(student.firstName, student.lastName);
 
-// Student avatar HTML - check if profile picture exists
-const studentAvatarHTML = student.profilePictureURL 
-  ? `<img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`
-  : `<span style="position: relative; z-index: 2;">${initials}</span>`;
+    // Student avatar HTML - check if profile picture exists
+    const studentAvatarHTML = student.profilePictureURL 
+      ? `<div class="student-avatar"><img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`
+      : `<div class="student-avatar">${initials}</div>`;
     
     // Determine performance color
     let performanceColor = "#10b981"; // Default green for good
@@ -2389,7 +2473,7 @@ const studentAvatarHTML = student.profilePictureURL
     
     card.innerHTML = `
       <div class="student-header">
-        <div class="student-avatar">${initials}</div>
+        ${studentAvatarHTML}
         <div class="student-info">
           <div class="student-name">${student.firstName} ${student.lastName}</div>
           <div class="student-email">${student.email}</div>
@@ -2453,14 +2537,15 @@ const studentAvatarHTML = student.profilePictureURL
     currentStudentDetail = student;
     
     // Update modal content
-   const initials = getInitials(student.firstName, student.lastName);
+    const initials = getInitials(student.firstName, student.lastName);
 
-// Update avatar with profile picture if available
-if (student.profilePictureURL) {
-  detailStudentAvatar.innerHTML = `<img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-} else {
-  detailStudentAvatar.innerHTML = `<span style="position: relative; z-index: 2;">${initials}</span>`;
-}
+    // Update avatar with profile picture if available
+    if (student.profilePictureURL) {
+      detailStudentAvatar.innerHTML = `<img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    } else {
+      detailStudentAvatar.innerHTML = `<span style="position: relative; z-index: 2;">${initials}</span>`;
+    }
+    
     detailStudentName.textContent = `${student.firstName} ${student.lastName}`;
     detailStudentEmail.textContent = student.email;
     detailStudentCourse.textContent = student.courseName;
@@ -2660,43 +2745,44 @@ if (student.profilePictureURL) {
   }
 
   // Calculate engagement score based on submission frequency
-function calculateEngagementScore(student) {
-  if (!student.weeklyProgress || student.weeklyProgress.length === 0) return 50;
-  
-  // Consider last 4 weeks or all available weeks
-  const recentWeeks = student.weeklyProgress.slice(-4);
-  
-  // Count weeks with activity (assignments completed or progress made)
-  const activeWeeks = recentWeeks.filter((week, index) => {
-    if (index === 0) return week.assignmentsCompleted > 0;
+  function calculateEngagementScore(student) {
+    if (!student.weeklyProgress || student.weeklyProgress.length === 0) return 50;
     
-    // Check if progress increased from previous week
-    const prevWeek = recentWeeks[index - 1];
-    return week.progress > prevWeek.progress || week.assignmentsCompleted > prevWeek.assignmentsCompleted;
-  }).length;
-  
-  return Math.round((activeWeeks / recentWeeks.length) * 100);
-}
+    // Consider last 4 weeks or all available weeks
+    const recentWeeks = student.weeklyProgress.slice(-4);
+    
+    // Count weeks with activity (assignments completed or progress made)
+    const activeWeeks = recentWeeks.filter((week, index) => {
+      if (index === 0) return week.assignmentsCompleted > 0;
+      
+      // Check if progress increased from previous week
+      const prevWeek = recentWeeks[index - 1];
+      return week.progress > prevWeek.progress || week.assignmentsCompleted > prevWeek.assignmentsCompleted;
+    }).length;
+    
+    return Math.round((activeWeeks / recentWeeks.length) * 100);
+  }
 
   // Calculate consistency score based on progress pattern
-function calculateConsistencyScore(student) {
-  if (!student.weeklyProgress || student.weeklyProgress.length < 2) return 50;
-  
-  let progressIncreases = 0;
-  const weeks = student.weeklyProgress;
-  
-  for (let i = 1; i < weeks.length; i++) {
-    const prevProgress = weeks[i - 1].progress || 0;
-    const currentProgress = weeks[i].progress || 0;
+  function calculateConsistencyScore(student) {
+    if (!student.weeklyProgress || student.weeklyProgress.length < 2) return 50;
     
-    // Award points for maintaining or increasing progress
-    if (currentProgress >= prevProgress) {
-      progressIncreases++;
+    let progressIncreases = 0;
+    const weeks = student.weeklyProgress;
+    
+    for (let i = 1; i < weeks.length; i++) {
+      const prevProgress = weeks[i - 1].progress || 0;
+      const currentProgress = weeks[i].progress || 0;
+      
+      // Award points for maintaining or increasing progress
+      if (currentProgress >= prevProgress) {
+        progressIncreases++;
+      }
     }
+    
+    return Math.round((progressIncreases / (weeks.length - 1)) * 100);
   }
-  
-  return Math.round((progressIncreases / (weeks.length - 1)) * 100);
-}
+
   // Helper function to get performance score
   function getPerformanceScore(performance) {
     switch(performance) {
@@ -2888,138 +2974,155 @@ function calculateConsistencyScore(student) {
     window.location.href = `teachermessages.html?studentId=${studentId}&courseId=${courseId}`;
   };
 
-// Set up real-time notifications from teacherNotifications collection
-function setupNotifications() {
-  if (!currentTeacher) return;
-  
-  try {
-    const notificationsRef = collection(db, "teacherNotifications");
-    const notificationsQuery = query(
-      notificationsRef,
-      where("teacherId", "==", currentTeacher.id),
-      where("read", "==", false),
-      orderBy("timestamp", "desc"),
-      limit(20)
-    );
-    
-    // Set up real-time listener
-    const unsubscribeNotifications = onSnapshot(notificationsQuery, 
-      (snapshot) => {
-        notifications = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          notifications.push({ 
-            id: doc.id, 
-            ...data,
-            timestamp: data.timestamp ? data.timestamp.toDate() : new Date()
-          });
-        });
-        
-        console.log(`Loaded ${notifications.length} notifications`);
-        updateNotificationDisplay();
-      }, 
-      (error) => {
-        console.error("Error listening to notifications:", error);
-      }
-    );
-  } catch (error) {
-    console.error("Error setting up notifications:", error);
-  }
-}
-  
-function updateNotificationDisplay() {
-  const unreadCount = notifications.filter(n => !n.read).length;
-  notificationBadge.textContent = unreadCount;
-  
-  notificationList.innerHTML = '';
-  
-  if (notifications.length === 0) {
-    notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
-    return;
-  }
-  
-  notifications.forEach(notification => {
-    const notificationItem = document.createElement('div');
-    notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
-    
-    const timeDisplay = formatDate(notification.timestamp);
-    const icon = getNotificationIcon(notification.type);
-    
-    notificationItem.innerHTML = `
-      <div style="display: flex; align-items: flex-start; gap: 10px;">
-        <div style="color: var(--primary-red); font-size: 16px; margin-top: 2px;">
-          ${icon}
-        </div>
-        <div style="flex: 1;">
-          <div class="notification-title">${notification.title}</div>
-          <div class="notification-message">${notification.message}</div>
-          <div class="notification-time">${timeDisplay}</div>
-        </div>
-      </div>
-    `;
-    
-    notificationList.appendChild(notificationItem);
-  });
-}
-
-// Add helper function for notification icons
-function getNotificationIcon(type) {
-  switch(type) {
-    case 'submission':
-      return '<i class="fas fa-file-upload"></i>';
-    case 'enrollment':
-      return '<i class="fas fa-user-plus"></i>';
-    case 'progress':
-      return '<i class="fas fa-chart-line"></i>';
-    case 'message':
-      return '<i class="fas fa-comment"></i>';
-    default:
-      return '<i class="fas fa-bell"></i>';
-  }
-}
-async function clearAllNotifications() {
-  try {
+  // Set up real-time notifications from teacherNotifications collection
+  function setupNotifications() {
     if (!currentTeacher) return;
     
-    const notificationsRef = collection(db, "teacherNotifications");
-    const notificationsQuery = query(
-      notificationsRef,
-      where("teacherId", "==", currentTeacher.id),
-      where("read", "==", false)
-    );
-    
-    const snapshot = await getDocs(notificationsQuery);
-    
-    const updatePromises = [];
-    snapshot.forEach((doc) => {
-      updatePromises.push(updateDoc(doc.ref, {
-        read: true,
-        readAt: serverTimestamp()
-      }));
-    });
-    
-    await Promise.all(updatePromises);
-    
-    console.log(`Cleared ${snapshot.size} notifications`);
-    
-    // Update local state
-    notifications.forEach(notification => {
-      notification.read = true;
-    });
-    
-    updateNotificationDisplay();
-    
-    alert("✅ All notifications cleared");
-    
-  } catch (error) {
-    console.error("Error clearing notifications:", error);
-    alert("❌ Error clearing notifications");
+    try {
+      const notificationsRef = collection(db, "teacherNotifications");
+      const notificationsQuery = query(
+        notificationsRef,
+        where("teacherId", "==", currentTeacher.id),
+        where("read", "==", false),
+        orderBy("timestamp", "desc"),
+        limit(20)
+      );
+      
+      // Set up real-time listener
+      unsubscribeNotifications = onSnapshot(notificationsQuery, 
+        (snapshot) => {
+          notifications = [];
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            notifications.push({ 
+              id: doc.id, 
+              ...data,
+              timestamp: data.timestamp ? data.timestamp.toDate() : new Date()
+            });
+          });
+          
+          console.log(`Loaded ${notifications.length} notifications`);
+          updateNotificationDisplay();
+        }, 
+        (error) => {
+          console.error("Error listening to notifications:", error);
+        }
+      );
+    } catch (error) {
+      console.error("Error setting up notifications:", error);
+    }
   }
-}
-clearNotifications.addEventListener('click', (e) => {
-  e.stopPropagation();
-  clearAllNotifications();
-});
+  
+  function updateNotificationDisplay() {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    notificationBadge.textContent = unreadCount;
+    
+    notificationList.innerHTML = '';
+    
+    if (notifications.length === 0) {
+      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+      return;
+    }
+    
+    notifications.forEach(notification => {
+      const notificationItem = document.createElement('div');
+      notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
+      
+      const timeDisplay = formatDate(notification.timestamp);
+      const icon = getNotificationIcon(notification.type);
+      
+      notificationItem.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+          <div style="color: var(--primary-red); font-size: 16px; margin-top: 2px;">
+            ${icon}
+          </div>
+          <div style="flex: 1;">
+            <div class="notification-title">${notification.title}</div>
+            <div class="notification-message">${notification.message}</div>
+            <div class="notification-time">${timeDisplay}</div>
+          </div>
+        </div>
+      `;
+      
+      notificationList.appendChild(notificationItem);
+    });
+  }
+
+  // Add helper function for notification icons
+  function getNotificationIcon(type) {
+    switch(type) {
+      case 'submission':
+        return '<i class="fas fa-file-upload"></i>';
+      case 'enrollment':
+        return '<i class="fas fa-user-plus"></i>';
+      case 'progress':
+        return '<i class="fas fa-chart-line"></i>';
+      case 'message':
+        return '<i class="fas fa-comment"></i>';
+      default:
+        return '<i class="fas fa-bell"></i>';
+    }
+  }
+
+  // Clear all notifications from teacherNotifications collection
+  async function clearAllNotifications() {
+    try {
+      if (!currentTeacher) return;
+      
+      const notificationsRef = collection(db, "teacherNotifications");
+      const notificationsQuery = query(
+        notificationsRef,
+        where("teacherId", "==", currentTeacher.id),
+        where("read", "==", false)
+      );
+      
+      const snapshot = await getDocs(notificationsQuery);
+      
+      const updatePromises = [];
+      snapshot.forEach((doc) => {
+        updatePromises.push(updateDoc(doc.ref, {
+          read: true,
+          readAt: serverTimestamp()
+        }));
+      });
+      
+      await Promise.all(updatePromises);
+      
+      console.log(`Cleared ${snapshot.size} notifications`);
+      
+      // Update local state
+      notifications.forEach(notification => {
+        notification.read = true;
+      });
+      
+      updateNotificationDisplay();
+      
+      showNotification("✅ All notifications cleared");
+      
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      showNotification("❌ Error clearing notifications", "error");
+    }
+  }
+
+  // Show notification message
+  function showNotification(message, type = "success") {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification-toast ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = "slideOut 0.3s ease";
+      setTimeout(() => {
+        if (notification.parentNode) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  }
 
   // Event listeners
   sidebarToggle.addEventListener('click', () => {
@@ -3097,11 +3200,21 @@ clearNotifications.addEventListener('click', (e) => {
 
   confirmLogoutBtn.addEventListener('click', async () => {
     try {
+      // Clean up real-time listeners
+      if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+      }
+      
       await signOut(auth);
       window.location.href = "index.html";
     } catch (error) {
       console.error("Error signing out:", error);
     }
+  });
+
+  clearNotifications.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearAllNotifications();
   });
 
   // Show error message

@@ -533,6 +533,7 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      line-height: 0;
     }
 
     .avatar::before {
@@ -555,6 +556,20 @@
       position: relative;
       z-index: 2;
     }
+    .avatar img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 3;
+}
+
+.avatar.has-image::before {
+  display: none;
+}
 
     /* Profile Container */
     .profile-container {
@@ -604,12 +619,27 @@
       cursor: pointer;
       transition: all 0.3s ease;
       overflow: hidden;
+      line-height: 0;
     }
 
     .profile-avatar-large:hover {
       transform: scale(1.05);
     }
+.profile-avatar-large img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 2;
+}
 
+.profile-avatar-large span {
+  position: relative;
+  z-index: 1;
+}
     .avatar-upload {
       position: absolute;
       bottom: -5px;
@@ -662,19 +692,7 @@
       flex-direction: column;
       gap: 0.8rem;
     }
-    .profile-avatar-large img,
-.avatar img {
-  position:absolute;
-  z-index: 2;
-}
 
-.avatar::before {
-  display: none;
-}
-
-.avatar.has-image::before {
-  display: block;
-}
 /* Image Crop Styles */
 #imageCropContainer {
   position: relative;
@@ -1904,14 +1922,28 @@ const photoURL = user.photoURL;
 const displayNameForInitials = userName.textContent;
 const initials = displayNameForInitials.split(" ").map(n => n[0]).join("").toUpperCase();
 
+// Get avatar container elements
+const avatarContainer = document.querySelector('.avatar');
+const profileAvatarLarge = document.getElementById('profileAvatar');
+
 if (photoURL) {
-  // Display profile picture
-  avatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-  userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  // Display profile picture - Navbar avatar
+  userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+  if (avatarContainer) {
+    avatarContainer.classList.add('has-image');
+  }
+  
+  // Display profile picture - Large profile avatar
+  avatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile">`;
 } else {
-  // Display initials
-  avatarInitials.textContent = initials;
+  // Display initials - Navbar avatar
   userAvatar.textContent = initials;
+  if (avatarContainer) {
+    avatarContainer.classList.remove('has-image');
+  }
+  
+  // Display initials - Large profile avatar
+  avatarInitials.innerHTML = `<span>${initials}</span>`;
 }
 
         // Set form values
@@ -2455,7 +2487,6 @@ window.openEditProfileForPicture = function() {
   }, 100);
 };
 
-// Initialize profile picture in edit modal
 function initEditModalProfilePic() {
   const user = auth.currentUser;
   if (!user) return;
@@ -2466,16 +2497,15 @@ function initEditModalProfilePic() {
   if (!editAvatarInitials || !removeBtn) return;
   
   if (user.photoURL) {
-    editAvatarInitials.innerHTML = `<img src="${user.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    editAvatarInitials.innerHTML = `<img src="${user.photoURL}" alt="Profile">`;
     removeBtn.style.display = 'inline-flex';
   } else {
     const displayName = user.displayName || "User";
     const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase();
-    editAvatarInitials.textContent = initials;
+    editAvatarInitials.innerHTML = `<span>${initials}</span>`;
     removeBtn.style.display = 'none';
   }
 }
-
 // Handle profile picture upload
 const profilePicInput = document.getElementById('profilePicInput');
 if (profilePicInput) {
@@ -2613,11 +2643,11 @@ window.applyCrop = async function() {
       photoURL: photoURL 
     }, { merge: true });
     
-    // Update edit modal preview
-    const editAvatarInitials = document.getElementById('editAvatarInitials');
-    if (editAvatarInitials) {
-      editAvatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    }
+// Update edit modal preview
+const editAvatarInitials = document.getElementById('editAvatarInitials');
+if (editAvatarInitials) {
+  editAvatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+}
     
     const removeBtn = document.getElementById('removeProfilePicBtn');
     if (removeBtn) removeBtn.style.display = 'inline-flex';
@@ -2671,14 +2701,14 @@ if (removeProfilePicBtn) {
         photoURL: null 
       });
       
-      // Update edit modal
-      const displayName = user.displayName || "User";
-      const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase();
-      const editAvatarInitials = document.getElementById('editAvatarInitials');
-      if (editAvatarInitials) {
-        editAvatarInitials.textContent = initials;
-      }
-      this.style.display = 'none';
+// Update edit modal
+const displayName = user.displayName || "User";
+const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase();
+const editAvatarInitials = document.getElementById('editAvatarInitials');
+if (editAvatarInitials) {
+  editAvatarInitials.innerHTML = `<span>${initials}</span>`;
+}
+this.style.display = 'none';
       
       // Update main profile display
       await loadUserProfile(user);
