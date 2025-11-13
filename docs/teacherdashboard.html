@@ -449,44 +449,59 @@
       animation: pulse 2s infinite;
     }
 
-    .avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 18px;
-      box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--primary-red), var(--primary-red-light));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  line-height: 0; /* ADD THIS LINE */
+}
 
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
+.avatar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: rotate 3s linear infinite;
+}
 
-    @keyframes rotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
-    .avatar span {
-      position: relative;
-      z-index: 2;
-    }
+.avatar span {
+  position: relative;
+  z-index: 2;
+}
 
+/* ADD THESE NEW STYLES */
+.avatar img {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block; /* ADD THIS LINE */
+}
+
+.avatar.has-image::before {
+  display: none;
+}
     /* Welcome Section */
     .welcome {
       padding: 40px 30px;
@@ -981,6 +996,40 @@
       text-align: center;
       color: var(--text-secondary);
     }
+    /* Toast notification styles */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+
+.message-toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--dark-red);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  z-index: 3000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  max-width: 350px;
+  cursor: pointer;
+}
+
+.message-toast.success {
+  background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.message-toast.error {
+  background: linear-gradient(45deg, #ff4757, #ff3742);
+}
 
     /* Modal Styles */
     .modal-overlay {
@@ -1352,29 +1401,29 @@
           <div class="topbar-title">Teacher Dashboard</div>
         </div>
         
-        <div class="user-info">
-          <!-- Single Notification Container -->
-          <div class="notification-container">
-            <button class="notification-icon" id="notificationIcon">
-              <i class="fas fa-bell"></i>
-              <span class="notification-badge" id="notificationBadge">0</span>
-            </button>
-            <!-- Notification Dropdown -->
-            <div class="notification-dropdown" id="notificationDropdown">
-              <div class="notification-header">
-                <h3>Notifications</h3>
-                <button class="notification-clear" id="clearNotifications">Clear All</button>
-              </div>
-              <div class="notification-list" id="notificationList">
-                <!-- Notifications will be populated here -->
-              </div>
-            </div>
-          </div>
-          <div class="avatar">
-            <span id="userInitials">AJ</span>
-          </div>
-        </div>
+<div class="user-info">
+  <!-- Single Notification Container -->
+  <div class="notification-container">
+    <button class="notification-icon" id="notificationIcon">
+      <i class="fas fa-bell"></i>
+      <span class="notification-badge" id="notificationBadge">0</span>
+    </button>
+    <!-- Notification Dropdown -->
+    <div class="notification-dropdown" id="notificationDropdown">
+      <div class="notification-header">
+        <h3>Notifications</h3>
+        <button class="notification-clear" id="clearNotifications">Clear All</button>
       </div>
+      <div class="notification-list" id="notificationList">
+        <!-- Notifications will be populated here -->
+      </div>
+    </div>
+  </div>
+  <span id="teacherDisplayName">Loading...</span> <!-- ADD THIS LINE -->
+  <div class="avatar" id="teacherAvatar">
+    <span id="userInitials">AJ</span>
+  </div>
+</div>
 
       <!-- Welcome Section -->
       <section class="welcome">
@@ -1520,12 +1569,12 @@
   </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
   import { 
     getAuth, 
     onAuthStateChanged, 
     signOut 
-  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
   import { 
     getFirestore, 
     collection, 
@@ -1539,7 +1588,7 @@
     onSnapshot,
     updateDoc,
     serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
   // Firebase Config
   const firebaseConfig = {
@@ -1570,6 +1619,8 @@
   const notificationList = document.getElementById('notificationList');
   const clearNotifications = document.getElementById('clearNotifications');
   const userInitials = document.getElementById('userInitials');
+  const teacherAvatar = document.getElementById('teacherAvatar');
+  const teacherDisplayName = document.getElementById('teacherDisplayName');
   const welcomeMessage = document.getElementById('welcomeMessage');
   const welcomeSubtitle = document.getElementById('welcomeSubtitle');
   const totalStudents = document.getElementById('totalStudents');
@@ -1601,19 +1652,14 @@
   // Check authentication state
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      // User is signed in
       try {
-        // Get teacher data from Firestore
         const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
         
         if (teacherDoc.exists()) {
           currentTeacher = { id: user.uid, ...teacherDoc.data() };
           
-          // Update UI with teacher info
-          const initials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
-          userInitials.textContent = initials;
-          welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
-          welcomeSubtitle.textContent = `Here's what's happening in your ${currentTeacher.expertise} classroom today`;
+          // Update UI with teacher info including profile picture
+          updateTeacherUI();
           
           // Load teacher's students
           await loadTeacherStudents();
@@ -1632,12 +1678,35 @@
         }
       } catch (error) {
         console.error("Error getting teacher document:", error);
+        window.location.href = "teachersignin.html";
       }
     } else {
-      // User is signed out, redirect to login
       window.location.href = "teachersignin.html";
     }
   });
+
+  // Update teacher UI with profile picture and name
+  function updateTeacherUI() {
+    const initials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+    
+    // Update avatar in navbar
+    if (currentTeacher.photoURL) {
+      userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="Profile">`;
+      teacherAvatar.classList.add('has-image');
+    } else {
+      userInitials.textContent = initials;
+      teacherAvatar.classList.remove('has-image');
+    }
+    
+    // Update teacher name display
+    if (teacherDisplayName) {
+      teacherDisplayName.textContent = `${currentTeacher.firstName} ${currentTeacher.lastName}`;
+    }
+    
+    // Update welcome messages
+    welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
+    welcomeSubtitle.textContent = `Here's what's happening in your ${currentTeacher.expertise} classroom today`;
+  }
 
   // Load teacher's students
   async function loadTeacherStudents() {
@@ -1657,7 +1726,7 @@
         courseMap[doc.id] = doc.data().name;
       });
       
-      let activeStudentIds = new Set(); // Track unique active student IDs
+      let activeStudentIds = new Set();
       const uniqueCourses = new Set();
       let totalProgressSum = 0;
       let activeStudentCount = 0;
@@ -1665,20 +1734,16 @@
       usersSnapshot.forEach((userDoc) => {
         const userData = userDoc.data();
         
-        // Check if user has enrollments (students will have enrollments)
         if (userData.enrollments) {
-          // Check each enrollment to see if this teacher is assigned
           for (const courseId in userData.enrollments) {
             const enrollment = userData.enrollments[courseId];
             
-            // Check if this enrollment has our teacher assigned
             if (enrollment.teacherId === currentTeacher.id) {
               const courseName = courseMap[courseId] || "Unknown Course";
               const progress = enrollment.progress || 0;
               
-              // Only count as active student if progress < 90%
               if (progress < 90) {
-                activeStudentIds.add(userDoc.id); // Add unique student ID
+                activeStudentIds.add(userDoc.id);
                 activeStudentCount++;
                 totalProgressSum += progress;
               }
@@ -1699,20 +1764,17 @@
                 enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
                 completedLessons: enrollment.completedLessons || []
               });
-              
-              console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}, Progress: ${progress}%`);
             }
           }
         }
       });
       
-      console.log(`Found ${activeStudentIds.size} active students enrolled with teacher ${currentTeacher.id}`);
+      console.log(`Found ${activeStudentIds.size} active students`);
       
-      // Update stats - count unique active students, not enrollments
+      // Update stats
       totalStudents.textContent = activeStudentIds.size;
       activeCourses.textContent = uniqueCourses.size;
       
-      // Calculate average progress for active students only
       const averageProgress = activeStudentCount > 0 ? Math.round(totalProgressSum / activeStudentCount) : 0;
       avgProgress.textContent = `${averageProgress}%`;
       
@@ -1722,9 +1784,6 @@
         .slice(0, 4);
       
       displayStudents(activeStudents);
-      
-      // Load recent activity
-      await loadRecentActivity();
       
       // Animate stats
       animateStats();
@@ -1742,20 +1801,46 @@
       `;
     }
   }
-  
-  // Load recent activity
-  async function loadRecentActivity() {
+
+  // Set up real-time notifications from teacherNotifications collection
+  function setupNotifications() {
+    if (!currentTeacher) return;
+    
+    const notificationsQuery = query(
+      collection(db, "teacherNotifications"),
+      where("teacherId", "==", currentTeacher.id),
+      orderBy("timestamp", "desc")
+    );
+    
+    onSnapshot(notificationsQuery, (snapshot) => {
+      notifications = [];
+      snapshot.forEach((doc) => {
+        notifications.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      updateNotificationDisplay();
+      loadRecentActivityFromNotifications();
+    }, (error) => {
+      console.error("Error listening to notifications:", error);
+    });
+  }
+
+  // Load recent activity from notifications
+  function loadRecentActivityFromNotifications() {
     try {
       activityList.innerHTML = '';
       allActivities = [];
       
-      if (enrolledStudents.length === 0) {
+      if (notifications.length === 0) {
         activityList.innerHTML = `
           <div class="activity-item">
             <div class="activity-icon"><i class="fas fa-chart-line"></i></div>
             <div class="activity-content">
               <div class="activity-title">No recent activity</div>
-              <div class="activity-description">Student activity will appear here when students enroll</div>
+              <div class="activity-description">Activity will appear here when students interact with your courses</div>
             </div>
             <div class="activity-time">Just now</div>
           </div>
@@ -1763,47 +1848,24 @@
         return;
       }
       
-      // Generate activities for all students
-      enrolledStudents.forEach(student => {
-        // Create enrollment activity
-        const enrollmentActivity = {
-          type: 'enrollment',
-          icon: 'fa-user-plus',
-          title: 'New Enrollment',
-          description: `${student.firstName} ${student.lastName} enrolled in ${student.courseName}`,
-          time: student.enrolledDate,
-          studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
-          courseName: student.courseName
-        };
+      // Convert notifications to activities
+      notifications.forEach(notification => {
+        let icon = '🔔';
+        if (notification.type === 'enrollment') icon = 'fa-user-plus';
+        else if (notification.type === 'message') icon = 'fa-comments';
+        else if (notification.type === 'submission') icon = 'fa-clipboard-check';
+        else if (notification.type === 'system') icon = 'fa-cog';
+        else icon = 'fa-bell';
         
-        // Create progress activities
-        const progressActivity = {
-          type: 'progress',
-          icon: 'fa-chart-line',
-          title: 'Progress Update',
-          description: `${student.firstName} reached ${student.progress}% in ${student.courseName}`,
-          time: new Date(student.enrolledDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000),
-          studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
-          courseName: student.courseName,
-          progress: student.progress
-        };
-        
-        // Create assessment activities
-        const assessmentActivity = {
-          type: 'assessment',
-          icon: 'fa-clipboard-check',
-          title: 'Assessment Submitted',
-          description: `${student.firstName} submitted an assessment for ${student.courseName}`,
-          time: new Date(student.enrolledDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000),
-          studentId: student.id,
-          studentName: `${student.firstName} ${student.lastName}`,
-          courseName: student.courseName
-        };
-        
-        // Add all activities to the list
-        allActivities.push(enrollmentActivity, progressActivity, assessmentActivity);
+        allActivities.push({
+          type: notification.type || 'general',
+          icon: icon,
+          title: notification.title || 'Notification',
+          description: notification.message || 'No description',
+          time: notification.timestamp ? notification.timestamp.toDate() : new Date(),
+          studentName: notification.studentName || '',
+          courseName: notification.courseName || ''
+        });
       });
       
       // Sort activities by time (newest first)
@@ -1842,111 +1904,116 @@
       `;
     }
   }
-  
-  // Set up real-time notifications
-  function setupNotifications() {
-    // Load notifications from localStorage if available
-    const savedNotifications = localStorage.getItem('teacherNotifications');
-    if (savedNotifications) {
-      notifications = JSON.parse(savedNotifications);
-    } else {
-      // Generate demo notifications based on enrolled students
-      notifications = [];
-      
-      if (enrolledStudents.length > 0) {
-        enrolledStudents.forEach(student => {
-          const notificationTypes = [
-            {
-              type: 'enrollment',
-              icon: 'fa-user-plus',
-              title: 'New Enrollment',
-              message: `${student.firstName} ${student.lastName} enrolled in your ${student.courseName} course`,
-              time: student.enrolledDate,
-              read: false,
-              id: `enrollment-${student.id}-${student.courseId}`
-            },
-            {
-              type: 'progress',
-              icon: 'fa-chart-line',
-              title: 'Progress Update',
-              message: `${student.firstName} reached ${student.progress}% in ${student.courseName}`,
-              time: new Date(student.enrolledDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000),
-              read: false,
-              id: `progress-${student.id}-${student.courseId}`
-            },
-            {
-              type: 'assessment',
-              icon: 'fa-clipboard-check',
-              title: 'Assessment Submitted',
-              message: `${student.firstName} submitted an assessment for ${student.courseName}`,
-              time: new Date(student.enrolledDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000),
-              read: false,
-              id: `assessment-${student.id}-${student.courseId}`
-            }
-          ];
-          
-          // Add one random notification per student for demo
-          const randomNotification = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
-          notifications.push(randomNotification);
-        });
-      }
-      
-      // Sort notifications by time (newest first)
-      notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
-      
-      // Save to localStorage
-      localStorage.setItem('teacherNotifications', JSON.stringify(notifications));
-    }
-    
-    // Update notification count and display
-    updateNotificationDisplay();
-  }
-  
+
   // Update notification display
   function updateNotificationDisplay() {
-    const unreadCount = notifications.filter(n => !n.read).length;
-    notificationBadge.textContent = unreadCount;
+    const unreadNotifications = notifications.filter(n => !n.read);
+    const unreadCount = unreadNotifications.length;
     
-    // Update notification dropdown
+    notificationBadge.textContent = unreadCount;
+    if (unreadCount > 0) {
+      notificationBadge.style.display = 'flex';
+    } else {
+      notificationBadge.style.display = 'none';
+    }
+    
     notificationList.innerHTML = '';
     
-    if (notifications.length === 0) {
+    if (unreadNotifications.length === 0) {
       notificationList.innerHTML = `
         <div class="notification-empty">
           <i class="fas fa-bell-slash"></i>
-          <p>No notifications</p>
+          <p>No unread notifications</p>
           <small>You're all caught up!</small>
         </div>
       `;
     } else {
-      notifications.forEach(notification => {
+      unreadNotifications.slice(0, 10).forEach(notification => {
         const notificationItem = document.createElement('div');
-        notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
-        notificationItem.addEventListener('click', () => markNotificationAsRead(notification));
+        notificationItem.className = 'notification-item unread';
+        
+        let timeDisplay = 'Recently';
+        if (notification.timestamp) {
+          const notificationTime = notification.timestamp.toDate ? notification.timestamp.toDate() : new Date(notification.timestamp);
+          const diffMs = new Date() - notificationTime;
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHours = Math.floor(diffMs / 3600000);
+          const diffDays = Math.floor(diffMs / 86400000);
+          
+          if (diffMins < 1) timeDisplay = 'Just now';
+          else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+          else if (diffHours < 24) timeDisplay = `${diffHours}h ago`;
+          else timeDisplay = `${diffDays}d ago`;
+        }
+        
+        let icon = '🔔';
+        if (notification.type === 'enrollment') icon = '👨‍🎓';
+        else if (notification.type === 'message') icon = '💬';
+        else if (notification.type === 'submission') icon = '📝';
+        else if (notification.type === 'system') icon = '⚙️';
         
         notificationItem.innerHTML = `
-          <div class="notification-title">${notification.title}</div>
+          <div class="notification-title">${icon} ${notification.title}</div>
           <div class="notification-message">${notification.message}</div>
-          <div class="notification-time">${formatDate(notification.time)}</div>
+          <div class="notification-time">${timeDisplay}</div>
         `;
         
         notificationList.appendChild(notificationItem);
       });
     }
   }
-  
-  // Mark notification as read
-  function markNotificationAsRead(notification) {
-    notification.read = true;
-    // Update localStorage
-    localStorage.setItem('teacherNotifications', JSON.stringify(notifications));
-    updateNotificationDisplay();
+
+  // Show success/error messages
+  function showMessage(message, type = "success") {
+    const messageElement = document.createElement('div');
+    messageElement.className = `message-toast ${type}`;
+    messageElement.textContent = message;
+    
+    document.body.appendChild(messageElement);
+    
+    setTimeout(() => {
+      if (messageElement.parentNode) {
+        messageElement.remove();
+      }
+    }, 4000);
   }
-  
+
+  // Clear all notifications
+  if (clearNotifications) {
+    clearNotifications.addEventListener('click', async () => {
+      try {
+        if (!currentTeacher) return;
+        
+        const notificationsQuery = query(
+          collection(db, "teacherNotifications"),
+          where("teacherId", "==", currentTeacher.id),
+          where("read", "==", false)
+        );
+        
+        const snapshot = await getDocs(notificationsQuery);
+        
+        const updatePromises = [];
+        snapshot.forEach((docSnap) => {
+          updatePromises.push(
+            updateDoc(doc(db, "teacherNotifications", docSnap.id), {
+              read: true,
+              readAt: serverTimestamp()
+            })
+          );
+        });
+        
+        await Promise.all(updatePromises);
+        
+        showMessage("✅ All notifications cleared");
+      } catch (error) {
+        console.error("Error clearing notifications:", error);
+        showMessage("❌ Error clearing notifications", "error");
+      }
+    });
+  }
+
   // Display students in the table
   function displayStudents(students) {
-    console.log("Displaying students:", students);
-    
     if (students.length === 0) {
       studentsTableBody.innerHTML = `
         <tr>
@@ -1954,7 +2021,6 @@
             <i class="fas fa-users"></i>
             <h3>No active students</h3>
             <p>Currently no students are actively enrolled in your courses</p>
-            <p><small>Your teacher ID: ${currentTeacher.id}</small></p>
           </td>
         </tr>
       `;
@@ -1991,11 +2057,10 @@
       studentsTableBody.appendChild(row);
     });
   }
-  
+
   // View student details in modal
   window.viewStudentDetails = async (studentId, courseId) => {
     try {
-      // Find the student
       const student = enrolledStudents.find(s => s.id === studentId && s.courseId === courseId);
       
       if (!student) {
@@ -2003,7 +2068,6 @@
         return;
       }
       
-      // Populate modal with student details
       studentDetailContent.innerHTML = `
         <div class="student-detail-header">
           <div class="student-detail-avatar">${getInitials(student.firstName, student.lastName)}</div>
@@ -2060,7 +2124,6 @@
         </div>
       `;
       
-      // Show the modal
       studentDetailModal.classList.add('active');
       
     } catch (error) {
@@ -2068,7 +2131,7 @@
       alert('Error loading student details');
     }
   };
-  
+
   // Show all activities in modal
   function showAllActivities() {
     activityDetailContent.innerHTML = '';
@@ -2084,7 +2147,6 @@
       return;
     }
     
-    // Group activities by date
     const groupedActivities = {};
     allActivities.forEach(activity => {
       const dateKey = activity.time.toDateString();
@@ -2094,14 +2156,13 @@
       groupedActivities[dateKey].push(activity);
     });
     
-    // Create timeline for each date
     for (const date in groupedActivities) {
       const dateGroup = document.createElement('div');
       dateGroup.className = 'activity-date-group';
       
       dateGroup.innerHTML = `
         <div class="activity-date-header">${date}</div>
-        <div class="activity-timeline">
+        <div class="activity-timeline"></div>
       `;
       
       const timeline = dateGroup.querySelector('.activity-timeline');
@@ -2127,17 +2188,15 @@
       activityDetailContent.appendChild(dateGroup);
     }
     
-    // Show the modal
     activityDetailModal.classList.add('active');
   }
-  
-  // Helper function to get initials
+
+  // Helper functions
   function getInitials(firstName, lastName) {
     if (!firstName || !lastName) return "SU";
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
   }
-  
-  // Helper function to format date
+
   function formatDate(date) {
     if (!date) return "Never";
     
@@ -2149,18 +2208,45 @@
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   }
-  
-  // Helper function to format time
+
   function formatTime(date) {
     if (!date) return "";
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
-  
-  // Helper function to get status from progress
+
   function getStatusFromProgress(progress) {
     if (progress >= 90) return 'completed';
     if (progress >= 50) return 'active';
     return 'pending';
+  }
+
+  function animateStats() {
+    const statValues = document.querySelectorAll('.stat-number');
+    statValues.forEach((stat, index) => {
+      const text = stat.textContent;
+      let finalValue = 0;
+      
+      if (index === 2) {
+        finalValue = parseInt(text) || 0;
+      } else {
+        finalValue = parseInt(text) || 0;
+      }
+      
+      if (finalValue > 0) {
+        let current = 0;
+        const increment = finalValue / 30;
+        
+        const counter = setInterval(() => {
+          current += increment;
+          if (current >= finalValue) {
+            stat.textContent = index === 2 ? `${finalValue}%` : finalValue;
+            clearInterval(counter);
+          } else {
+            stat.textContent = index === 2 ? `${Math.floor(current)}%` : Math.floor(current);
+          }
+        }, 50);
+      }
+    });
   }
 
   // Sidebar toggle functionality
@@ -2204,15 +2290,6 @@
       notificationDropdown.classList.remove('active');
     }
   });
-
-  // Clear notifications
-  if (clearNotifications) {
-    clearNotifications.addEventListener('click', () => {
-      notifications = [];
-      localStorage.removeItem('teacherNotifications');
-      updateNotificationDisplay();
-    });
-  }
 
   // Logout functionality
   if (logoutBtn) {
@@ -2284,37 +2361,6 @@
       alert('Redirecting to messages...');
       studentDetailModal.classList.remove('active');
       window.location.href = "teachermessages.html";
-    });
-  }
-
-  // Animate stats on load
-  function animateStats() {
-    const statValues = document.querySelectorAll('.stat-number');
-    statValues.forEach((stat, index) => {
-      const text = stat.textContent;
-      let finalValue = 0;
-      
-      if (index === 2) {
-        // For percentage, extract the number
-        finalValue = parseInt(text) || 0;
-      } else {
-        finalValue = parseInt(text) || 0;
-      }
-      
-      if (finalValue > 0) {
-        let current = 0;
-        const increment = finalValue / 30;
-        
-        const counter = setInterval(() => {
-          current += increment;
-          if (current >= finalValue) {
-            stat.textContent = index === 2 ? `${finalValue}%` : finalValue;
-            clearInterval(counter);
-          } else {
-            stat.textContent = index === 2 ? `${Math.floor(current)}%` : Math.floor(current);
-          }
-        }, 50);
-      }
     });
   }
 
