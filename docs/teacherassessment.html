@@ -326,7 +326,7 @@
       margin-left: 280px;
     }
 
-    /* Topbar */
+    /* Topbar - UPDATED */
     .topbar {
       background: var(--bg-secondary);
       backdrop-filter: blur(20px);
@@ -449,6 +449,7 @@
       100% { transform: scale(1); }
     }
 
+    /* Avatar Styles - UPDATED */
     .avatar {
       width: 50px;
       height: 50px;
@@ -485,6 +486,31 @@
     .avatar span {
       position: relative;
       z-index: 2;
+    }
+
+    /* Profile picture styling */
+    .avatar img,
+    .student-avatar-small img,
+    .student-avatar-large img {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    /* Hide the rotating background when image is present */
+    .avatar.has-image::before,
+    .student-avatar-small.has-image::before,
+    .student-avatar-large.has-image::before {
+      display: none;
+    }
+
+    .teacher-display-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 16px;
     }
 
     /* Welcome Section */
@@ -622,10 +648,11 @@
       align-items: center;
     }
     
+    /* Student Avatar Styles - UPDATED */
     .student-avatar-small {
       width: 35px;
       height: 35px;
-      border-radius: 8px;
+      border-radius: 50%;
       background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
       color: white;
       display: flex;
@@ -634,6 +661,19 @@
       font-weight: 600;
       margin-right: 1rem;
       font-size: 0.9rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .student-avatar-small::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
     }
     
     .student-info {
@@ -790,10 +830,11 @@
       border-bottom: 1px solid var(--dark-red);
     }
     
+    /* Student Avatar Large - UPDATED */
     .student-avatar-large {
       width: 60px;
       height: 60px;
-      border-radius: 12px;
+      border-radius: 50%;
       background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
       color: white;
       display: flex;
@@ -802,6 +843,19 @@
       font-weight: 600;
       margin-right: 1.5rem;
       font-size: 1.3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .student-avatar-large::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: rotate 3s linear infinite;
     }
     
     .assessment-details {
@@ -1292,7 +1346,7 @@
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
-      <!-- Topbar -->
+      <!-- Topbar - UPDATED -->
       <div class="topbar">
         <div class="topbar-left">
           <button class="sidebar-toggle" id="sidebarToggle">
@@ -1319,7 +1373,8 @@
               </div>
             </div>
           </div>
-          <div class="avatar">
+          <span id="teacherDisplayName" class="teacher-display-name">Loading...</span>
+          <div class="avatar" id="teacherAvatar">
             <span id="userInitials">AJ</span>
           </div>
         </div>
@@ -1441,6 +1496,9 @@
       </div>
       <h3>Success!</h3>
       <p id="successMessage">Evaluation submitted successfully!</p>
+      <div class="evaluation-results" id="evaluationResults" style="margin: 20px 0; padding: 15px; background: var(--light-red); border-radius: 10px; border: 1px solid var(--dark-red);">
+        <!-- Evaluation results will be shown here -->
+      </div>
       <button class="action-btn btn-primary" id="closeSuccessPopup">OK</button>
     </div>
   </div>
@@ -1482,6 +1540,11 @@
     orderBy,
     onSnapshot
   } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  import { 
+    getStorage, 
+    ref, 
+    getDownloadURL 
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
   // Firebase config
   const firebaseConfig = {
@@ -1498,6 +1561,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   // DOM Elements
   const loadingContainer = document.getElementById('loadingContainer');
@@ -1512,6 +1576,8 @@
   const notificationList = document.getElementById('notificationList');
   const clearNotifications = document.getElementById('clearNotifications');
   const userInitials = document.getElementById('userInitials');
+  const teacherDisplayName = document.getElementById('teacherDisplayName');
+  const teacherAvatar = document.getElementById('teacherAvatar');
   const welcomeMessage = document.getElementById('welcomeMessage');
   const welcomeSubtitle = document.getElementById('welcomeSubtitle');
   const assessmentTypeFilter = document.getElementById('assessmentTypeFilter');
@@ -1538,6 +1604,7 @@
   const successPopup = document.getElementById('successPopup');
   const closeSuccessPopup = document.getElementById('closeSuccessPopup');
   const successMessage = document.getElementById('successMessage');
+  const evaluationResults = document.getElementById('evaluationResults');
   const logoutModal = document.getElementById('logoutModal');
   const closeLogoutModal = document.getElementById('closeLogoutModal');
   const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
@@ -1561,8 +1628,8 @@
           currentTeacher = { id: user.uid, ...teacherDoc.data() };
           console.log("Teacher data loaded:", currentTeacher);
           
-          // Update UI with teacher info
-          userInitials.textContent = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+          // Update UI with teacher info - UPDATED
+          populateTeacherInfo();
           welcomeMessage.textContent = `Welcome back, Professor ${currentTeacher.lastName}!`;
           welcomeSubtitle.textContent = `Evaluate student assignments and final tests`;
           
@@ -1590,6 +1657,26 @@
       window.location.href = "teachersignin.html";
     }
   });
+
+  // Populate teacher info - NEW FUNCTION
+  function populateTeacherInfo() {
+    const teacher = currentTeacher;
+    const initials = getInitials(teacher.firstName, teacher.lastName);
+    
+    // Update display name
+    if (teacherDisplayName) {
+      teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
+    }
+    
+    // Update avatar with profile picture if available
+    if (teacher.photoURL) {
+      teacherAvatar.classList.add('has-image');
+      userInitials.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.firstName} ${teacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    } else {
+      teacherAvatar.classList.remove('has-image');
+      userInitials.textContent = initials;
+    }
+  }
 
   // Helper function to get initials
   function getInitials(firstName, lastName) {
@@ -1733,6 +1820,9 @@
     // Set max score to 100 for all assessments
     const maxScore = 100;
     
+    // Get student profile picture
+    const studentProfilePic = await getStudentProfilePicture(submission.studentId);
+    
     // Determine status based on evaluated field or status field
     let status = 'submitted';
     if (submission.evaluated === true || submission.status === 'completed') {
@@ -1746,6 +1836,7 @@
       ...submission,
       maxScore: maxScore,
       studentInitials: getInitialsFromName(submission.studentName),
+      studentProfilePic: studentProfilePic,
       assignmentTitle: submission.assignmentTitle || 'Unknown Assessment',
       courseName: submission.courseName || 'General Course',
       assessmentType: type,
@@ -1754,6 +1845,30 @@
       status: status,
       collectionType: type === 'final-test' ? 'testSubmissions' : 'submissions'
     });
+  }
+
+  // Get student profile picture from Firebase Storage
+  async function getStudentProfilePicture(studentId) {
+    try {
+      // Get the user document from Firestore
+      const userDoc = await getDoc(doc(db, "users", studentId));
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Check if user has photoURL in their Firestore document
+        if (userData.photoURL) {
+          console.log(`Found profile picture for student ${studentId}:`, userData.photoURL);
+          return userData.photoURL;
+        }
+      }
+      
+      console.log(`No profile picture found in Firestore for student ${studentId}`);
+      return null;
+    } catch (error) {
+      console.error(`Error getting profile picture for student ${studentId}:`, error);
+      return null;
+    }
   }
 
   // Helper function to get initials from full name
@@ -1809,10 +1924,15 @@
       const buttonClass = isEvaluated ? 'btn-secondary' : 'btn-primary';
       const buttonText = isEvaluated ? 'View' : 'Evaluate';
       
+      // Student avatar HTML - UPDATED with profile picture support
+      const studentAvatarHTML = submission.studentProfilePic 
+        ? `<div class="student-avatar-small has-image"><img src="${submission.studentProfilePic}" alt="${submission.studentName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`
+        : `<div class="student-avatar-small">${submission.studentInitials}</div>`;
+
       row.innerHTML = `
         <td>
           <div class="student-cell">
-            <div class="student-avatar-small">${submission.studentInitials}</div>
+            ${studentAvatarHTML}
             <div class="student-info">
               <div class="student-name">${submission.studentName}</div>
               <div class="student-email">${submission.studentEmail}</div>
@@ -1848,8 +1968,13 @@
       
       console.log("Opening evaluation for submission:", submission);
       
+      // Student avatar HTML for modal - UPDATED with profile picture support
+      const studentAvatarModalHTML = submission.studentProfilePic 
+        ? `<div class="student-avatar-large has-image"><img src="${submission.studentProfilePic}" alt="${submission.studentName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`
+        : `<div class="student-avatar-large">${submission.studentInitials}</div>`;
+
       // Set modal content
-      modalStudentAvatar.textContent = submission.studentInitials;
+      modalStudentAvatar.innerHTML = studentAvatarModalHTML;
       modalStudentName.textContent = submission.studentName;
       modalStudentEmail.textContent = submission.studentEmail;
       modalAssignmentTitle.textContent = submission.assignmentTitle;
@@ -2160,7 +2285,28 @@
       console.log("Submitting final evaluation:", updateData);
       await updateDoc(submissionRef, updateData);
       
+      // Show evaluation results in success popup - UPDATED
       successMessage.textContent = 'Evaluation submitted successfully! Results have been sent to the student.';
+      
+      // Display evaluation results
+      const passFailText = isPass ? 'PASS' : 'FAIL';
+      const passFailClass = isPass ? 'status-completed' : 'status-pending';
+      
+      evaluationResults.innerHTML = `
+        <div style="text-align: center;">
+          <h4 style="margin-bottom: 10px;">Evaluation Results</h4>
+          <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-red); margin-bottom: 10px;">
+            ${totalScore} / 100
+          </div>
+          <div class="status-badge ${passFailClass}" style="display: inline-block;">
+            ${passFailText}
+          </div>
+          <div style="margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+            ${passPercentage}% - ${isPass ? 'Student passed the assessment' : 'Student needs to retake the assessment'}
+          </div>
+        </div>
+      `;
+      
       successPopup.classList.add('active');
       
       evaluationModal.classList.remove('active');
