@@ -2613,8 +2613,22 @@ window.applyCrop = async function() {
     
     showMessage("✅ Profile picture uploaded successfully!");
     
-    // Update main profile display
-    populateProfileData();
+ // Update main profile display
+populateProfileData();
+
+// Specifically update navbar avatar
+const teacherAvatar = document.getElementById('teacherAvatar');
+const userInitials = document.getElementById('userInitials');
+if (teacherAvatar && userInitials) {
+  if (photoURL) {
+    userInitials.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+    teacherAvatar.classList.add('has-image');
+  } else {
+    const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
+    userInitials.innerHTML = initials;
+    teacherAvatar.classList.remove('has-image');
+  }
+}
     
     // Restore button
     applyBtn.innerHTML = originalText;
@@ -2668,8 +2682,17 @@ if (removeProfilePicBtn) {
       }
       this.style.display = 'none';
       
-      // Update main profile display
-      populateProfileData();
+// Update main profile display
+populateProfileData();
+
+// Specifically update navbar avatar
+const teacherAvatar = document.getElementById('teacherAvatar');
+const userInitials = document.getElementById('userInitials');
+if (teacherAvatar && userInitials) {
+  const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
+  userInitials.innerHTML = initials;
+  teacherAvatar.classList.remove('has-image');
+}
       
       showMessage("✅ Profile picture removed successfully!");
     } catch (error) {
