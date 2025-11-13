@@ -1658,25 +1658,27 @@
     }
   });
 
-  // Populate teacher info - NEW FUNCTION
-  function populateTeacherInfo() {
-    const teacher = currentTeacher;
-    const initials = getInitials(teacher.firstName, teacher.lastName);
-    
-    // Update display name
-    if (teacherDisplayName) {
-      teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
-    }
-    
-    // Update avatar with profile picture if available
-    if (teacher.photoURL) {
-      teacherAvatar.classList.add('has-image');
-      userInitials.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.firstName} ${teacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    } else {
-      teacherAvatar.classList.remove('has-image');
-      userInitials.textContent = initials;
-    }
+// Populate teacher info - FIXED FUNCTION
+function populateTeacherInfo() {
+  const teacher = currentTeacher;
+  const initials = getInitials(teacher.firstName, teacher.lastName);
+  
+  // Update display name
+  if (teacherDisplayName) {
+    teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
   }
+  
+  // Update avatar with profile picture if available
+  if (teacher.photoURL) {
+    teacherAvatar.classList.add('has-image');
+    // Clear existing content and add image directly to avatar container
+    teacherAvatar.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.firstName} ${teacher.lastName}">`;
+  } else {
+    teacherAvatar.classList.remove('has-image');
+    // Clear and add span with initials
+    teacherAvatar.innerHTML = `<span id="userInitials">${initials}</span>`;
+  }
+}
 
   // Helper function to get initials
   function getInitials(firstName, lastName) {
