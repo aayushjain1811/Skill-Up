@@ -489,10 +489,13 @@
       z-index: 2;
     }
 
-    /* Profile picture styling */
+    
+/* Profile picture styling */
 .avatar img,
 .profile-avatar-large img {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   z-index: 2;
   width: 100%;
   height: 100%;
@@ -698,6 +701,7 @@
       position: relative;
       cursor: pointer;
       transition: all 0.3s ease;
+      overflow: hidden;
     }
     
     .profile-avatar-large:hover {
@@ -2027,10 +2031,17 @@ passwordForm.addEventListener('submit', async (e) => {
       }
     });
 
-    // Modal functions
-    window.openModal = (modalId) => {
-      document.getElementById(modalId).style.display = 'flex';
-    };
+// Modal functions
+window.openModal = (modalId) => {
+  document.getElementById(modalId).style.display = 'flex';
+  
+  // Initialize profile picture when opening edit modal
+  if (modalId === 'editProfileModal') {
+    setTimeout(() => {
+      initEditModalProfilePic();
+    }, 50);
+  }
+};
 
 // Modal functions
 window.closeModal = (modalId) => {
