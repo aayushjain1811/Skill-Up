@@ -1326,71 +1326,7 @@
             </button>
           </div>
         </div>
-        <div class="modal-body">
-  <div id="personalInfoAlert"></div>
-          <!-- Profile Picture Section -->
-  <div class="form-group" style="text-align: center; margin-bottom: 2rem;">
-    <label class="form-label">Profile Picture</label>
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-      <div id="editProfileAvatar" class="profile-avatar-large" style="margin: 0;">
-        <span id="editAvatarInitials">AJ</span>
-      </div>
-      
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
-        <label for="profilePicInput" class="btn btn-primary" style="margin: 0; cursor: pointer; padding: 0.7rem 1.5rem;">
-          <i class="fas fa-upload"></i> Upload Picture
-        </label>
-        <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
-        
-        <button type="button" class="btn btn-secondary" id="removeProfilePicBtn" style="display: none; padding: 0.7rem 1.5rem;">
-          <i class="fas fa-trash"></i> Remove
-        </button>
-      </div>
-      
-      <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
-        Square image recommended, max 5MB
-      </p>
-    </div>
-  </div>
 
-  <form id="personalInfoForm">
-    <div class="form-grid">
-      <div class="form-group">
-        <label class="form-label" for="firstName">First Name</label>
-        <input type="text" class="form-input" id="firstName" name="firstName" required>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label" for="lastName">Last Name</label>
-        <input type="text" class="form-input" id="lastName" name="lastName" required>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label" for="email">Email Address</label>
-        <input type="email" class="form-input" id="email" name="email" required disabled style="background: var(--bg-main);">
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label" for="expertise">Expertise/Subject</label>
-        <input type="text" class="form-input" id="expertise" name="expertise" required readonly style="background: var(--bg-main);">
-      </div>
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label" for="bio">Bio/Description</label>
-      <textarea class="form-input form-textarea" id="bio" name="bio" placeholder="Tell us about yourself, your teaching philosophy, and experience..."></textarea>
-    </div>
-    
-    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('editProfileModal')">
-        Cancel
-      </button>
-      <button type="submit" class="btn btn-primary" style="flex: 1;">
-        Update Profile
-      </button>
-    </div>
-  </form>
-</div>
         <!-- Account Overview -->
         <div class="form-section">
           <h3 class="section-title">Account Overview</h3>
@@ -1486,11 +1422,81 @@
       </div>
     </div>
   </div>
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Edit Profile</h3>
+      <button class="modal-close" onclick="closeModal('editProfileModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="personalInfoAlert"></div>
+      
+      <!-- Profile Picture Section -->
+      <div class="form-group" style="text-align: center; margin-bottom: 2rem;">
+        <label class="form-label">Profile Picture</label>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+          <div id="editProfileAvatar" class="profile-avatar-large" style="margin: 0;">
+            <span id="editAvatarInitials">AJ</span>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+            <label for="profilePicInput" class="btn btn-primary" style="margin: 0; cursor: pointer; padding: 0.7rem 1.5rem;">
+              <i class="fas fa-upload"></i> Upload Picture
+            </label>
+            <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+            
+            <button type="button" class="btn btn-secondary" id="removeProfilePicBtn" style="display: none; padding: 0.7rem 1.5rem;">
+              <i class="fas fa-trash"></i> Remove
+            </button>
+          </div>
+          
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+            Square image recommended, max 5MB
+          </p>
+        </div>
+      </div>
 
-
-  
-
-
+      <form id="personalInfoForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="firstName">First Name</label>
+            <input type="text" class="form-input" id="firstName" name="firstName" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="lastName">Last Name</label>
+            <input type="text" class="form-input" id="lastName" name="lastName" required>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" class="form-input" id="email" name="email" required disabled style="background: var(--bg-main);">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="expertise">Expertise/Subject</label>
+            <input type="text" class="form-input" id="expertise" name="expertise" required readonly style="background: var(--bg-main);">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="bio">Bio/Description</label>
+          <textarea class="form-input form-textarea" id="bio" name="bio" placeholder="Tell us about yourself, your teaching philosophy, and experience..."></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('editProfileModal')">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" style="flex: 1;">
+            Update Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
   <!-- Change Password Modal -->
   <div class="modal" id="changePasswordModal">
     <div class="modal-content">
