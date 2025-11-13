@@ -1691,92 +1691,97 @@
     }
   }
 
-  // Load teacher's students with assignment data
-  async function loadTeacherStudents() {
-    try {
-      allStudents = [];
+// Load teacher's students with assignment data - UPDATED
+async function loadTeacherStudents() {
+  try {
+    allStudents = [];
+    
+    console.log("Loading students for teacher:", currentTeacher.id);
+    
+    // Get ALL users from the users collection
+    const usersSnapshot = await getDocs(collection(db, "users"));
+    console.log(`Found ${usersSnapshot.size} users in database`);
+    
+    // Get ALL courses for course name mapping
+    const coursesSnapshot = await getDocs(collection(db, "courses"));
+    const courseMap = {};
+    coursesSnapshot.forEach(doc => {
+      courseMap[doc.id] = doc.data().name;
+    });
+    
+    let enrollmentCount = 0;
+    
+    // Process each user to find students enrolled with this teacher
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
       
-      console.log("Loading students for teacher:", currentTeacher.id);
-      
-      // Get ALL users from the users collection
-      const usersSnapshot = await getDocs(collection(db, "users"));
-      console.log(`Found ${usersSnapshot.size} users in database`);
-      
-      // Get ALL courses for course name mapping
-      const coursesSnapshot = await getDocs(collection(db, "courses"));
-      const courseMap = {};
-      coursesSnapshot.forEach(doc => {
-        courseMap[doc.id] = doc.data().name;
-      });
-      
-      let enrollmentCount = 0;
-      
-      // Process each user to find students enrolled with this teacher
-      for (const userDoc of usersSnapshot.docs) {
-        const userData = userDoc.data();
-        
-        // Check if user has enrollments (students will have enrollments)
-        if (userData.enrollments) {
-          // Check each enrollment to see if this teacher is assigned
-          for (const courseId in userData.enrollments) {
-            const enrollment = userData.enrollments[courseId];
+      // Check if user has enrollments (students will have enrollments)
+      if (userData.enrollments) {
+        // Check each enrollment to see if this teacher is assigned
+        for (const courseId in userData.enrollments) {
+          const enrollment = userData.enrollments[courseId];
+          
+          // Check if this enrollment has our teacher assigned
+          if (enrollment.teacherId === currentTeacher.id) {
+            enrollmentCount++;
             
-            // Check if this enrollment has our teacher assigned
-            if (enrollment.teacherId === currentTeacher.id) {
-              enrollmentCount++;
-              
-              const courseName = courseMap[courseId] || "Unknown Course";
-              
-              // Get assignment data for this course and student
-              const assignmentData = await getAssignmentData(courseId, userDoc.id);
-              const courseImageURL = await getCourseImageURL(courseId);
-              const profilePictureURL = await getStudentProfilePicture(userDoc.id);
-              
-              // Create a separate student record for each course enrollment
-              allStudents.push({
-                id: userDoc.id,
-                enrollmentId: `${userDoc.id}_${courseId}`, // Unique ID for this enrollment
-                firstName: userData.firstName || "Student",
-                lastName: userData.lastName || "User",
-                email: userData.email || "No email",
-                courseId: courseId,
-                courseName: courseName,
-                courseImageURL: courseImageURL,
-                profilePictureURL: profilePictureURL,
-                progress: enrollment.progress || 0,
-                lastActivity: enrollment.lastAccessed ? 
-                  formatDate(enrollment.lastAccessed.toDate()) : "Never",
-                enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
-                assignmentsCompleted: assignmentData.completedAssignments,
-                totalAssignments: assignmentData.totalAssignments,
-                performance: getPerformanceFromProgress(enrollment.progress || 0),
-                teacherName: enrollment.teacherName || `${currentTeacher.firstName} ${currentTeacher.lastName}`
-              });
-              
-              console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}`);
+            const courseName = courseMap[courseId] || "Unknown Course";
+            
+            // Get assignment data for this course and student
+            const assignmentData = await getAssignmentData(courseId, userDoc.id);
+            const courseImageURL = await getCourseImageURL(courseId);
+            
+            // Get profile picture URL from user data (already in Firestore from profile page)
+            const profilePictureURL = userData.photoURL || null;
+            
+            // Create a separate student record for each course enrollment
+            allStudents.push({
+              id: userDoc.id,
+              enrollmentId: `${userDoc.id}_${courseId}`, // Unique ID for this enrollment
+              firstName: userData.firstName || "Student",
+              lastName: userData.lastName || "User",
+              email: userData.email || "No email",
+              courseId: courseId,
+              courseName: courseName,
+              courseImageURL: courseImageURL,
+              profilePictureURL: profilePictureURL, // Use photoURL from user data
+              progress: enrollment.progress || 0,
+              lastActivity: enrollment.lastAccessed ? 
+                formatDate(enrollment.lastAccessed.toDate()) : "Never",
+              enrolledDate: enrollment.enrolledAt ? enrollment.enrolledAt.toDate() : new Date(),
+              assignmentsCompleted: assignmentData.completedAssignments,
+              totalAssignments: assignmentData.totalAssignments,
+              performance: getPerformanceFromProgress(enrollment.progress || 0),
+              teacherName: enrollment.teacherName || `${currentTeacher.firstName} ${currentTeacher.lastName}`
+            });
+            
+            console.log(`Found student: ${userData.firstName} ${userData.lastName} in course: ${courseName}`);
+            if (profilePictureURL) {
+              console.log(`Student has profile picture: ${profilePictureURL}`);
             }
           }
         }
       }
-      
-      console.log(`Found ${enrollmentCount} student-course enrollments with teacher ${currentTeacher.id}`);
-      
-      filteredStudents = [...allStudents];
-      
-      // Update stats
-      updateStats();
-      
-      // Render students
-      renderStudents();
-      
-    } catch (error) {
-      console.error("Error loading teacher students:", error);
-      // Show error state
-      emptyState.style.display = "block";
-      studentsList.style.display = "none";
-      emptyDescription.textContent = `Error loading students: ${error.message}. Please try refreshing the page.`;
     }
+    
+    console.log(`Found ${enrollmentCount} student-course enrollments with teacher ${currentTeacher.id}`);
+    
+    filteredStudents = [...allStudents];
+    
+    // Update stats
+    updateStats();
+    
+    // Render students
+    renderStudents();
+    
+  } catch (error) {
+    console.error("Error loading teacher students:", error);
+    // Show error state
+    emptyState.style.display = "block";
+    studentsList.style.display = "none";
+    emptyDescription.textContent = `Error loading students: ${error.message}. Please try refreshing the page.`;
   }
+}
 
   // Get assignment data for a student in a course
   async function getAssignmentData(courseId, studentId) {
@@ -1822,17 +1827,37 @@
     }
   }
 
-  // Get student profile picture URL
-  async function getStudentProfilePicture(studentId) {
-    try {
-      const imageRef = ref(storage, `profile-pictures/${studentId}`);
-      const url = await getDownloadURL(imageRef);
-      return url;
-    } catch (error) {
-      console.log(`No profile picture found for student ${studentId}:`, error.code);
-      return null;
+  // Get student profile picture URL - IMPROVED VERSION
+async function getStudentProfilePicture(studentId) {
+  try {
+    // Get the user document from Firestore
+    const userDoc = await getDoc(doc(db, "users", studentId));
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      
+      // Check if user has photoURL in their Firestore document
+      if (userData.photoURL) {
+        console.log(`Found profile picture for student ${studentId}:`, userData.photoURL);
+        return userData.photoURL;
+      }
+      
+      // Check if user has photoURL in Firebase Auth (fallback)
+      try {
+        // Note: We can't directly access other users' Auth data
+        // So we rely on the photoURL being stored in Firestore
+      } catch (authError) {
+        console.log(`Cannot access Auth data for student ${studentId}`);
+      }
     }
+    
+    console.log(`No profile picture found in Firestore for student ${studentId}`);
+    return null;
+  } catch (error) {
+    console.error(`Error getting profile picture for student ${studentId}:`, error);
+    return null;
   }
+}
 
   // Update statistics
   function updateStats() {

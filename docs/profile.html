@@ -2235,7 +2235,8 @@ if (photoURL) {
         const userRef = doc(db, "users", user.uid);
         await setDoc(userRef, { 
           name: name,
-          bio: bio 
+          bio: bio,
+          photoURL: photoURL 
         }, { merge: true });
 
         // Reload profile data
