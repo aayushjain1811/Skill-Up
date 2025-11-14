@@ -513,43 +513,71 @@
       animation: pulse 2s infinite;
     }
 
-    .avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, var(--light), var(--success));
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 18px;
-      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--light), var(--success));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
 
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
+.avatar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
+  animation: rotate 3s linear infinite;
+  z-index: 1;
+}
 
-    @keyframes rotate {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
-    .avatar span {
-      position: relative;
-      z-index: 2;
-    }
+.avatar span {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fix for navbar avatar with image */
+.avatar.has-image {
+  background: transparent !important;
+}
+
+.avatar.has-image::before {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.avatar.has-image span {
+  color: transparent;
+  font-size: 0;
+}
+
+.avatar img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 10;
+}
 
     /* Profile Container */
     .profile-container {
@@ -1318,9 +1346,9 @@
             </div>
           </div>
           <span id="userDisplayName">Loading...</span>
-          <div class="avatar">
-            <span id="userAvatar">U</span>
-          </div>
+<div class="avatar" id="userAvatar">
+  <span>U</span>
+</div>
         </div>
       </div>
 
@@ -1672,6 +1700,7 @@
     const userBio = document.getElementById("userBio");
     const avatarInitials = document.getElementById("avatarInitials");
     const userAvatar = document.getElementById("userAvatar");
+console.log("User avatar element:", userAvatar); // Debug line
     const userDisplayName = document.getElementById("userDisplayName");
     const learningProgress = document.getElementById("learningProgress");
 
@@ -1929,115 +1958,111 @@
 // Update avatar display in both profile card and navbar
 function updateAvatarDisplay(photoURL, initials, user) {
   const profileAvatar = document.getElementById('profileAvatar');
-  const userAvatarParent = userAvatar.parentElement;
+  const userAvatarElement = document.getElementById('userAvatar');
   
   // Update profile card avatar
   if (photoURL) {
     // Display profile picture
     avatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" onload="this.style.opacity=1" style="opacity:0; transition: opacity 0.3s;">`;
     profileAvatar.classList.add('has-image');
-    // Force background to be transparent
     profileAvatar.style.background = 'transparent';
   } else {
     // Display initials
     avatarInitials.innerHTML = initials;
     profileAvatar.classList.remove('has-image');
-    // Restore gradient background
     profileAvatar.style.background = '';
   }
 
-  // Update navbar avatar
+  // Update navbar avatar (the actual avatar element, not its parent)
   if (photoURL) {
-    userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile" onload="this.style.opacity=1" style="opacity:0; transition: opacity 0.3s;">`;
-    userAvatarParent.classList.add('has-image');
-    // Force background to be transparent
-    userAvatarParent.style.background = 'transparent';
+    userAvatarElement.innerHTML = `<img src="${photoURL}" alt="Profile" onload="this.style.opacity=1" style="opacity:0; transition: opacity 0.3s;">`;
+    userAvatarElement.classList.add('has-image');
+    userAvatarElement.style.background = 'transparent';
   } else {
-    userAvatar.innerHTML = initials;
-    userAvatarParent.classList.remove('has-image');
-    // Restore gradient background
-    userAvatarParent.style.background = '';
+    userAvatarElement.innerHTML = initials;
+    userAvatarElement.classList.remove('has-image');
+    userAvatarElement.style.background = '';
   }
 }
 
-    // Load enrolled courses with progress - UPDATED to match your Firestore structure
-    async function loadEnrolledCourses(user) {
-      try {
-        learningProgress.innerHTML = `<p>Loading courses...</p>`;
+// Load enrolled courses with progress - UPDATED to match your Firestore structure
+async function loadEnrolledCourses(user) {
+  try {
+    learningProgress.innerHTML = `<p>Loading courses...</p>`;
 
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-        let html = "";
+    let html = "";
 
-        if (userSnap.exists() && userSnap.data().enrollments) {
-          const enrollments = userSnap.data().enrollments;
-          const enrolledCourseIds = Object.keys(enrollments);
+    if (userSnap.exists() && userSnap.data().enrollments) {
+      const enrollments = userSnap.data().enrollments;
+      const enrolledCourseIds = Object.keys(enrollments);
+      
+      if (enrolledCourseIds.length === 0) {
+        html = `<p class="no-courses">No enrolled courses yet.</p>`;
+      } else {
+        // Remove duplicates
+        const uniqueCourseIds = [...new Set(enrolledCourseIds)];
+        
+        for (const courseId of uniqueCourseIds) {
+          const courseRef = doc(db, "courses", courseId);
+          const courseSnap = await getDoc(courseRef);
           
-          if (enrolledCourseIds.length === 0) {
-            html = `<p class="no-courses">No enrolled courses yet.</p>`;
-          } else {
-            // Remove duplicates
-            const uniqueCourseIds = [...new Set(enrolledCourseIds)];
+          if (courseSnap.exists()) {
+            const course = courseSnap.data();
+            const title = course.name || course.title || "Untitled Course";
             
-            for (const courseId of uniqueCourseIds) {
-              const courseRef = doc(db, "courses", courseId);
-              const courseSnap = await getDoc(courseRef);
-              
-              if (courseSnap.exists()) {
-                const course = courseSnap.data();
-                const title = course.name || course.title || "Untitled Course";
-                
-                // Get user's progress for this course from enrollments
-                const enrollment = enrollments[courseId];
-                let progress = enrollment.progress || 0;
-                let completedLessons = enrollment.completedLessons 
-                  ? enrollment.completedLessons.length 
-                  : 0;
-                let hasPassedTest = enrollment.hasPassedTest || false;
-                
-                // Get total lessons count for this course
-                let totalLessons = 0;
-                try {
-                  const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
-                  totalLessons = lecturesSnap.size;
-                } catch (error) {
-                  console.error("Error getting lectures count:", error);
-                  totalLessons = 0;
-                }
-                
-                // If test is passed, show 100% progress
-                const displayProgress = hasPassedTest ? 100 : progress;
-                
-                html += `
-                  <div class="progress-item">
-                    <div class="progress-label">
-                      <span>${title}</span>
-                      <span>${displayProgress}%${hasPassedTest ? ' ✅' : ''}</span>
-                    </div>
-                    <div class="progress-bar">
-                      <div class="progress-fill" data-progress="${displayProgress}"></div>
-                    </div>
-                    <div class="progress-details">
-                      ${completedLessons} of ${totalLessons} lessons completed
-                      ${hasPassedTest ? '<span class="test-passed">Test Passed</span>' : ''}
-                    </div>
-                  </div>
-                `;
-              }
+            // Get user's progress for this course from enrollments
+            const enrollment = enrollments[courseId];
+            let progress = enrollment.progress || 0;
+            let completedLessons = enrollment.completedLessons 
+              ? enrollment.completedLessons.length 
+              : 0;
+            let hasPassedTest = enrollment.hasPassedTest || false;
+            
+            // Get total lessons count for this course
+            let totalLessons = 0;
+            try {
+              const lecturesSnap = await getDocs(collection(db, "courses", courseId, "lectures"));
+              totalLessons = lecturesSnap.size;
+            } catch (error) {
+              console.error("Error getting lectures count:", error);
+              totalLessons = 0;
             }
+            
+            // If test is passed, show 100% progress
+            const displayProgress = hasPassedTest ? 100 : progress;
+            
+            html += `
+              <div class="progress-item">
+                <div class="progress-label">
+                  <span>${title}</span>
+                  <span>${displayProgress}%${hasPassedTest ? ' ✅' : ''}</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" data-progress="${displayProgress}"></div>
+                </div>
+                <div class="progress-details">
+                  ${completedLessons} of ${totalLessons} lessons completed
+                  ${hasPassedTest ? '<span class="test-passed">Test Passed</span>' : ''}
+                </div>
+              </div>
+            `;
           }
-        } else {
-          html = `<p class="no-courses">No enrolled courses yet.</p>`;
         }
-
-        learningProgress.innerHTML = html;
-        animateProgressBars();
-      } catch (error) {
-        console.error("Error loading enrolled courses:", error);
-        learningProgress.innerHTML = `<p class="error-msg">❌ Failed to load courses. Please try again later.</p>`;
       }
+    } else {
+      html = `<p class="no-courses">No enrolled courses yet.</p>`;
     }
+
+    learningProgress.innerHTML = html;
+    animateProgressBars();
+  } catch (error) {
+    console.error("Error loading enrolled courses:", error);
+    learningProgress.innerHTML = `<p class="error-msg">❌ Failed to load courses. Please try again later.</p>`;
+  }
+}
 
     // Load notifications - UPDATED to match your Firestore structure
     async function loadNotifications(userId) {
