@@ -662,18 +662,29 @@
       flex-direction: column;
       gap: 0.8rem;
     }
-    .profile-avatar-large img,
+.profile-avatar-large img,
 .avatar img {
-  position:absolute;
-  z-index: 2;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 3;
 }
 
-.avatar::before {
-  display: none;
-}
-
+/* Hide the rotating gradient when image is present */
+.profile-avatar-large.has-image::before,
 .avatar.has-image::before {
-  display: block;
+  display: none !important;
+}
+
+/* Ensure initials are centered when no image */
+.profile-avatar-large span,
+.avatar span {
+  position: relative;
+  z-index: 3;
 }
 /* Image Crop Styles */
 #imageCropContainer {
@@ -1900,18 +1911,31 @@ if (confirmPassword) {
         userBio.textContent = bio;
         
 // Handle profile picture or initials
-const photoURL = user.photoURL;
 const displayNameForInitials = userName.textContent;
 const initials = displayNameForInitials.split(" ").map(n => n[0]).join("").toUpperCase();
 
-if (photoURL) {
+// Check both Auth photoURL and Firestore photoURL
+let finalPhotoURL = user.photoURL;
+if (userSnap.exists() && userSnap.data().photoURL) {
+  finalPhotoURL = userSnap.data().photoURL;
+}
+
+if (finalPhotoURL) {
   // Display profile picture
-  avatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-  userAvatar.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  avatarInitials.innerHTML = `<img src="${finalPhotoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: absolute; top: 0; left: 0; z-index: 3;">`;
+  userAvatar.innerHTML = `<img src="${finalPhotoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: absolute; top: 0; left: 0; z-index: 3;">`;
+  
+  // Add 'has-image' class for proper styling
+  document.getElementById('profileAvatar').classList.add('has-image');
+  userAvatar.parentElement.classList.add('has-image');
 } else {
   // Display initials
   avatarInitials.textContent = initials;
   userAvatar.textContent = initials;
+  
+  // Remove 'has-image' class
+  document.getElementById('profileAvatar').classList.remove('has-image');
+  userAvatar.parentElement.classList.remove('has-image');
 }
 
         // Set form values
@@ -2455,8 +2479,7 @@ window.openEditProfileForPicture = function() {
   }, 100);
 };
 
-// Initialize profile picture in edit modal
-function initEditModalProfilePic() {
+async function initEditModalProfilePic() {
   const user = auth.currentUser;
   if (!user) return;
   
@@ -2465,14 +2488,28 @@ function initEditModalProfilePic() {
   
   if (!editAvatarInitials || !removeBtn) return;
   
-  if (user.photoURL) {
-    editAvatarInitials.innerHTML = `<img src="${user.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+  // Check both Auth and Firestore for photoURL
+  let finalPhotoURL = user.photoURL;
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists() && userSnap.data().photoURL) {
+      finalPhotoURL = userSnap.data().photoURL;
+    }
+  } catch (error) {
+    console.error("Error getting photo URL:", error);
+  }
+  
+  if (finalPhotoURL) {
+    editAvatarInitials.innerHTML = `<img src="${finalPhotoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: absolute; top: 0; left: 0; z-index: 3;">`;
     removeBtn.style.display = 'inline-flex';
+    document.getElementById('editProfileAvatar').classList.add('has-image');
   } else {
     const displayName = user.displayName || "User";
     const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase();
     editAvatarInitials.textContent = initials;
     removeBtn.style.display = 'none';
+    document.getElementById('editProfileAvatar').classList.remove('has-image');
   }
 }
 
@@ -2696,13 +2733,13 @@ if (removeProfilePicBtn) {
 
 // Update the modal open function to initialize profile pic
 const originalOpenModal = window.openModal;
-window.openModal = (modalId) => {
+window.openModal = async (modalId) => {
   document.getElementById(modalId).classList.add("active");
   
   // If opening edit profile modal, initialize profile picture
   if (modalId === 'editProfileModal') {
-    setTimeout(() => {
-      initEditModalProfilePic();
+    setTimeout(async () => {
+      await initEditModalProfilePic();
     }, 50);
   }
 };
