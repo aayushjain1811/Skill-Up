@@ -2541,7 +2541,7 @@
 
     // Update avatar with profile picture if available
     if (student.profilePictureURL) {
-      detailStudentAvatar.innerHTML = `<img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+      detailStudentAvatar.innerHTML = `<img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10%;">`;
     } else {
       detailStudentAvatar.innerHTML = `<span style="position: relative; z-index: 2;">${initials}</span>`;
     }

@@ -466,6 +466,7 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
+      line-height: 0;
     }
 
     .avatar::before {
@@ -488,45 +489,61 @@
       position: relative;
       z-index: 2;
     }
+    
+    .avatar img {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* Hide the rotating background when image is present */
+    .avatar.has-image::before {
+      display: none;
+    }
 
     .status-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid var(--bg-secondary);
-}
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-secondary);
+    }
 
-.status-indicator.status-online {
-    background-color: var(--online-green);
-    box-shadow: 0 0 5px var(--online-green);
-}
+    .status-indicator.status-online {
+      background-color: var(--online-green);
+      box-shadow: 0 0 5px var(--online-green);
+    }
 
-.status-indicator.status-offline {
-    background-color: var(--offline-red);
-}
+    .status-indicator.status-offline {
+      background-color: var(--offline-red);
+    }
 
-.conversation-avatar, .chat-avatar {
-    position: relative;
-}
+    .conversation-avatar, .chat-avatar {
+      position: relative;
+    }
 
-.conversation-status.online {
-    color: var(--online-green);
-}
+    .conversation-status.online {
+      color: var(--online-green);
+    }
 
-.conversation-status.offline {
-    color: var(--offline-red);
-}
+    .conversation-status.offline {
+      color: var(--offline-red);
+    }
 
-.chat-status.online {
-    color: var(--online-green);
-}
+    .chat-status.online {
+      color: var(--online-green);
+    }
 
-.chat-status.offline {
-    color: var(--offline-red);
-}
+    .chat-status.offline {
+      color: var(--offline-red);
+    }
+    
     /* Messages Page Specific Styles */
     .messages-page {
       display: flex;
@@ -639,23 +656,12 @@
       position: relative;
     }
 
-    .status-indicator {
-      position: absolute;
-      bottom: 2px;
-      right: 2px;
-      width: 12px;
-      height: 12px;
+    .conversation-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       border-radius: 50%;
-      border: 2px solid var(--bg-secondary);
-    }
-
-    .status-online {
-      background-color: var(--online-green);
-      box-shadow: 0 0 5px var(--online-green);
-    }
-
-    .status-offline {
-      background-color: var(--offline-red);
+      display: block;
     }
 
     .conversation-info {
@@ -753,6 +759,14 @@
       font-size: 16px;
       margin-right: 15px;
       position: relative;
+    }
+
+    .chat-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
     }
 
     .chat-info h3 {
@@ -1240,6 +1254,14 @@
       position: relative;
     }
 
+    .contact-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
     .contact-info {
       flex: 1;
     }
@@ -1372,7 +1394,7 @@
               </div>
             </div>
           </div>
-          <div class="avatar">
+          <div class="avatar" id="teacherAvatar">
             <span id="userInitials">AJ</span>
           </div>
         </div>
@@ -1513,6 +1535,11 @@
     limit,
     setDoc
   } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  import { 
+    getStorage, 
+    ref, 
+    getDownloadURL 
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
   // Firebase config
   const firebaseConfig = {
@@ -1529,6 +1556,7 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   // DOM Elements
   const loadingContainer = document.getElementById('loadingContainer');
@@ -1542,6 +1570,7 @@
   const notificationBadge = document.getElementById('notificationBadge');
   const notificationList = document.getElementById('notificationList');
   const clearNotifications = document.getElementById('clearNotifications');
+  const teacherAvatar = document.getElementById('teacherAvatar');
   const userInitials = document.getElementById('userInitials');
   const conversationsList = document.getElementById('conversationsList');
   const searchConversations = document.getElementById('searchConversations');
@@ -1579,285 +1608,290 @@
   let allStudents = [];
   let onlineUsers = {};
 
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    console.log("User authenticated:", user.uid);
-    try {
-      const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
-      
-      if (teacherDoc.exists()) {
-        currentTeacher = { id: user.uid, ...teacherDoc.data() };
-        console.log("Teacher data loaded:", currentTeacher);
-        
-        // IMPORTANT: Initialize teacher status BEFORE setting up tracking
-        await initializeTeacherStatus();
-        
-        // Set up connection state monitoring
-        setupConnectionStateMonitoring();
-        
-        // Set up real-time notifications
-        setupNotifications();
-        
-        // Set up online status tracking (this will call updateOnlineStatus internally)
-        setupOnlineStatusTracking();
-        
-        // Load students and conversations
-        await loadStudentsAndConversations();
-        
-        // Update user initials in the avatar
-        updateUserAvatar();
-        
-        // Hide loading animation
-        setTimeout(() => {
-          if (loadingContainer) loadingContainer.classList.add('hidden');
-        }, 1000);
-        
-      } else {
-        console.error("Teacher document not found for user:", user.uid);
-        window.location.href = "teachersignin.html";
-      }
-    } catch (error) {
-      console.error("Error getting teacher document:", error);
-      showError("Authentication error: " + error.message);
-    }
-  } else {
-    console.log("User not authenticated, redirecting to login");
-    window.location.href = "teachersignin.html";
-  }
-});
-
-
-
-
-// Set up online status tracking from users collection
-function setupOnlineStatusTracking() {
-  // Listen to student status changes
-  const studentsQuery = query(
-    collection(db, "users"),
-    where("role", "==", "student")
-  );
-  
-  onlineStatusListener = onSnapshot(studentsQuery, (snapshot) => {
-    onlineUsers = {};
-    
-    snapshot.forEach(doc => {
-      const userData = doc.data();
-      onlineUsers[doc.id] = {
-        isOnline: userData.isOnline || false,
-        lastSeen: userData.lastSeen,
-        userId: doc.id,
-        userType: "student",
-        name: userData.displayName || `${userData.firstName} ${userData.lastName}`
-      };
-    });
-    
-    console.log("Student online status updated:", onlineUsers);
-    
-    // Update conversation statuses if we have an active conversation
-    if (activeConversation) {
-      updateChatStatus(activeConversation.studentId);
-    }
-    
-    // Update all conversation statuses in the list
-    updateConversationStatuses();
-  });
-}
-async function updateOnlineStatus(isOnline) {
-  if (!currentTeacher) return;
-  
-  try {
-    // Update in teachers collection (main status)
-    const teacherRef = doc(db, "teachers", currentTeacher.id);
-    await updateDoc(teacherRef, {
-      isOnline: isOnline,
-      lastSeen: serverTimestamp()
-    });
-    console.log(`Teacher status updated to: ${isOnline ? 'online' : 'offline'}`);
-  } catch (error) {
-    console.error("Error updating teacher online status:", error);
-  }
-}
-async function initializeTeacherStatus() {
-  if (!currentTeacher) return;
-  
-  try {
-    const teacherRef = doc(db, "teachers", currentTeacher.id);
-    const teacherDoc = await getDoc(teacherRef);
-    
-    if (teacherDoc.exists()) {
-      // Update existing teacher with online status fields
-      await updateDoc(teacherRef, {
-        isOnline: true,
-        lastSeen: serverTimestamp()
-      });
-      console.log("Teacher status initialized to online");
-    }
-  } catch (error) {
-    console.error("Error initializing teacher status:", error);
-  }
-}
-// Set up connection state monitoring
-function setupConnectionStateMonitoring() {
-  if (!currentTeacher) return;
-  
-  const teacherRef = doc(db, "teachers", currentTeacher.id);
-  
-  // Set up visibility change handler
-  const handleVisibilityChange = async () => {
-    if (document.hidden) {
-      console.log("Page hidden - setting teacher offline");
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      console.log("User authenticated:", user.uid);
       try {
-        await updateDoc(teacherRef, {
-          isOnline: false,
-          lastSeen: serverTimestamp()
-        });
+        const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+        
+        if (teacherDoc.exists()) {
+          currentTeacher = { id: user.uid, ...teacherDoc.data() };
+          console.log("Teacher data loaded:", currentTeacher);
+          
+          // Update teacher avatar
+          updateTeacherAvatar();
+          
+          // IMPORTANT: Initialize teacher status BEFORE setting up tracking
+          await initializeTeacherStatus();
+          
+          // Set up connection state monitoring
+          setupConnectionStateMonitoring();
+          
+          // Set up real-time notifications from teacherNotifications collection
+          setupNotifications();
+          
+          // Set up online status tracking (this will call updateOnlineStatus internally)
+          setupOnlineStatusTracking();
+          
+          // Load students and conversations
+          await loadStudentsAndConversations();
+          
+          // Hide loading animation
+          setTimeout(() => {
+            if (loadingContainer) loadingContainer.classList.add('hidden');
+          }, 1000);
+          
+        } else {
+          console.error("Teacher document not found for user:", user.uid);
+          window.location.href = "teachersignin.html";
+        }
       } catch (error) {
-        console.error("Error setting offline on visibility change:", error);
+        console.error("Error getting teacher document:", error);
+        showError("Authentication error: " + error.message);
       }
     } else {
-      console.log("Page visible - setting teacher online");
-      try {
+      console.log("User not authenticated, redirecting to login");
+      window.location.href = "teachersignin.html";
+    }
+  });
+
+  // Update teacher avatar with profile picture
+  function updateTeacherAvatar() {
+    if (currentTeacher && currentTeacher.photoURL) {
+      teacherAvatar.classList.add('has-image');
+      userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    } else {
+      teacherAvatar.classList.remove('has-image');
+      const initials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+      userInitials.textContent = initials;
+    }
+  }
+
+  // Set up online status tracking from users collection
+  function setupOnlineStatusTracking() {
+    // Listen to student status changes
+    const studentsQuery = query(
+      collection(db, "users"),
+      where("role", "==", "student")
+    );
+    
+    onlineStatusListener = onSnapshot(studentsQuery, (snapshot) => {
+      onlineUsers = {};
+      
+      snapshot.forEach(doc => {
+        const userData = doc.data();
+        onlineUsers[doc.id] = {
+          isOnline: userData.isOnline || false,
+          lastSeen: userData.lastSeen,
+          userId: doc.id,
+          userType: "student",
+          name: userData.displayName || `${userData.firstName} ${userData.lastName}`
+        };
+      });
+      
+      console.log("Student online status updated:", onlineUsers);
+      
+      // Update conversation statuses if we have an active conversation
+      if (activeConversation) {
+        updateChatStatus(activeConversation.studentId);
+      }
+      
+      // Update all conversation statuses in the list
+      updateConversationStatuses();
+    });
+  }
+
+  async function updateOnlineStatus(isOnline) {
+    if (!currentTeacher) return;
+    
+    try {
+      // Update in teachers collection (main status)
+      const teacherRef = doc(db, "teachers", currentTeacher.id);
+      await updateDoc(teacherRef, {
+        isOnline: isOnline,
+        lastSeen: serverTimestamp()
+      });
+      console.log(`Teacher status updated to: ${isOnline ? 'online' : 'offline'}`);
+    } catch (error) {
+      console.error("Error updating teacher online status:", error);
+    }
+  }
+
+  async function initializeTeacherStatus() {
+    if (!currentTeacher) return;
+    
+    try {
+      const teacherRef = doc(db, "teachers", currentTeacher.id);
+      const teacherDoc = await getDoc(teacherRef);
+      
+      if (teacherDoc.exists()) {
+        // Update existing teacher with online status fields
         await updateDoc(teacherRef, {
           isOnline: true,
           lastSeen: serverTimestamp()
         });
-      } catch (error) {
-        console.error("Error setting online on visibility change:", error);
+        console.log("Teacher status initialized to online");
       }
+    } catch (error) {
+      console.error("Error initializing teacher status:", error);
     }
-  };
-  
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  
-  // Set offline on page unload using sendBeacon
-  const handleBeforeUnload = () => {
-    console.log("Page unloading - setting teacher offline");
-    // Use navigator.sendBeacon for more reliable offline status
-    const offlineData = {
-      isOnline: false,
-      lastSeen: new Date().toISOString()
+  }
+
+  // Set up connection state monitoring
+  function setupConnectionStateMonitoring() {
+    if (!currentTeacher) return;
+    
+    const teacherRef = doc(db, "teachers", currentTeacher.id);
+    
+    // Set up visibility change handler
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        console.log("Page hidden - setting teacher offline");
+        try {
+          await updateDoc(teacherRef, {
+            isOnline: false,
+            lastSeen: serverTimestamp()
+          });
+        } catch (error) {
+          console.error("Error setting offline on visibility change:", error);
+        }
+      } else {
+        console.log("Page visible - setting teacher online");
+        try {
+          await updateDoc(teacherRef, {
+            isOnline: true,
+            lastSeen: serverTimestamp()
+          });
+        } catch (error) {
+          console.error("Error setting online on visibility change:", error);
+        }
+      }
     };
     
-    // Attempt synchronous update (may not complete but worth trying)
-    try {
-      updateDoc(teacherRef, {
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Set offline on page unload using sendBeacon
+    const handleBeforeUnload = () => {
+      console.log("Page unloading - setting teacher offline");
+      // Use navigator.sendBeacon for more reliable offline status
+      const offlineData = {
         isOnline: false,
-        lastSeen: serverTimestamp()
-      });
-    } catch (error) {
-      console.error("Error in beforeunload:", error);
-    }
-  };
-  
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  window.addEventListener('unload', handleBeforeUnload);
-}
+        lastSeen: new Date().toISOString()
+      };
+      
+      // Attempt synchronous update (may not complete but worth trying)
+      try {
+        updateDoc(teacherRef, {
+          isOnline: false,
+          lastSeen: serverTimestamp()
+        });
+      } catch (error) {
+        console.error("Error in beforeunload:", error);
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleBeforeUnload);
+  }
 
   // Update conversation statuses in the list
-function updateConversationStatuses() {
-  const conversationItems = document.querySelectorAll('.conversation-item');
-  
-  conversationItems.forEach(item => {
-    const conversationName = item.querySelector('.conversation-name').textContent;
-    const conversation = conversations.find(c => c.studentName === conversationName);
+  function updateConversationStatuses() {
+    const conversationItems = document.querySelectorAll('.conversation-item');
     
-    if (conversation) {
-      updateConversationStatus(conversation.studentId, item);
-    }
-  });
-}
+    conversationItems.forEach(item => {
+      const conversationName = item.querySelector('.conversation-name').textContent;
+      const conversation = conversations.find(c => c.studentName === conversationName);
+      
+      if (conversation) {
+        updateConversationStatus(conversation.studentId, item);
+      }
+    });
+  }
 
   // Update status for a specific conversation
-function updateConversationStatus(studentId, conversationElement) {
-  const statusElement = conversationElement.querySelector('.conversation-status');
-  const avatarElement = conversationElement.querySelector('.conversation-avatar');
-  
-  if (!statusElement) return;
-  
-  const statusData = onlineUsers[studentId];
-  
-  // Update status indicator on avatar
-  let statusIndicator = avatarElement.querySelector('.status-indicator');
-  if (!statusIndicator) {
-    statusIndicator = document.createElement('div');
-    statusIndicator.className = 'status-indicator';
-    avatarElement.appendChild(statusIndicator);
+  function updateConversationStatus(studentId, conversationElement) {
+    const statusElement = conversationElement.querySelector('.conversation-status');
+    const avatarElement = conversationElement.querySelector('.conversation-avatar');
+    
+    if (!statusElement) return;
+    
+    const statusData = onlineUsers[studentId];
+    
+    // Update status indicator on avatar
+    let statusIndicator = avatarElement.querySelector('.status-indicator');
+    if (!statusIndicator) {
+      statusIndicator = document.createElement('div');
+      statusIndicator.className = 'status-indicator';
+      avatarElement.appendChild(statusIndicator);
+    }
+    
+    if (statusData && statusData.isOnline) {
+      statusElement.innerHTML = '<span class="status-dot online"></span> Online';
+      statusElement.className = 'conversation-status online';
+      statusIndicator.className = 'status-indicator status-online';
+    } else if (statusData && statusData.lastSeen) {
+      const lastSeen = statusData.lastSeen.toDate();
+      statusElement.innerHTML = `<span class="status-dot offline"></span> Last seen ${getTimeAgo(lastSeen)}`;
+      statusElement.className = 'conversation-status offline';
+      statusIndicator.className = 'status-indicator status-offline';
+    } else {
+      statusElement.innerHTML = '<span class="status-dot offline"></span> Offline';
+      statusElement.className = 'conversation-status offline';
+      statusIndicator.className = 'status-indicator status-offline';
+    }
   }
-  
-  if (statusData && statusData.isOnline) {
-    statusElement.innerHTML = '<span class="status-dot online"></span> Online';
-    statusElement.className = 'conversation-status online';
-    statusIndicator.className = 'status-indicator status-online';
-  } else if (statusData && statusData.lastSeen) {
-    const lastSeen = statusData.lastSeen.toDate();
-    statusElement.innerHTML = `<span class="status-dot offline"></span> Last seen ${getTimeAgo(lastSeen)}`;
-    statusElement.className = 'conversation-status offline';
-    statusIndicator.className = 'status-indicator status-offline';
-  } else {
-    statusElement.innerHTML = '<span class="status-dot offline"></span> Offline';
-    statusElement.className = 'conversation-status offline';
-    statusIndicator.className = 'status-indicator status-offline';
-  }
-}
 
   // Update chat status in the chat header
-function updateChatStatus(studentId) {
-  const statusData = onlineUsers[studentId];
-  const statusDot = currentChatStatus.querySelector('.status-dot');
-  const statusText = currentChatStatus.querySelector('span');
-  
-  if (!statusDot) {
-    const newStatusDot = document.createElement('div');
-    newStatusDot.className = 'status-dot';
-    currentChatStatus.innerHTML = '';
-    currentChatStatus.appendChild(newStatusDot);
-    const newStatusText = document.createElement('span');
-    currentChatStatus.appendChild(newStatusText);
+  function updateChatStatus(studentId) {
+    const statusData = onlineUsers[studentId];
+    const statusDot = currentChatStatus.querySelector('.status-dot');
+    const statusText = currentChatStatus.querySelector('span');
+    
+    if (!statusDot) {
+      const newStatusDot = document.createElement('div');
+      newStatusDot.className = 'status-dot';
+      currentChatStatus.innerHTML = '';
+      currentChatStatus.appendChild(newStatusDot);
+      const newStatusText = document.createElement('span');
+      currentChatStatus.appendChild(newStatusText);
+    }
+    
+    const actualStatusDot = currentChatStatus.querySelector('.status-dot');
+    const actualStatusText = currentChatStatus.querySelector('span:last-child');
+    
+    // Update status indicator on chat avatar
+    const chatAvatar = document.getElementById('currentChatAvatar');
+    let statusIndicator = chatAvatar.querySelector('.status-indicator');
+    if (!statusIndicator) {
+      statusIndicator = document.createElement('div');
+      statusIndicator.className = 'status-indicator';
+      chatAvatar.style.position = 'relative';
+      chatAvatar.appendChild(statusIndicator);
+    }
+    
+    if (statusData && statusData.isOnline) {
+      actualStatusDot.className = 'status-dot online';
+      actualStatusText.textContent = 'Online';
+      currentChatStatus.className = 'chat-status online';
+      statusIndicator.className = 'status-indicator status-online';
+    } else if (statusData && statusData.lastSeen) {
+      const lastSeen = statusData.lastSeen.toDate();
+      actualStatusDot.className = 'status-dot offline';
+      actualStatusText.textContent = `Last seen ${getTimeAgo(lastSeen)}`;
+      currentChatStatus.className = 'chat-status offline';
+      statusIndicator.className = 'status-indicator status-offline';
+    } else {
+      actualStatusDot.className = 'status-dot offline';
+      actualStatusText.textContent = 'Offline';
+      currentChatStatus.className = 'chat-status offline';
+      statusIndicator.className = 'status-indicator status-offline';
+    }
   }
-  
-  const actualStatusDot = currentChatStatus.querySelector('.status-dot');
-  const actualStatusText = currentChatStatus.querySelector('span:last-child');
-  
-  // Update status indicator on chat avatar
-  const chatAvatar = document.getElementById('currentChatAvatar');
-  let statusIndicator = chatAvatar.querySelector('.status-indicator');
-  if (!statusIndicator) {
-    statusIndicator = document.createElement('div');
-    statusIndicator.className = 'status-indicator';
-    chatAvatar.style.position = 'relative';
-    chatAvatar.appendChild(statusIndicator);
-  }
-  
-  if (statusData && statusData.isOnline) {
-    actualStatusDot.className = 'status-dot online';
-    actualStatusText.textContent = 'Online';
-    currentChatStatus.className = 'chat-status online';
-    statusIndicator.className = 'status-indicator status-online';
-  } else if (statusData && statusData.lastSeen) {
-    const lastSeen = statusData.lastSeen.toDate();
-    actualStatusDot.className = 'status-dot offline';
-    actualStatusText.textContent = `Last seen ${getTimeAgo(lastSeen)}`;
-    currentChatStatus.className = 'chat-status offline';
-    statusIndicator.className = 'status-indicator status-offline';
-  } else {
-    actualStatusDot.className = 'status-dot offline';
-    actualStatusText.textContent = 'Offline';
-    currentChatStatus.className = 'chat-status offline';
-    statusIndicator.className = 'status-indicator status-offline';
-  }
-}
+
   // Helper function to get initials
   function getInitials(firstName, lastName) {
     if (!firstName || !lastName) return "TU";
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-  }
-
-  // Update user avatar with teacher's initials
-  function updateUserAvatar() {
-    if (currentTeacher) {
-      const initials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
-      userInitials.textContent = initials;
-    }
   }
 
   // Load students and conversations from Firebase
@@ -1898,11 +1932,15 @@ function updateChatStatus(studentId) {
               
               const courseName = courseMap[courseId] || "Unknown Course";
               
+              // Get student profile picture URL
+              const profilePictureURL = userData.photoURL || null;
+              
               allStudents.push({
                 id: userDoc.id,
                 firstName: userData.firstName || "Student",
                 lastName: userData.lastName || "User",
                 email: userData.email || "No email",
+                profilePictureURL: profilePictureURL,
                 courseId: courseId,
                 courseName: courseName,
                 progress: enrollment.progress || 0,
@@ -1988,6 +2026,7 @@ function updateChatStatus(studentId) {
                 studentId: conversationData.studentId,
                 studentName: `${student.firstName} ${student.lastName}`,
                 studentEmail: student.email,
+                studentProfilePictureURL: student.profilePictureURL,
                 courseName: student.courseName,
                 lastMessage: lastMessage,
                 lastMessageTime: lastMessageTime,
@@ -2039,6 +2078,7 @@ function updateChatStatus(studentId) {
             studentId: student.id,
             studentName: `${student.firstName} ${student.lastName}`,
             studentEmail: student.email,
+            studentProfilePictureURL: student.profilePictureURL,
             courseName: student.courseName,
             lastMessage: "No messages yet",
             lastMessageTime: new Date(), // Ensure this is a Date object
@@ -2060,6 +2100,7 @@ function updateChatStatus(studentId) {
         studentId: "student1",
         studentName: "Emily Chen",
         studentEmail: "emily.chen@example.com",
+        studentProfilePictureURL: null,
         courseName: "Calculus I",
         lastMessage: "I'm having trouble with the homework problem 3.",
         lastMessageTime: new Date(2024, 1, 22, 14, 30),
@@ -2070,6 +2111,7 @@ function updateChatStatus(studentId) {
         studentId: "student2",
         studentName: "James Rodriguez",
         studentEmail: "james.rodriguez@example.com",
+        studentProfilePictureURL: null,
         courseName: "Linear Algebra",
         lastMessage: "Thank you for the clarification!",
         lastMessageTime: new Date(2024, 1, 21, 10, 15),
@@ -2080,6 +2122,7 @@ function updateChatStatus(studentId) {
         studentId: "student3",
         studentName: "Sophia Williams",
         studentEmail: "sophia.williams@example.com",
+        studentProfilePictureURL: null,
         courseName: "Statistics",
         lastMessage: "When is the next assignment due?",
         lastMessageTime: new Date(2024, 1, 20, 16, 45),
@@ -2122,8 +2165,13 @@ function updateChatStatus(studentId) {
     const initials = conversation.studentName.split(' ').map(n => n[0]).join('').toUpperCase();
     const timeAgo = getTimeAgo(conversation.lastMessageTime);
     
+    // Create avatar HTML - check if profile picture exists
+    const avatarHTML = conversation.studentProfilePictureURL 
+      ? `<div class="conversation-avatar"><img src="${conversation.studentProfilePictureURL}" alt="${conversation.studentName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`
+      : `<div class="conversation-avatar">${initials}</div>`;
+    
     element.innerHTML = `
-      <div class="conversation-avatar">${initials}</div>
+      ${avatarHTML}
       <div class="conversation-info">
         <div class="conversation-top">
           <div class="conversation-name">${conversation.studentName}</div>
@@ -2160,7 +2208,14 @@ function updateChatStatus(studentId) {
     
     // Update chat header
     const initials = conversation.studentName.split(' ').map(n => n[0]).join('').toUpperCase();
-    currentChatAvatar.textContent = initials;
+    
+    // Update chat avatar - check if profile picture exists
+    if (conversation.studentProfilePictureURL) {
+      currentChatAvatar.innerHTML = `<img src="${conversation.studentProfilePictureURL}" alt="${conversation.studentName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    } else {
+      currentChatAvatar.textContent = initials;
+    }
+    
     currentChatName.textContent = conversation.studentName;
     currentChatRole.textContent = `Course: ${conversation.courseName}`;
     
@@ -2265,8 +2320,8 @@ function updateChatStatus(studentId) {
         lastMessageTime: serverTimestamp()
       });
       
-      // Create notification for the student
-      await createNotification(
+      // Create notification for the student in studentNotifications collection
+      await createStudentNotification(
         activeConversation.studentId,
         'New Message',
         `Professor ${currentTeacher.lastName} sent you a message`,
@@ -2285,10 +2340,10 @@ function updateChatStatus(studentId) {
     }
   }
 
-  // Create notification
-  async function createNotification(userId, title, message, type) {
+  // Create notification for student in studentNotifications collection
+  async function createStudentNotification(userId, title, message, type) {
     try {
-      await addDoc(collection(db, "notifications"), {
+      await addDoc(collection(db, "studentNotifications"), {
         userId: userId,
         title: title,
         message: message,
@@ -2296,8 +2351,9 @@ function updateChatStatus(studentId) {
         read: false,
         timestamp: serverTimestamp()
       });
+      console.log("Notification created in studentNotifications for student:", userId);
     } catch (error) {
-      console.error("Error creating notification:", error);
+      console.error("Error creating student notification:", error);
     }
   }
 
@@ -2360,11 +2416,13 @@ function updateChatStatus(studentId) {
     });
   }
 
-  // Set up real-time notifications
+  // Set up real-time notifications from teacherNotifications collection
   function setupNotifications() {
+    if (!currentTeacher) return;
+    
     // Set up listener for teacher notifications
     const notificationsQuery = query(
-      collection(db, "notifications"),
+      collection(db, "teacherNotifications"),
       where("userId", "==", currentTeacher.id),
       orderBy("timestamp", "desc")
     );
@@ -2382,7 +2440,9 @@ function updateChatStatus(studentId) {
       
       updateNotificationDisplay();
     }, (error) => {
-      console.error("Error loading notifications:", error);
+      console.error("Error loading teacher notifications:", error);
+      // Fallback to sample notifications
+      setupSampleNotifications();
     });
   }
 
@@ -2423,7 +2483,7 @@ function updateChatStatus(studentId) {
   // Mark notification as read
   async function markNotificationAsRead(notification) {
     try {
-      await updateDoc(doc(db, "notifications", notification.id), {
+      await updateDoc(doc(db, "teacherNotifications", notification.id), {
         read: true
       });
     } catch (error) {
@@ -2435,7 +2495,7 @@ function updateChatStatus(studentId) {
   async function clearAllNotifications() {
     try {
       const updatePromises = notifications.map(notification => {
-        return updateDoc(doc(db, "notifications", notification.id), {
+        return updateDoc(doc(db, "teacherNotifications", notification.id), {
           read: true
         });
       });
@@ -2467,24 +2527,24 @@ function updateChatStatus(studentId) {
   }
 
   // Utility functions
-function getTimeAgo(date) {
-  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-    return 'Never';
+  function getTimeAgo(date) {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+      return 'Never';
+    }
+    
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString();
   }
-  
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-  
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  
-  return date.toLocaleDateString();
-}
   
   function scrollToBottom() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -2517,8 +2577,13 @@ function getTimeAgo(date) {
       
       const initials = getInitials(student.firstName, student.lastName);
       
+      // Create avatar HTML - check if profile picture exists
+      const avatarHTML = student.profilePictureURL 
+        ? `<div class="contact-avatar"><img src="${student.profilePictureURL}" alt="${student.firstName} ${student.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>`
+        : `<div class="contact-avatar">${initials}</div>`;
+      
       contactItem.innerHTML = `
-        <div class="contact-avatar">${initials}</div>
+        ${avatarHTML}
         <div class="contact-info">
           <div class="contact-name">${student.firstName} ${student.lastName}</div>
           <div class="contact-course">${student.courseName}</div>
@@ -2604,6 +2669,39 @@ function getTimeAgo(date) {
     
     // Close the action menu
     chatActionMenu.classList.remove('active');
+  }
+
+  // Final fallback to sample notifications
+  function setupSampleNotifications() {
+    console.log("Setting up sample notifications");
+    notifications = [
+      {
+        id: '1',
+        title: 'New Message',
+        message: 'Emily Chen sent you a message',
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        read: false,
+        type: 'message'
+      },
+      {
+        id: '2',
+        title: 'Assignment Submission',
+        message: 'James Rodriguez submitted the Algorithms assignment',
+        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        read: false,
+        type: 'submission'
+      },
+      {
+        id: '3',
+        title: 'Progress Update',
+        message: 'Sophia Williams reached 85% completion in Statistics',
+        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        read: true,
+        type: 'progress'
+      }
+    ];
+    
+    updateNotificationDisplay();
   }
 
   // Event listeners
@@ -2705,43 +2803,43 @@ function getTimeAgo(date) {
     logoutModal.classList.remove('active');
   });
 
-confirmLogoutBtn.addEventListener('click', async () => {
-  try {
-    console.log("Logging out teacher...");
-    
-    // CRITICAL: Update online status to offline FIRST
-    if (currentTeacher) {
-      const teacherRef = doc(db, "teachers", currentTeacher.id);
-      await updateDoc(teacherRef, {
-        isOnline: false,
-        lastSeen: serverTimestamp()
-      });
-      console.log("Teacher status set to offline");
-    }
-    
-    // Clean up listeners
-    if (messagesListener) messagesListener();
-    if (notificationsListener) notificationsListener();
-    if (onlineStatusListener) onlineStatusListener();
-    
-    // Wait a moment to ensure Firestore update completes
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Sign out
-    await signOut(auth);
-    console.log("Teacher signed out successfully");
-    window.location.href = "index.html";
-  } catch (error) {
-    console.error("Error signing out:", error);
-    // Even if there's an error, try to sign out
+  confirmLogoutBtn.addEventListener('click', async () => {
     try {
+      console.log("Logging out teacher...");
+      
+      // CRITICAL: Update online status to offline FIRST
+      if (currentTeacher) {
+        const teacherRef = doc(db, "teachers", currentTeacher.id);
+        await updateDoc(teacherRef, {
+          isOnline: false,
+          lastSeen: serverTimestamp()
+        });
+        console.log("Teacher status set to offline");
+      }
+      
+      // Clean up listeners
+      if (messagesListener) messagesListener();
+      if (notificationsListener) notificationsListener();
+      if (onlineStatusListener) onlineStatusListener();
+      
+      // Wait a moment to ensure Firestore update completes
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Sign out
       await signOut(auth);
-    } catch (e) {
-      console.error("Error in fallback signout:", e);
+      console.log("Teacher signed out successfully");
+      window.location.href = "index.html";
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Even if there's an error, try to sign out
+      try {
+        await signOut(auth);
+      } catch (e) {
+        console.error("Error in fallback signout:", e);
+      }
+      window.location.href = "index.html";
     }
-    window.location.href = "index.html";
-  }
-});
+  });
 
   // Close sidebar on outside click
   document.addEventListener('click', (e) => {
@@ -2774,39 +2872,40 @@ confirmLogoutBtn.addEventListener('click', async () => {
       </div>
     `;
   }
-  // Handle page close/refresh - set offline status
-window.addEventListener('beforeunload', async (e) => {
-  if (currentTeacher) {
-    // Use sendBeacon for reliable offline status update
-    const teacherRef = doc(db, "teachers", currentTeacher.id);
-    try {
-      // Use a synchronous update for beforeunload
-      await updateDoc(teacherRef, {
-        isOnline: false,
-        lastSeen: serverTimestamp()
-      });
-    } catch (error) {
-      console.error("Error setting offline status:", error);
-    }
-  }
-});
 
-// Also handle visibility change
-document.addEventListener('visibilitychange', async () => {
-  if (currentTeacher) {
-    if (document.hidden) {
-      // User switched tabs or minimized - set offline after delay
-      setTimeout(async () => {
-        if (document.hidden) {
-          await updateOnlineStatus(false);
-        }
-      }, 5000); // 5 second grace period
-    } else {
-      // User returned - set online
-      await updateOnlineStatus(true);
+  // Handle page close/refresh - set offline status
+  window.addEventListener('beforeunload', async (e) => {
+    if (currentTeacher) {
+      // Use sendBeacon for reliable offline status update
+      const teacherRef = doc(db, "teachers", currentTeacher.id);
+      try {
+        // Use a synchronous update for beforeunload
+        await updateDoc(teacherRef, {
+          isOnline: false,
+          lastSeen: serverTimestamp()
+        });
+      } catch (error) {
+        console.error("Error setting offline status:", error);
+      }
     }
-  }
-});
+  });
+
+  // Also handle visibility change
+  document.addEventListener('visibilitychange', async () => {
+    if (currentTeacher) {
+      if (document.hidden) {
+        // User switched tabs or minimized - set offline after delay
+        setTimeout(async () => {
+          if (document.hidden) {
+            await updateOnlineStatus(false);
+          }
+        }, 5000); // 5 second grace period
+      } else {
+        // User returned - set online
+        await updateOnlineStatus(true);
+      }
+    }
+  });
 
   // Create floating particles
   function createParticles() {
