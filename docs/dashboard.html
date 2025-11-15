@@ -6,6 +6,7 @@
   <title>SkillUp Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     :root {
       --primary: #ffffff;
@@ -3263,12 +3264,14 @@
       appId: "1:775742235468:web:bd46cb802185c89f2aa5e9",
       measurementId: "G-FWBKTSQDS9"
     };
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js";
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
+    const functions = getFunctions(app);
 
     // DOM elements with null checks
     function getElement(id) {
@@ -4675,34 +4678,259 @@ function generateFeedbackHTML(feedbackData) {
       currentPaymentId = null;
     }
 
-    // Handle payment proceed
-    async function handlePaymentProceed() {
-      if (!selectedPaymentMethod) {
-        showMessage("Please select a payment method", "error");
-        return;
+// Handle payment proceed - UPDATED WITH RAZORPAY
+async function handlePaymentProceed() {
+  if (!selectedPaymentMethod) {
+    showMessage("Please select a payment method", "error");
+    return;
+  }
+  
+  try {
+    // Disable buttons during payment
+    proceedPayment.disabled = true;
+    cancelPayment.disabled = true;
+    
+    // Create payment record first
+    const paymentRecord = await storePaymentRecord();
+    
+    if (selectedPaymentMethod === 'upi' || selectedPaymentMethod === 'card' || 
+        selectedPaymentMethod === 'netbanking' || selectedPaymentMethod === 'wallet') {
+      await initiateRazorpayPayment(paymentRecord);
+    } else {
+      // Fallback for other methods
+      simulatePaymentSuccess();
+    }
+  } catch (error) {
+    console.error("Payment error:", error);
+    showMessage("Payment initialization failed. Please try again.", "error");
+    proceedPayment.disabled = false;
+    cancelPayment.disabled = false;
+  }
+}
+// Initiate Razorpay payment
+async function initiateRazorpayPayment(paymentRecord) {
+  try {
+    // Create Razorpay order first (you'll need to add this Cloud Function)
+    const createOrder = httpsCallable(functions, 'createRazorpayOrder');
+    const orderResult = await createOrder({
+      amount: currentCourseToEnroll.price * 100, // Amount in paise
+      currency: "INR",
+      receipt: paymentRecord.transactionId
+    });
+    
+    const orderId = orderResult.data.orderId;
+    
+    const options = {
+      key: "rzp_test_Rg4QEqb0YajyRz", // Your Razorpay key
+      amount: currentCourseToEnroll.price * 100, // Amount in paise
+      currency: "INR",
+      name: "SkillUp Learning Platform",
+      description: currentCourseToEnroll.name,
+      order_id: orderId, // Use proper Razorpay order ID
+      prefill: {
+        name: currentUser.displayName || "Student",
+        email: currentUser.email,
+        contact: currentUser.phoneNumber || ""
+      },
+      notes: {
+        courseId: currentCourseToEnroll.id,
+        courseName: currentCourseToEnroll.name,
+        studentId: currentUser.uid,
+        paymentRecordId: paymentRecord.id
+      },
+      theme: {
+        color: "#4361ee"
+      },
+      handler: async function (response) {
+        // Payment successful
+        console.log("Razorpay payment successful:", response);
+        await handleRazorpaySuccess(response, paymentRecord.id);
+      },
+      modal: {
+        ondismiss: function() {
+          // Payment cancelled
+          handleRazorpayFailure("Payment cancelled by user", paymentRecord.id);
+        }
+      }
+    };
+
+    const razorpay = new Razorpay(options);
+    
+    razorpay.on('payment.failed', async function (response) {
+      // Payment failed
+      console.error("Razorpay payment failed:", response.error);
+      await handleRazorpayFailure(response.error.description, paymentRecord.id);
+    });
+
+    razorpay.open();
+  } catch (error) {
+    console.error("Error initiating Razorpay:", error);
+    showMessage("Failed to open payment gateway", "error");
+    proceedPayment.disabled = false;
+    cancelPayment.disabled = false;
+  }
+}
+// Handle Razorpay payment success - UPDATED WITH VERIFICATION
+async function handleRazorpaySuccess(response, paymentRecordId) {
+  try {
+    // First update payment record with Razorpay details
+    await updateDoc(doc(db, "payments", paymentRecordId), {
+      status: 'processing',
+      razorpayPaymentId: response.razorpay_payment_id,
+      razorpayOrderId: response.razorpay_order_id,
+      razorpaySignature: response.razorpay_signature,
+      updatedAt: serverTimestamp()
+    });
+
+    // Show processing state
+    const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+    if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
+    if (paymentProcessing) paymentProcessing.style.display = 'block';
+
+    // Call Cloud Function to verify payment
+    const verifyPayment = httpsCallable(functions, 'verifyRazorpayPayment');
+    
+    const result = await verifyPayment({
+      razorpayPaymentId: response.razorpay_payment_id,
+      razorpayOrderId: response.razorpay_order_id,
+      razorpaySignature: response.razorpay_signature,
+      paymentRecordId: paymentRecordId,
+      courseId: currentCourseToEnroll.id,
+      teacherId: null // Will be set after teacher selection
+    });
+
+    console.log("Payment verification result:", result.data);
+
+    if (result.data.success && result.data.verified) {
+      // Hide processing
+      if (paymentProcessing) paymentProcessing.style.display = 'none';
+      
+      // Show success
+      if (paymentSuccess) paymentSuccess.style.display = 'block';
+      
+      // Enable proceed button to continue to teacher selection
+      if (proceedPayment) {
+        proceedPayment.disabled = false;
+        proceedPayment.textContent = 'Continue to Enrollment';
+        proceedPayment.onclick = proceedToTeacherSelection;
       }
       
-      try {
-        // Disable buttons during payment
-        proceedPayment.disabled = true;
-        cancelPayment.disabled = true;
-        
-        // Create payment record first
-        await storePaymentRecord();
-        
-        if (selectedPaymentMethod === 'upi') {
-          await handleUPIPayment();
-        } else {
-          // For other payment methods, simulate success after delay
-          simulatePaymentSuccess();
-        }
-      } catch (error) {
-        console.error("Payment error:", error);
-        showMessage("Payment initialization failed. Please try again.", "error");
-        proceedPayment.disabled = false;
-        cancelPayment.disabled = false;
-      }
+      showMessage("✅ Payment verified successfully!", "success");
+    } else {
+      throw new Error("Payment verification failed");
     }
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+    
+    // Hide processing
+    if (paymentProcessing) paymentProcessing.style.display = 'none';
+    
+    // Show error
+    if (paymentError) paymentError.style.display = 'block';
+    if (paymentErrorMessage) {
+      paymentErrorMessage.textContent = error.message || "Payment verification failed";
+    }
+    
+    // Update payment record as failed
+    await updateDoc(doc(db, "payments", paymentRecordId), {
+      status: 'verification_failed',
+      errorMessage: error.message,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Re-enable buttons
+    if (proceedPayment) {
+      proceedPayment.disabled = false;
+      proceedPayment.textContent = 'Try Again';
+      proceedPayment.onclick = () => {
+        resetPaymentModal();
+        showPaymentModal();
+      };
+    }
+    
+    if (cancelPayment) {
+      cancelPayment.disabled = false;
+    }
+    
+    paymentInProgress = false;
+    
+    showMessage("❌ Payment verification failed", "error");
+  }
+}
+// Handle Razorpay payment failure
+async function handleRazorpayFailure(errorMessage, paymentRecordId) {
+  try {
+    // Update payment record
+    await updateDoc(doc(db, "payments", paymentRecordId), {
+      status: 'failed',
+      errorMessage: errorMessage,
+      updatedAt: serverTimestamp()
+    });
+
+    // Show error
+    if (paymentError) paymentError.style.display = 'block';
+    if (paymentErrorMessage) {
+      paymentErrorMessage.textContent = errorMessage;
+    }
+    
+    // Re-enable buttons
+    if (proceedPayment) {
+      proceedPayment.disabled = false;
+      proceedPayment.textContent = 'Try Again';
+      proceedPayment.onclick = () => {
+        resetPaymentModal();
+        showPaymentModal();
+      };
+    }
+    
+    if (cancelPayment) {
+      cancelPayment.disabled = false;
+    }
+    
+    paymentInProgress = false;
+    
+    showMessage("❌ " + errorMessage, "error");
+  } catch (error) {
+    console.error("Error updating payment record:", error);
+  }
+}
+// Store payment record in Firestore - UPDATED
+async function storePaymentRecord() {
+  try {
+    const transactionId = generateTransactionId();
+    
+    const paymentData = {
+      transactionId: transactionId,
+      studentId: currentUser.uid,
+      studentName: currentUser.displayName || "Student",
+      studentEmail: currentUser.email,
+      courseId: currentCourseToEnroll.id,
+      courseName: currentCourseToEnroll.name,
+      amount: currentCourseToEnroll.price,
+      paymentMethod: selectedPaymentMethod,
+      status: 'pending',
+      razorpayPaymentId: null,
+      razorpayOrderId: null,
+      razorpaySignature: null,
+      verified: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    
+    const docRef = await addDoc(collection(db, "payments"), paymentData);
+    currentPaymentId = docRef.id;
+    
+    console.log("Payment record created:", currentPaymentId);
+    
+    return {
+      id: docRef.id,
+      transactionId: transactionId
+    };
+  } catch (error) {
+    console.error("Error creating payment record:", error);
+    throw error;
+  }
+}
 
     // Handle UPI Payment
     async function handleUPIPayment() {
@@ -5123,103 +5351,64 @@ function generateFeedbackHTML(feedbackData) {
 
     // Enroll in course - UPDATED with proper notification system
     async function enrollCourse(userId, courseId, teacher) {
-      try {
-        console.log("Starting enrollment process...");
-        
-        const userRef = doc(db, "users", userId);
-        const courseRef = doc(db, "courses", courseId);
+  try {
+    console.log("Updating enrollment with teacher info...");
+    
+    const userRef = doc(db, "users", userId);
+    
+    // Update enrollment with teacher info
+    await updateDoc(userRef, {
+      [`enrollments.${courseId}.teacherId`]: teacher.id,
+      [`enrollments.${courseId}.teacherName`]: teacher.name,
+      [`enrollments.${courseId}.teacherAssignedAt`]: serverTimestamp()
+    });
 
-        // Check if user exists
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            name: currentUser.displayName || "Student",
-            email: currentUser.email,
-            createdAt: serverTimestamp(),
-            enrollments: {},
-            profileComplete: false,
-            role: "student"
-          });
-        }
+    // Get course data for notifications
+    const courseRef = doc(db, "courses", courseId);
+    const courseSnap = await getDoc(courseRef);
+    const courseData = courseSnap.exists() ? courseSnap.data() : {};
+    const courseName = courseData.name || courseData.title || "Unknown Course";
 
-        // Check if already enrolled
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        if (userData.enrollments && userData.enrollments[courseId]) {
-          console.log("User already enrolled in this course");
-          return true;
-        }
+    // Create notification for student
+    await setDoc(doc(collection(db, "studentNotifications")), {
+      studentId: userId,
+      studentName: currentUser.displayName || "Student",
+      studentEmail: currentUser.email,
+      title: "Teacher Assigned!",
+      message: `${teacher.name} has been assigned as your instructor for "${courseName}"`,
+      timestamp: serverTimestamp(),
+      type: "enrollment",
+      courseId: courseId,
+      courseName: courseName,
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      read: false
+    });
 
-        // Get course data
-        const courseSnap = await getDoc(courseRef);
-        if (!courseSnap.exists()) {
-          throw new Error("Course not found");
-        }
+    // Create notification for teacher
+    await setDoc(doc(collection(db, "teacherNotifications")), {
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      title: "New Student Enrolled",
+      message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
+      timestamp: serverTimestamp(),
+      type: "enrollment",
+      courseId: courseId,
+      courseName: courseName,
+      studentId: userId,
+      studentName: currentUser.displayName || "Student",
+      studentEmail: currentUser.email,
+      read: false
+    });
 
-        const courseData = courseSnap.data();
-        const courseName = courseData.name || courseData.title || "Unknown Course";
+    console.log("Teacher assignment and notifications created successfully");
+    return true;
 
-        // Create enrollment data
-        const enrollmentData = {
-          progress: 0,
-          completedLessons: [],
-          courseName: courseName,
-          enrolledAt: new Date(),
-          hasPassedTest: false,
-          lastAccessed: new Date(),
-          lectureProgress: 0,
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          testProgress: 0,
-          assignmentProgress: 0
-        };
-
-        // Update user document with enrollment
-        await updateDoc(userRef, {
-          [`enrollments.${courseId}`]: enrollmentData
-        });
-
-        // Create notification in studentNotifications collection
-        const studentNotificationRef = doc(collection(db, "studentNotifications"));
-        await setDoc(studentNotificationRef, {
-          studentId: userId,
-          studentName: currentUser.displayName || "Student",
-          studentEmail: currentUser.email,
-          title: "Course Enrolled Successfully!",
-          message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
-          timestamp: serverTimestamp(),
-          type: "enrollment",
-          courseId: courseId,
-          courseName: courseName,
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          read: false
-        });
-
-        // Create notification for teacher in teacherNotifications collection
-        const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
-        await setDoc(teacherNotificationRef, {
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          title: "New Student Enrolled",
-          message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
-          timestamp: serverTimestamp(),
-          type: "enrollment",
-          courseId: courseId,
-          courseName: courseName,
-          studentId: userId,
-          studentName: currentUser.displayName || "Student",
-          studentEmail: currentUser.email,
-          read: false
-        });
-
-        console.log("Enrollment and notifications created successfully");
-        return true;
-
-      } catch (error) {
-        console.error("Error in enrollCourse:", error);
-        return false;
-      }
-    }
+  } catch (error) {
+    console.error("Error in enrollCourse:", error);
+    return false;
+  }
+}
 
     // Load notifications - UPDATED to use studentNotifications collection
     async function loadNotifications(userId) {
