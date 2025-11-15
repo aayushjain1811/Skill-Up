@@ -4954,42 +4954,6 @@ async function storePaymentRecord() {
       }, 5000);
     }
 
-    // Store payment record in Firestore
-    async function storePaymentRecord() {
-      try {
-        const transactionId = generateTransactionId();
-        
-        const paymentData = {
-          transactionId: transactionId,
-          studentId: currentUser.uid,
-          studentName: currentUser.displayName || "Student",
-          studentEmail: currentUser.email,
-          courseId: currentCourseToEnroll.id,
-          courseName: currentCourseToEnroll.name,
-          amount: currentCourseToEnroll.price,
-          paymentMethod: selectedPaymentMethod,
-          status: 'pending',
-          upiId: selectedPaymentMethod === 'upi' ? "aayushjain1811@okhdfcbank" : null,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-        
-        const docRef = await addDoc(collection(db, "payments"), paymentData);
-        currentPaymentId = docRef.id;
-        
-        // Update display
-        const displayPaymentId = document.getElementById('displayPaymentId');
-        if (displayPaymentId) {
-          displayPaymentId.textContent = transactionId;
-        }
-        
-        console.log("Payment record created:", currentPaymentId);
-      } catch (error) {
-        console.error("Error creating payment record:", error);
-        throw error;
-      }
-    }
-
     // Generate QR Code
     async function generateQRCode() {
       if (!qrCodeCanvas) return;
