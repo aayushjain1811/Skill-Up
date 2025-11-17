@@ -278,33 +278,42 @@
       box-shadow: 0 10px 20px rgba(255, 71, 87, 0.4);
     }
 
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      margin-left: 0;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 0;
+  padding-top: 80px;  /* ADD THIS - same as topbar height */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
 
-    .main-content.sidebar-open {
-      margin-left: 280px;
-    }
+.main-content.sidebar-open {
+  margin-left: 280px;
+  padding-top: 80px;  /* ADD THIS */
+}
 
-    /* Topbar */
-    .topbar {
-      background: var(--bg-secondary);
-      backdrop-filter: blur(20px);
-      padding: 0 30px;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
+/* Topbar */
+.topbar {
+  background: var(--bg-secondary);
+  backdrop-filter: blur(20px);
+  padding: 0 30px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;  /* CHANGED FROM sticky TO fixed */
+  top: 0;
+  left: 0;  /* ADD THIS */
+  right: 0;  /* ADD THIS */
+  z-index: 999;  /* CHANGED FROM 100 TO 999 */
+  border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+/* Topbar adjusts when sidebar is open */
+.sidebar-open .topbar {
+  left: 280px;  /* Width of sidebar */
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
     .topbar-left {
       display: flex;
@@ -501,13 +510,13 @@
   background: linear-gradient(45deg, #ff4757, #ff3742);
 }
 
-    /* Messages Page Specific Styles */
-    .messages-page {
-      display: flex;
-      height: calc(100vh - 80px);
-      padding: 20px;
-      gap: 20px;
-    }
+/* Messages Page Specific Styles */
+.messages-page {
+  display: flex;
+  height: calc(100vh - 160px);  /* CHANGED: Account for topbar + padding */
+  padding: 20px;
+  gap: 20px;
+}
 
     /* Conversations List */
     .conversations-list {
@@ -2720,91 +2729,105 @@ function loadChat(conversation, teacher) {
       }, 100);
     }
 
-    // Send a message
-    async function sendMessage(conversation, teacher) {
-      const messageInput = document.getElementById('messageInput');
-      const sendBtn = document.getElementById('sendMessageBtn');
-      const content = messageInput.value.trim();
-      
-      if (!content) return;
-      
-      try {
-        // Disable input temporarily to prevent multiple sends
-        sendBtn.disabled = true;
-        messageInput.disabled = true;
-        
-        const message = {
-          text: content,
-          senderId: currentUser.id,
-          senderName: currentUser.name,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          read: false
-        };
-        
-        console.log("Sending message:", content, "to conversation:", conversation.id);
-        
-        // Add message to subcollection
-        await db.collection('conversations')
-          .doc(conversation.id)
-          .collection('messages')
-          .add(message);
-        
-        // Update conversation with last message
-        await db.collection('conversations')
-          .doc(conversation.id)
-          .update({
-            lastMessage: content,
-            lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
-            lastMessageSender: currentUser.name
-          });
-        
-        console.log("Message sent successfully");
-        
-        // Clear input and re-enable
-        messageInput.value = '';
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
-        messageInput.focus();
-        
-        // Reset textarea height
-        messageInput.style.height = 'auto';
-        
-        // Create notification for teacher
-        await createNotification(
-          teacher.id,
-          'New Message',
-          `${currentUser.name} sent you a message: "${content}"`,
-          'message'
-        );
-        
-      } catch (error) {
-        console.error("Error sending message:", error);
-        
-        // Re-enable input on error
-        const sendBtn = document.getElementById('sendMessageBtn');
-        const messageInput = document.getElementById('messageInput');
-        sendBtn.disabled = false;
-        messageInput.disabled = false;
-        
-        alert("Error sending message. Please try again.");
-      }
-    }
+// Send a message
+async function sendMessage(conversation, teacher) {
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendMessageBtn');
+  const content = messageInput.value.trim();
+  
+  if (!content) return;
+  
+  try {
+    // Disable input temporarily to prevent multiple sends
+    sendBtn.disabled = true;
+    messageInput.disabled = true;
+    
+    const message = {
+      text: content,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      read: false
+    };
+    
+    console.log("Sending message:", content, "to conversation:", conversation.id);
+    
+    // Add message to subcollection
+    await db.collection('conversations')
+      .doc(conversation.id)
+      .collection('messages')
+      .add(message);
+    
+    // Update conversation with last message
+    await db.collection('conversations')
+      .doc(conversation.id)
+      .update({
+        lastMessage: content,
+        lastMessageTime: firebase.firestore.FieldValue.serverTimestamp(),
+        lastMessageSender: currentUser.name
+      });
+    
+    console.log("Message sent successfully");
+    
+    // Clear input and re-enable
+    messageInput.value = '';
+    messageInput.disabled = false;
+    sendBtn.disabled = false;
+    messageInput.focus();
+    
+    // Reset textarea height
+    messageInput.style.height = 'auto';
+    
+    // Create notification for teacher in teacherNotifications collection
+    await db.collection('teacherNotifications').add({
+      teacherId: teacher.id,
+      studentId: currentUser.id,
+      studentName: currentUser.name,
+      title: 'New Message',
+      message: `${currentUser.name} sent you a message: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+      type: 'message',
+      read: false,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      conversationId: conversation.id,
+      messagePreview: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+      // Optional: Add course info if available
+      courseName: conversation.courseName || 'General Course'
+    });
+    
+    console.log("Teacher notification created successfully");
+    
+  } catch (error) {
+    console.error("Error sending message:", error);
+    
+    // Re-enable input on error
+    const sendBtn = document.getElementById('sendMessageBtn');
+    const messageInput = document.getElementById('messageInput');
+    sendBtn.disabled = false;
+    messageInput.disabled = false;
+    
+    alert("Error sending message. Please try again.");
+  }
+}
 
-    // Create notification function
-    async function createNotification(userId, title, message, type) {
-      try {
-        await db.collection('notifications').add({
-          userId: userId,
-          title: title,
-          message: message,
-          type: type,
-          read: false,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } catch (error) {
-        console.error("Error creating notification:", error);
-      }
-    }
+// Create notification function - UPDATED for teacherNotifications
+async function createNotification(teacherId, title, message, type, additionalData = {}) {
+  try {
+    await db.collection('teacherNotifications').add({
+      teacherId: teacherId,
+      studentId: currentUser.id,
+      studentName: currentUser.name,
+      title: title,
+      message: message,
+      type: type,
+      read: false,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      ...additionalData
+    });
+    console.log("Teacher notification created successfully");
+  } catch (error) {
+    console.error("Error creating teacher notification:", error);
+  }
+}
 
     // Mark messages as read
     async function markMessagesAsRead(conversationId) {
@@ -3060,7 +3083,7 @@ function initNotifications() {
     e.stopPropagation();
   });
 }
-// Clear all notifications - marks them as read
+// Clear all notifications - DELETES them from Firebase and UI
 async function clearAllNotifications() {
   try {
     if (!currentUser) {
@@ -3068,35 +3091,34 @@ async function clearAllNotifications() {
       return;
     }
     
-    // Get all unread notifications for this student
-    const unreadQuery = await db.collection('studentNotifications')
+    // Get ALL notifications for this student (both read and unread)
+    const notificationsQuery = await db.collection('studentNotifications')
       .where('studentId', '==', currentUser.id)
-      .where('read', '==', false)
       .get();
     
-    if (unreadQuery.empty) {
-      showMessage("No unread notifications to clear");
+    if (notificationsQuery.empty) {
+      showMessage("No notifications to clear");
       return;
     }
     
-    // Batch update all notifications to read
+    // DELETE all notifications from Firebase
     const batch = db.batch();
-    unreadQuery.forEach(doc => {
-      batch.update(doc.ref, { read: true });
+    notificationsQuery.forEach(doc => {
+      batch.delete(doc.ref);
     });
     
     await batch.commit();
     
-    console.log(`Cleared ${unreadQuery.size} notifications`);
+    console.log(`Deleted ${notificationsQuery.size} notifications from Firebase`);
+    
+    // Clear the UI immediately
+    notificationList.innerHTML = '<div class="no-notifications">No notifications</div>';
+    
+    // Update badge to 0
+    updateNotificationBadge(0);
     
     // Show success message
     showMessage("✅ All notifications cleared");
-    
-    // Update badge
-    updateNotificationBadge(0);
-    
-    // Reload notifications to update UI
-    loadNotifications();
     
   } catch (error) {
     console.error("Error clearing notifications:", error);

@@ -530,34 +530,41 @@
       color: var(--gray);
     }
 
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      margin-left: 0;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
+/* Main Content */
+.main-content {
+  flex: 1;
+  margin-left: 0;
+  padding-top: 80px;  /* ADD THIS - same as topbar height */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
 
-    .main-content.sidebar-open {
-      margin-left: 280px;
-    }
+.main-content.sidebar-open {
+  margin-left: 280px;
+  padding-top: 80px;  /* ADD THIS */
+}
 
-    /* Topbar */
-    .topbar {
-      background: var(--bg-secondary);
-      backdrop-filter: blur(20px);
-      padding: 0 30px;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 1px solid rgba(67, 97, 238, 0.2);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-
+.topbar {
+  background: var(--bg-secondary);
+  backdrop-filter: blur(20px);
+  padding: 0 30px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;  /* CHANGED FROM sticky TO fixed */
+  top: 0;
+  left: 0;  /* ADD THIS */
+  right: 0;  /* ADD THIS */
+  z-index: 999;  /* CHANGED FROM 100 TO 999 */
+  border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+/* Topbar adjusts when sidebar is open */
+.sidebar-open .topbar {
+  left: 280px;  /* Width of sidebar */
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
     .topbar-left {
       display: flex;
       align-items: center;
@@ -1520,7 +1527,8 @@ import {
   updateDoc,
   onSnapshot,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  deleteDoc  
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { 
   getStorage, 
@@ -2112,39 +2120,19 @@ async function loadNotifications(userId) {
   }
 }
 
-// Clear all notifications - UPDATED to work with studentNotifications collection
-async function clearAllNotifications() {
-  try {
-    if (!currentUser) return;
-    
-    // Query all unread notifications for this student
-    const notificationsQuery = query(
-      collection(db, "studentNotifications"),
-      where("studentId", "==", currentUser.uid),
-      where("read", "==", false)
-    );
-    
-    const notificationsSnap = await getDocs(notificationsQuery);
-    
-    // Batch update all notifications to read
-    const updatePromises = [];
-    notificationsSnap.forEach(docSnap => {
-      const notificationRef = doc(db, "studentNotifications", docSnap.id);
-      updatePromises.push(updateDoc(notificationRef, { read: true }));
-    });
-    
-    await Promise.all(updatePromises);
-    
-    showMessage("✅ All notifications marked as read");
-    loadNotifications(currentUser.uid);
-  } catch (error) {
-    console.error("Error clearing notifications:", error);
-    showMessage("❌ Error clearing notifications");
-  }
-}
-// Show success/error messages
+// Show success/error messages - NEW FUNCTION
 function showMessage(message, type = "success") {
   const messageElement = document.createElement('div');
+  
+  let backgroundColor;
+  if (type === "error") {
+    backgroundColor = "linear-gradient(45deg, #ff4757, #ff3742)";
+  } else if (type === "info") {
+    backgroundColor = "linear-gradient(45deg, #4361ee, #3a0ca3)";
+  } else {
+    backgroundColor = "linear-gradient(45deg, #28a745, #20c997)";
+  }
+  
   messageElement.style.cssText = `
     position: fixed;
     top: 100px;
@@ -2156,18 +2144,68 @@ function showMessage(message, type = "success") {
     animation: slideIn 0.3s ease;
     max-width: 400px;
     word-wrap: break-word;
-    background: ${type === "error" ? "linear-gradient(45deg, #ff4757, #ff3742)" : "linear-gradient(45deg, #28a745, #20c997)"};
+    background: ${backgroundColor};
     color: white;
+    font-weight: 500;
   `;
   messageElement.textContent = message;
   
   document.body.appendChild(messageElement);
   
   setTimeout(() => {
-    if (messageElement.parentNode) {
-      messageElement.remove();
-    }
+    messageElement.style.animation = "slideOut 0.3s ease";
+    setTimeout(() => {
+      if (messageElement.parentNode) {
+        messageElement.remove();
+      }
+    }, 300);
   }, 4000);
+}
+
+// Clear all notifications - UPDATED to work with studentNotifications collection
+async function clearAllNotifications() {
+  try {
+    if (!currentUser) return;
+    
+    // Query all notifications for this student (both read and unread)
+    const notificationsQuery = query(
+      collection(db, "studentNotifications"),
+      where("studentId", "==", currentUser.uid)
+    );
+    
+    const notificationsSnap = await getDocs(notificationsQuery);
+    
+    if (notificationsSnap.empty) {
+      showMessage("No notifications to clear", "info");
+      return;
+    }
+    
+    // Delete all notifications from Firebase
+    const deletePromises = [];
+    notificationsSnap.forEach(docSnap => {
+      const notificationRef = doc(db, "studentNotifications", docSnap.id);
+      deletePromises.push(deleteDoc(notificationRef));
+    });
+    
+    await Promise.all(deletePromises);
+    
+    // Clear the UI immediately
+    if (notificationList) {
+      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+    }
+    
+    // Update badge
+    if (notificationBadge) {
+      notificationBadge.textContent = '0';
+      notificationBadge.style.display = 'none';
+    }
+    
+    showMessage("✅ All notifications cleared");
+    
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    showMessage("❌ Error clearing notifications", "error");
+  }
 }
 
     // Initialize UI animations and effects

@@ -469,16 +469,7 @@
       line-height: 0;
     }
 
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
+
 
     @keyframes rotate {
       0% { transform: rotate(0deg); }
@@ -823,16 +814,6 @@
       overflow: hidden;
     }
     
-    .student-avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
     
     .student-avatar span {
       position: relative;
@@ -1252,19 +1233,21 @@
       border-bottom: 1px solid var(--dark-red);
     }
     
-    .student-avatar-large {
-      width: 60px;
-      height: 60px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      margin-right: 1.5rem;
-      font-size: 1.3rem;
-    }
+.student-modal-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-red), var(--primary-red-dark));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-right: 1.5rem;
+  font-size: 1.3rem;
+  position: relative;
+  overflow: hidden;
+}
     
     .modal-footer {
       padding: 2rem;
@@ -1497,6 +1480,7 @@
         </div>
         
         <div class="user-info">
+
           <!-- Single Notification Container -->
           <div class="notification-container">
             <button class="notification-icon" id="notificationIcon">
@@ -1514,6 +1498,7 @@
               </div>
             </div>
           </div>
+                     <span id="teacherDisplayName" style="margin-right: 10px; font-weight: 500;">Loading...</span>
           <div class="avatar" id="teacherAvatar">
             <span id="userInitials">AJ</span>
           </div>
@@ -1859,10 +1844,14 @@
           currentTeacher = { id: user.uid, ...teacherDoc.data() };
           console.log("Teacher data loaded:", currentTeacher);
           
-          // Update teacher avatar
-          const teacherInitials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
-          
-          if (currentTeacher.photoURL) {
+// Update teacher avatar
+const teacherInitials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+const teacherDisplayName = document.getElementById('teacherDisplayName');
+if (teacherDisplayName) {
+  teacherDisplayName.textContent = `Prof. ${currentTeacher.lastName}`;
+}
+
+if (currentTeacher.photoURL) {
             teacherAvatar.classList.add('has-image');
             userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
           } else {

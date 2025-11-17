@@ -469,17 +469,6 @@
       line-height: 0;
     }
 
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
-
     @keyframes rotate {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -1394,6 +1383,7 @@
               </div>
             </div>
           </div>
+           <span id="userDisplayName">Loading...</span>
           <div class="avatar" id="teacherAvatar">
             <span id="userInitials">AJ</span>
           </div>
@@ -1533,7 +1523,8 @@
     serverTimestamp,
     orderBy,
     limit,
-    setDoc
+    setDoc,
+    deleteDoc
   } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
   import { 
     getStorage, 
@@ -1656,16 +1647,24 @@
   });
 
   // Update teacher avatar with profile picture
-  function updateTeacherAvatar() {
-    if (currentTeacher && currentTeacher.photoURL) {
-      teacherAvatar.classList.add('has-image');
-      userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    } else {
-      teacherAvatar.classList.remove('has-image');
-      const initials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
-      userInitials.textContent = initials;
+
+function updateTeacherAvatar() {
+    // Update display name in topbar
+    const teacherDisplayName = document.getElementById('userDisplayName');
+    if (teacherDisplayName && currentTeacher) {
+        teacherDisplayName.textContent = `Prof. ${currentTeacher.lastName}`;
     }
-  }
+    
+    // Update teacher avatar
+    if (currentTeacher && currentTeacher.photoURL) {
+        teacherAvatar.classList.add('has-image');
+        userInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="${currentTeacher.firstName} ${currentTeacher.lastName}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    } else if (currentTeacher) {
+        teacherAvatar.classList.remove('has-image');
+        const initials = getInitials(currentTeacher.firstName, currentTeacher.lastName);
+        userInitials.textContent = initials;
+    }
+}
 
   // Set up online status tracking from users collection
   function setupOnlineStatusTracking() {
@@ -2340,22 +2339,22 @@
     }
   }
 
-  // Create notification for student in studentNotifications collection
-  async function createStudentNotification(userId, title, message, type) {
-    try {
-      await addDoc(collection(db, "studentNotifications"), {
-        userId: userId,
-        title: title,
-        message: message,
-        type: type,
-        read: false,
-        timestamp: serverTimestamp()
-      });
-      console.log("Notification created in studentNotifications for student:", userId);
-    } catch (error) {
-      console.error("Error creating student notification:", error);
-    }
+// Create notification for student in studentNotifications collection
+async function createStudentNotification(userId, title, message, type) {
+  try {
+    await addDoc(collection(db, "studentNotifications"), {
+      studentId: userId,  // Changed from userId to studentId to match rules
+      title: title,
+      message: message,
+      type: type,
+      read: false,
+      timestamp: serverTimestamp()
+    });
+    console.log("Notification created in studentNotifications for student:", userId);
+  } catch (error) {
+    console.error("Error creating student notification:", error);
   }
+}
 
   // Mark messages as read
   async function markMessagesAsRead(conversationId) {
@@ -2416,69 +2415,74 @@
     });
   }
 
-  // Set up real-time notifications from teacherNotifications collection
-  function setupNotifications() {
-    if (!currentTeacher) return;
+// Set up real-time notifications from teacherNotifications collection
+function setupNotifications() {
+  if (!currentTeacher) return;
+  
+  // Set up listener for teacher notifications
+  const notificationsQuery = query(
+    collection(db, "teacherNotifications"),
+    where("userId", "==", currentTeacher.id),  // Changed from teacherId to userId
+    orderBy("timestamp", "desc")
+  );
+  
+  notificationsListener = onSnapshot(notificationsQuery, (snapshot) => {
+    notifications = [];
     
-    // Set up listener for teacher notifications
-    const notificationsQuery = query(
-      collection(db, "teacherNotifications"),
-      where("userId", "==", currentTeacher.id),
-      orderBy("timestamp", "desc")
-    );
+    snapshot.forEach(doc => {
+      const notification = {
+        id: doc.id,
+        ...doc.data()
+      };
+      notifications.push(notification);
+    });
     
-    notificationsListener = onSnapshot(notificationsQuery, (snapshot) => {
-      notifications = [];
+    updateNotificationDisplay();
+  }, (error) => {
+    console.error("Error loading teacher notifications:", error);
+    // Fallback to sample notifications
+    setupSampleNotifications();
+  });
+}
+
+// Update notification display
+function updateNotificationDisplay() {
+  const unreadCount = notifications.filter(n => !n.read).length;
+  notificationBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+  notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+  
+  // Update notification dropdown
+  notificationList.innerHTML = '';
+  
+  if (notifications.length === 0) {
+    notificationList.innerHTML = `
+      <div class="notification-empty">
+        <i class="fas fa-bell-slash"></i>
+        <p>No notifications</p>
+        <small>You're all caught up!</small>
+      </div>
+    `;
+  } else {
+    notifications.forEach(notification => {
+      const notificationItem = document.createElement('div');
+      notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
+      notificationItem.addEventListener('click', () => markNotificationAsRead(notification));
       
-      snapshot.forEach(doc => {
-        const notification = {
-          id: doc.id,
-          ...doc.data()
-        };
-        notifications.push(notification);
-      });
+      // Safely handle timestamp
+      const timestamp = notification.timestamp?.toDate ? 
+        notification.timestamp.toDate() : 
+        (notification.timestamp instanceof Date ? notification.timestamp : new Date());
       
-      updateNotificationDisplay();
-    }, (error) => {
-      console.error("Error loading teacher notifications:", error);
-      // Fallback to sample notifications
-      setupSampleNotifications();
+      notificationItem.innerHTML = `
+        <div class="notification-title">${notification.title}</div>
+        <div class="notification-message">${notification.message}</div>
+        <div class="notification-time">${formatDate(timestamp)}</div>
+      `;
+      
+      notificationList.appendChild(notificationItem);
     });
   }
-
-  // Update notification display
-  function updateNotificationDisplay() {
-    const unreadCount = notifications.filter(n => !n.read).length;
-    notificationBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-    notificationBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
-    
-    // Update notification dropdown
-    notificationList.innerHTML = '';
-    
-    if (notifications.length === 0) {
-      notificationList.innerHTML = `
-        <div class="notification-empty">
-          <i class="fas fa-bell-slash"></i>
-          <p>No notifications</p>
-          <small>You're all caught up!</small>
-        </div>
-      `;
-    } else {
-      notifications.forEach(notification => {
-        const notificationItem = document.createElement('div');
-        notificationItem.className = `notification-item ${notification.read ? '' : 'unread'}`;
-        notificationItem.addEventListener('click', () => markNotificationAsRead(notification));
-        
-        notificationItem.innerHTML = `
-          <div class="notification-title">${notification.title}</div>
-          <div class="notification-message">${notification.message}</div>
-          <div class="notification-time">${formatDate(notification.timestamp?.toDate())}</div>
-        `;
-        
-        notificationList.appendChild(notificationItem);
-      });
-    }
-  }
+}
   
   // Mark notification as read
   async function markNotificationAsRead(notification) {
@@ -2491,20 +2495,28 @@
     }
   }
   
-  // Clear all notifications
-  async function clearAllNotifications() {
-    try {
-      const updatePromises = notifications.map(notification => {
-        return updateDoc(doc(db, "teacherNotifications", notification.id), {
-          read: true
-        });
-      });
-      
-      await Promise.all(updatePromises);
-    } catch (error) {
-      console.error("Error clearing notifications:", error);
-    }
+// Clear all notifications
+async function clearAllNotifications() {
+  try {
+    // Delete all notifications from Firebase
+    const deletePromises = notifications.map(notification => {
+      return deleteDoc(doc(db, "teacherNotifications", notification.id));
+    });
+    
+    await Promise.all(deletePromises);
+    
+    // Clear local array
+    notifications = [];
+    
+    // Update display
+    updateNotificationDisplay();
+    
+    console.log("All notifications cleared successfully");
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    alert("Failed to clear notifications. Please try again.");
   }
+}
 
   // Update notification count
   function updateNotificationCount() {
@@ -2671,38 +2683,38 @@
     chatActionMenu.classList.remove('active');
   }
 
-  // Final fallback to sample notifications
-  function setupSampleNotifications() {
-    console.log("Setting up sample notifications");
-    notifications = [
-      {
-        id: '1',
-        title: 'New Message',
-        message: 'Emily Chen sent you a message',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        read: false,
-        type: 'message'
-      },
-      {
-        id: '2',
-        title: 'Assignment Submission',
-        message: 'James Rodriguez submitted the Algorithms assignment',
-        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        read: false,
-        type: 'submission'
-      },
-      {
-        id: '3',
-        title: 'Progress Update',
-        message: 'Sophia Williams reached 85% completion in Statistics',
-        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-        read: true,
-        type: 'progress'
-      }
-    ];
-    
-    updateNotificationDisplay();
-  }
+// Final fallback to sample notifications
+function setupSampleNotifications() {
+  console.log("Setting up sample notifications");
+  notifications = [
+    {
+      id: '1',
+      title: 'New Message',
+      message: 'Emily Chen sent you a message',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),  // Plain Date object
+      read: false,
+      type: 'message'
+    },
+    {
+      id: '2',
+      title: 'Assignment Submission',
+      message: 'James Rodriguez submitted the Algorithms assignment',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      read: false,
+      type: 'submission'
+    },
+    {
+      id: '3',
+      title: 'Progress Update',
+      message: 'Sophia Williams reached 85% completion in Statistics',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      read: true,
+      type: 'progress'
+    }
+  ];
+  
+  updateNotificationDisplay();
+}
 
   // Event listeners
   sidebarToggle.addEventListener('click', () => {

@@ -1932,9 +1932,18 @@ console.log("User avatar element:", userAvatar); // Debug line
         userEmail.textContent = email;
         userBio.textContent = bio;
         
-        // Handle profile picture or initials
-        const displayNameForInitials = userName.textContent;
-        const initials = displayNameForInitials.split(" ").map(n => n[0]).join("").toUpperCase();
+// Handle profile picture or initials - UPDATED for first and last name
+const displayNameForInitials = userName.textContent;
+const nameParts = displayNameForInitials.split(" ");
+let initials = "";
+
+if (nameParts.length >= 2) {
+  // First letter of first name + first letter of last name
+  initials = (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+} else {
+  // If only one name, use first two letters or just first letter
+  initials = displayNameForInitials.substring(0, 2).toUpperCase();
+}
 
         // Check both Auth photoURL and Firestore photoURL
         let finalPhotoURL = user.photoURL;
@@ -1955,7 +1964,7 @@ console.log("User avatar element:", userAvatar); // Debug line
       }
     }
 
-// Update avatar display in both profile card and navbar
+// Update avatar display in both profile card and navbar - UPDATED
 function updateAvatarDisplay(photoURL, initials, user) {
   const profileAvatar = document.getElementById('profileAvatar');
   const userAvatarElement = document.getElementById('userAvatar');
@@ -1967,10 +1976,10 @@ function updateAvatarDisplay(photoURL, initials, user) {
     profileAvatar.classList.add('has-image');
     profileAvatar.style.background = 'transparent';
   } else {
-    // Display initials
-    avatarInitials.innerHTML = initials;
+    // Display initials - wrapped in span for proper styling
+    avatarInitials.innerHTML = `<span>${initials}</span>`;
     profileAvatar.classList.remove('has-image');
-    profileAvatar.style.background = '';
+    profileAvatar.style.background = ''; // Restore gradient background
   }
 
   // Update navbar avatar (the actual avatar element, not its parent)
@@ -1979,9 +1988,10 @@ function updateAvatarDisplay(photoURL, initials, user) {
     userAvatarElement.classList.add('has-image');
     userAvatarElement.style.background = 'transparent';
   } else {
-    userAvatarElement.innerHTML = initials;
+    // Display initials - wrapped in span for proper styling
+    userAvatarElement.innerHTML = `<span>${initials}</span>`;
     userAvatarElement.classList.remove('has-image');
-    userAvatarElement.style.background = '';
+    userAvatarElement.style.background = ''; // Restore gradient background
   }
 }
 
@@ -2666,54 +2676,101 @@ async function loadEnrolledCourses(user) {
       }
     };
 
-    // Remove profile picture button handler
-    const removeProfilePicBtn = document.getElementById('removeProfilePicBtn');
-    if (removeProfilePicBtn) {
-      removeProfilePicBtn.addEventListener('click', async function() {
-        if (!confirm('Are you sure you want to remove your profile picture?')) {
-          return;
-        }
-        
-        try {
-          const user = auth.currentUser;
-          if (!user) return;
-          
-          // Show loading
-          this.innerHTML = '<span class="spinner"></span>';
-          this.disabled = true;
-          
-          // Update user profile in Auth
-          await updateProfile(user, { photoURL: null });
-          
-          // Update Firestore
-          const userRef = doc(db, "users", user.uid);
-          await updateDoc(userRef, { 
-            photoURL: null 
-          });
-          
-          // Update edit modal
-          const displayName = user.displayName || "User";
-          const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase();
-          const editAvatarInitials = document.getElementById('editAvatarInitials');
-          if (editAvatarInitials) {
-            editAvatarInitials.textContent = initials;
-          }
-          this.style.display = 'none';
-          
-          // Update main profile display
-          await loadUserProfile(user);
-          
-          showNotification("✅ Profile picture removed successfully!");
-        } catch (error) {
-          console.error("Error removing profile picture:", error);
-          showNotification("❌ Error removing picture: " + error.message, "error");
-        } finally {
-          this.innerHTML = '<i class="fas fa-trash"></i> Remove';
-          this.disabled = false;
-        }
-      });
+// Remove profile picture button handler - UPDATED to delete from Storage
+const removeProfilePicBtn = document.getElementById('removeProfilePicBtn');
+if (removeProfilePicBtn) {
+  removeProfilePicBtn.addEventListener('click', async function() {
+    if (!confirm('Are you sure you want to remove your profile picture?')) {
+      return;
     }
-
+    
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      // Show loading
+      this.innerHTML = '<span class="spinner"></span>';
+      this.disabled = true;
+      
+      // Get current photoURL to delete from storage
+      let currentPhotoURL = user.photoURL;
+      
+      // Also check Firestore for photoURL
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists() && userSnap.data().photoURL) {
+        currentPhotoURL = userSnap.data().photoURL;
+      }
+      
+      // Delete from Firebase Storage if photoURL exists
+      if (currentPhotoURL && currentPhotoURL.includes('firebase')) {
+        try {
+          // Extract the path from the URL
+          const photoPath = decodeURIComponent(currentPhotoURL.split('/o/')[1].split('?')[0]);
+          const photoRef = ref(storage, photoPath);
+          await deleteObject(photoRef);
+          console.log("Profile picture deleted from storage");
+        } catch (storageError) {
+          console.error("Error deleting from storage:", storageError);
+          // Continue even if storage delete fails
+        }
+      }
+      
+      // Update user profile in Auth
+      await updateProfile(user, { photoURL: null });
+      
+      // Update Firestore - set photoURL to null
+      await updateDoc(userRef, { 
+        photoURL: null 
+      });
+      
+      // Get user's name for initials
+      let displayName = user.displayName || "User";
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const firstName = userData.firstName || "";
+        const lastName = userData.lastName || "";
+        if (firstName || lastName) {
+          displayName = `${firstName} ${lastName}`.trim();
+        }
+      }
+      
+      // Create initials from first letter of first name and last name
+      const nameParts = displayName.split(" ");
+      let initials = "";
+      if (nameParts.length >= 2) {
+        // First letter of first name + first letter of last name
+        initials = (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+      } else {
+        // If only one name, use first two letters or just first letter
+        initials = displayName.substring(0, 2).toUpperCase();
+      }
+      
+      // Update edit modal avatar
+      const editAvatarInitials = document.getElementById('editAvatarInitials');
+      const editProfileAvatar = document.getElementById('editProfileAvatar');
+      if (editAvatarInitials && editProfileAvatar) {
+        editAvatarInitials.textContent = initials;
+        editProfileAvatar.classList.remove('has-image');
+        editProfileAvatar.style.background = ''; // Restore gradient background
+      }
+      
+      // Hide remove button
+      this.style.display = 'none';
+      
+      // Update main profile displays
+      await loadUserProfile(user);
+      
+      showNotification("✅ Profile picture removed successfully!");
+    } catch (error) {
+      console.error("Error removing profile picture:", error);
+      showNotification("❌ Error removing picture: " + error.message, "error");
+    } finally {
+      this.innerHTML = '<i class="fas fa-trash"></i> Remove';
+      this.disabled = false;
+    }
+  });
+}
     // Update the modal open function to initialize profile pic
     const originalOpenModal = window.openModal;
     window.openModal = async (modalId) => {

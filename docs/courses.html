@@ -6,6 +6,7 @@
   <title>Courses - SkillUp</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     :root {
       --primary: #ffffff;
@@ -2608,108 +2609,64 @@
     </div>
   </div>
 
-<!-- Payment Modal -->
-<div class="modal payment-modal" id="paymentModal">
-  <div class="payment-modal-content">
-    <div class="payment-header">
-      <h2 class="payment-title">Complete Payment</h2>
-      <p class="payment-subtitle">Secure payment - All transactions are encrypted</p>
-    </div>
-    
-    <div class="payment-body">
-      <div class="payment-info">
-        <div class="course-name-payment" id="paymentCourseName">Course Name</div>
-        <div class="course-price-payment" id="paymentCoursePrice">₹0</div>
+  <!-- Payment Modal -->
+  <div class="modal payment-modal" id="paymentModal">
+    <div class="payment-modal-content">
+      <div class="payment-header">
+        <h2 class="payment-title">Complete Payment</h2>
+        <p class="payment-subtitle">Secure payment - All transactions are encrypted</p>
       </div>
       
-      <!-- Payment Status Indicator -->
-      <div class="payment-status-indicator" id="paymentStatusIndicator" style="display: none;">
-        <div class="status-icon">
-          <i class="fas fa-hourglass-half"></i>
+      <div class="payment-body">
+        <div class="payment-info">
+          <div class="course-name-payment" id="paymentCourseName">Course Name</div>
+          <div class="course-price-payment" id="paymentCoursePrice">₹0</div>
         </div>
-        <div class="status-text">Waiting for payment confirmation...</div>
-        <div class="status-subtext">Please complete the payment to continue</div>
-      </div>
-      
-      <div class="payment-methods" id="paymentMethodsSection">
-        <h3 class="payment-method-title">Select Payment Method</h3>
-        <div class="payment-methods-grid">
-          <div class="payment-method" data-method="upi">
-            <div class="payment-method-icon">
-              <i class="fas fa-qrcode"></i>
-            </div>
-            <div class="payment-method-name">UPI / QR Code</div>
-          </div>
-          <div class="payment-method" data-method="card">
-            <div class="payment-method-icon">
-              <i class="far fa-credit-card"></i>
-            </div>
-            <div class="payment-method-name">Credit/Debit Card</div>
-          </div>
-          <div class="payment-method" data-method="netbanking">
-            <div class="payment-method-icon">
-              <i class="fas fa-university"></i>
-            </div>
-            <div class="payment-method-name">Net Banking</div>
-          </div>
-          <div class="payment-method" data-method="wallet">
-            <div class="payment-method-icon">
-              <i class="fas fa-wallet"></i>
-            </div>
-            <div class="payment-method-name">Wallets</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- UPI/QR Payment Section -->
-      <div class="qr-payment-section" id="qrPaymentSection">
-        <div class="qr-code-container" id="qrCodeCanvas"></div>
-        <div class="qr-instructions">
-          <p>Scan this QR code with any UPI app to complete payment</p>
-          <div class="upi-id-display" id="upiIdDisplay">aayushjain1811@okhdfcbank</div>
-          <p style="margin-top: 15px; font-size: 12px; color: var(--gray);">
-            Payment ID: <span id="displayPaymentId" style="font-family: monospace;">Generating...</span>
+        <div class="payment-methods" id="paymentMethodsSection">
+          <h3 class="payment-method-title">Complete Payment</h3>
+          <p style="color: var(--gray); font-size: 14px; margin-bottom: 20px;">
+            You'll be redirected to Razorpay to complete your payment securely. 
+            All payment methods (UPI, Cards, Net Banking, Wallets) are available.
           </p>
         </div>
-      </div>
-      
-      <!-- Payment Processing -->
-      <div class="payment-processing" id="paymentProcessing">
-        <div class="processing-spinner"></div>
-        <div class="processing-text">Verifying Payment</div>
-        <div class="processing-subtext">Please wait while we confirm your payment...</div>
-      </div>
-      
-      <!-- Payment Success -->
-      <div class="payment-success" id="paymentSuccess">
-        <div class="success-checkmark">
-          <div class="check-icon">
-            <span class="icon-line line-tip"></span>
-            <span class="icon-line line-long"></span>
-            <div class="icon-circle"></div>
-            <div class="icon-fix"></div>
+        
+        <!-- Payment Processing -->
+        <div class="payment-processing" id="paymentProcessing">
+          <div class="processing-spinner"></div>
+          <div class="processing-text">Verifying Payment</div>
+          <div class="processing-subtext">Please wait while we confirm your payment...</div>
+        </div>
+        
+        <!-- Payment Success -->
+        <div class="payment-success" id="paymentSuccess">
+          <div class="success-checkmark">
+            <div class="check-icon">
+              <span class="icon-line line-tip"></span>
+              <span class="icon-line line-long"></span>
+              <div class="icon-circle"></div>
+              <div class="icon-fix"></div>
+            </div>
           </div>
+          <div class="processing-text">Payment Successful!</div>
+          <div class="processing-subtext">You have been enrolled in the course</div>
         </div>
-        <div class="processing-text">Payment Successful!</div>
-        <div class="processing-subtext">You have been enrolled in the course</div>
+        
+        <!-- Payment Error -->
+        <div class="payment-error" id="paymentError">
+          <div class="error-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="error-text">Payment Failed</div>
+          <div class="error-subtext" id="paymentErrorMessage">Please try again or use a different payment method</div>
+        </div>
       </div>
       
-      <!-- Payment Error -->
-      <div class="payment-error" id="paymentError">
-        <div class="error-icon">
-          <i class="fas fa-times-circle"></i>
-        </div>
-        <div class="error-text">Payment Failed</div>
-        <div class="error-subtext" id="paymentErrorMessage">Please try again or use a different payment method</div>
+      <div class="payment-actions">
+        <button class="modal-btn cancel" id="cancelPayment">Cancel</button>
+        <button class="modal-btn confirm" id="proceedPayment">Pay ₹<span id="paymentAmount">0</span></button>
       </div>
-    </div>
-    
-    <div class="payment-actions">
-      <button class="modal-btn cancel" id="cancelPayment" disabled>Cancel</button>
-      <button class="modal-btn confirm" id="proceedPayment" disabled>Proceed to Pay</button>
     </div>
   </div>
-</div>
 
   <!-- Course Details Modal -->
   <div class="modal course-details-modal" id="courseDetailsModal">
@@ -2804,7 +2761,8 @@
       orderBy,
       serverTimestamp,
       addDoc,
-      deleteDoc
+      deleteDoc,
+      limit
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
     import { 
       getAuth, 
@@ -2814,9 +2772,7 @@
     import { 
       getStorage, 
       ref, 
-      uploadBytes, 
-      getDownloadURL,
-      uploadString
+      getDownloadURL
     } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
     // Firebase config
@@ -2888,15 +2844,13 @@
     const paymentModal = document.getElementById('paymentModal');
     const paymentCourseName = document.getElementById('paymentCourseName');
     const paymentCoursePrice = document.getElementById('paymentCoursePrice');
-    const qrPaymentSection = document.getElementById('qrPaymentSection');
-    const qrCodeCanvas = document.getElementById('qrCodeCanvas');
-    const upiIdDisplay = document.getElementById('upiIdDisplay');
     const paymentProcessing = document.getElementById('paymentProcessing');
     const paymentSuccess = document.getElementById('paymentSuccess');
     const paymentError = document.getElementById('paymentError');
     const paymentErrorMessage = document.getElementById('paymentErrorMessage');
     const cancelPayment = document.getElementById('cancelPayment');
     const proceedPayment = document.getElementById('proceedPayment');
+    const paymentAmount = document.getElementById('paymentAmount');
 
     // State
     let courses = [];
@@ -3069,31 +3023,6 @@
       if (proceedPayment) {
         proceedPayment.addEventListener('click', handlePaymentProceed);
       }
-
-      // Payment method selection
-      document.querySelectorAll('.payment-method').forEach(method => {
-        method.addEventListener('click', () => {
-          // Remove selected class from all methods
-          document.querySelectorAll('.payment-method').forEach(m => {
-            m.classList.remove('selected');
-          });
-          
-          // Add selected class to clicked method
-          method.classList.add('selected');
-          selectedPaymentMethod = method.dataset.method;
-          
-          // Enable proceed button
-          proceedPayment.disabled = false;
-          
-          // Show appropriate payment section
-          if (selectedPaymentMethod === 'upi') {
-            qrPaymentSection.classList.add('active');
-            generateQRCode();
-          } else {
-            qrPaymentSection.classList.remove('active');
-          }
-        });
-      });
 
       // Search functionality
       if (searchInput) {
@@ -3282,9 +3211,6 @@
       try {
         if (!notificationList) return;
 
-        // Add orderBy import at the top if not already present
-        const { orderBy } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
-
         // Query studentNotifications collection for this user
         const notificationsQuery = query(
           collection(db, "studentNotifications"),
@@ -3392,11 +3318,12 @@
       }
     }
 
+    // Clear all notifications
     async function clearAllNotifications() {
       try {
         if (!currentUser) return;
         
-        // Query all notifications for this student (both read and unread)
+        // Query all notifications for this student
         const notificationsQuery = query(
           collection(db, "studentNotifications"),
           where("studentId", "==", currentUser.uid)
@@ -3409,7 +3336,7 @@
           return;
         }
         
-        // Delete all notifications
+        // Delete all notifications from Firebase
         const deletePromises = [];
         notificationsSnap.forEach(docSnap => {
           deletePromises.push(deleteDoc(doc(db, "studentNotifications", docSnap.id)));
@@ -3417,10 +3344,20 @@
         
         await Promise.all(deletePromises);
         
-        showMessage("✅ All notifications cleared");
-        loadNotifications(currentUser.uid);
+        // Clear the UI
+        if (notificationList) {
+          notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+        }
         
-        // Close dropdown after clearing
+        // Hide badge
+        if (notificationBadge) {
+          notificationBadge.textContent = '0';
+          notificationBadge.style.display = 'none';
+        }
+        
+        showMessage("✅ All notifications cleared");
+        
+        // Close dropdown
         if (notificationDropdown) {
           notificationDropdown.classList.remove('active');
         }
@@ -3430,7 +3367,7 @@
       }
     }
 
-    // Function to get course image URL from Firebase Storage - CORRECTED
+    // Function to get course image URL from Firebase Storage
     async function getCourseImageUrl(courseId) {
       try {
         // Clean the courseId to remove any "course" prefix if it exists
@@ -3438,10 +3375,10 @@
         
         // Try different possible image paths and names
         const possiblePaths = [
-              `coursepic/${courseId}/${courseId}.jpg`,
-              `coursepic/${courseId}/${courseId}.png`,
-              `coursepic/${courseId}/image.jpg`,
-              `coursepic/${courseId}/image.png`,
+          `coursepic/${courseId}/${courseId}.jpg`,
+          `coursepic/${courseId}/${courseId}.png`,
+          `coursepic/${courseId}/image.jpg`,
+          `coursepic/${courseId}/image.png`,
         ];
         
         console.log(`Looking for course image for ID: ${courseId} (cleaned: ${cleanCourseId})`);
@@ -3603,12 +3540,11 @@
 
     // Attach event listeners to course buttons
     function attachCourseButtonListeners() {
-      // Enroll Now buttons - Direct enrollment with payment
+      // Enroll Now buttons - Direct to payment (like dashboard)
       document.querySelectorAll(".enroll-now-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
           const courseId = e.currentTarget.dataset.courseId;
-          // Skip course details modal and go directly to payment
           const course = courses.find(c => c.id === courseId);
           if (course) {
             currentCourseToEnroll = {
@@ -3616,7 +3552,7 @@
               name: course.name || course.title || "Course",
               price: course.price || 0
             };
-            showPaymentModal();
+            showPaymentModal(); // Go directly to payment
           }
         });
       });
@@ -3679,37 +3615,102 @@
     }
 
     // Show payment modal
-    function showPaymentModal() {
-      if (!paymentModal) return;
-      
-      // Update payment modal with course details
-      if (paymentCourseName) {
-        paymentCourseName.textContent = currentCourseToEnroll.name;
+    async function showPaymentModal() {
+      try {
+        // Ensure user is authenticated
+        if (!currentUser || !auth.currentUser) {
+          showMessage("Please sign in to continue", "error");
+          setTimeout(() => {
+            window.location.href = "signin.html";
+          }, 2000);
+          return;
+        }
+        
+        // Check if there's a pending/failed payment for this course
+        const existingPayment = await checkExistingPayment(currentUser.uid, currentCourseToEnroll.id);
+        
+        if (existingPayment) {
+          if (existingPayment.status === 'success') {
+            showMessage("You have already paid for this course!", "success");
+            // Proceed directly to teacher selection
+            showTeacherModal();
+            return;
+          } else if (existingPayment.status === 'pending' || existingPayment.status === 'failed') {
+            // Show retry option for failed/pending payments
+            const retry = confirm(`A ${existingPayment.status} payment was found for this course. Would you like to retry payment?`);
+            if (!retry) {
+              return;
+            }
+            // Update existing payment record to retry
+            currentPaymentId = existingPayment.id;
+          }
+        }
+        
+        if (!paymentModal) return;
+        
+        // Update payment modal with course details
+        if (paymentCourseName) {
+          paymentCourseName.textContent = currentCourseToEnroll.name;
+        }
+        if (paymentCoursePrice) {
+          paymentCoursePrice.textContent = `₹${currentCourseToEnroll.price}`;
+        }
+        
+        // Update the pay button amount
+        if (paymentAmount) {
+          paymentAmount.textContent = currentCourseToEnroll.price;
+        }
+        
+        // Reset payment modal state
+        resetPaymentModal();
+        
+        // Show the modal
+        paymentModal.classList.add('active');
+        
+        // Enable the proceed button immediately since we only have Razorpay
+        if (proceedPayment) {
+          proceedPayment.disabled = false;
+        }
+        
+        // Lock navigation during payment
+        lockNavigationForPayment();
+      } catch (error) {
+        console.error("Error showing payment modal:", error);
+        showMessage("Error opening payment modal", "error");
       }
-      if (paymentCoursePrice) {
-        paymentCoursePrice.textContent = `₹${currentCourseToEnroll.price}`;
+    }
+
+    // Check for existing payment for this course
+    async function checkExistingPayment(userId, courseId) {
+      try {
+        const paymentsQuery = query(
+          collection(db, "payments"),
+          where("studentId", "==", userId),
+          where("courseId", "==", courseId),
+          orderBy("createdAt", "desc"),
+          limit(1)
+        );
+        
+        const paymentsSnap = await getDocs(paymentsQuery);
+        
+        if (!paymentsSnap.empty) {
+          const paymentDoc = paymentsSnap.docs[0];
+          return {
+            id: paymentDoc.id,
+            ...paymentDoc.data()
+          };
+        }
+        
+        return null;
+      } catch (error) {
+        console.error("Error checking existing payment:", error);
+        return null;
       }
-      
-      // Reset payment modal state
-      resetPaymentModal();
-      
-      // Show the modal
-      paymentModal.classList.add('active');
-      
-      // Lock navigation during payment
-      lockNavigationForPayment();
     }
 
     // Reset payment modal
     function resetPaymentModal() {
-      // Reset payment method selection
-      selectedPaymentMethod = null;
-      document.querySelectorAll('.payment-method').forEach(method => {
-        method.classList.remove('selected');
-      });
-      
       // Hide all payment sections
-      qrPaymentSection.classList.remove('active');
       if (paymentProcessing) paymentProcessing.style.display = 'none';
       if (paymentSuccess) paymentSuccess.style.display = 'none';
       if (paymentError) paymentError.style.display = 'none';
@@ -3722,8 +3723,8 @@
       
       // Reset proceed button
       if (proceedPayment) {
-        proceedPayment.disabled = true;
-        proceedPayment.textContent = 'Proceed to Pay';
+        proceedPayment.disabled = false;
+        proceedPayment.textContent = 'Pay ₹' + (currentCourseToEnroll ? currentCourseToEnroll.price : 0);
       }
       
       // Enable cancel button
@@ -3735,129 +3736,391 @@
       currentPaymentId = null;
     }
 
-    // Handle payment proceed
+    // Handle payment proceed - DIRECT RAZORPAY WITH RETRY SUPPORT
     async function handlePaymentProceed() {
-      if (!selectedPaymentMethod) {
-        showMessage("Please select a payment method", "error");
+      // Check if user is authenticated
+      if (!currentUser || !auth.currentUser) {
+        showMessage("Please sign in to continue with payment", "error");
+        setTimeout(() => {
+          window.location.href = "signin.html";
+        }, 2000);
+        return;
+      }
+      
+      // Prevent multiple clicks
+      if (proceedPayment && proceedPayment.disabled) {
+        console.log("Payment already in progress");
         return;
       }
       
       try {
         // Disable buttons during payment
-        proceedPayment.disabled = true;
-        cancelPayment.disabled = true;
-        
-        // Create payment record first
-        await storePaymentRecord();
-        
-        if (selectedPaymentMethod === 'upi') {
-          await handleUPIPayment();
-        } else {
-          // For other payment methods, simulate success after delay
-          simulatePaymentSuccess();
+        if (proceedPayment) {
+          proceedPayment.disabled = true;
+          proceedPayment.textContent = 'Opening Payment Gateway...';
         }
+        if (cancelPayment) {
+          cancelPayment.disabled = true;
+        }
+        
+        // Create or update payment record
+        const paymentRecord = await storePaymentRecord();
+        
+        // Directly initiate Razorpay (supports all methods including UPI/QR)
+        await initiateRazorpayPayment(paymentRecord);
+        
       } catch (error) {
         console.error("Payment error:", error);
-        showMessage("Payment initialization failed. Please try again.", "error");
-        proceedPayment.disabled = false;
-        cancelPayment.disabled = false;
+        showMessage("Payment initialization failed: " + error.message, "error");
+        
+        // Re-enable buttons
+        if (proceedPayment) {
+          proceedPayment.disabled = false;
+          proceedPayment.textContent = 'Pay ₹' + currentCourseToEnroll.price;
+        }
+        if (cancelPayment) {
+          cancelPayment.disabled = false;
+        }
       }
     }
 
-    // Handle UPI Payment
-    async function handleUPIPayment() {
-      // Hide payment methods section
-      const paymentMethodsSection = document.getElementById('paymentMethodsSection');
-      if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
-      
-      // Show QR code
-      qrPaymentSection.classList.add('active');
-      
-      // Generate QR code
-      await generateQRCode();
-      
-      // Show status indicator
-      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
-      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'block';
-      
-      // Simulate payment success after delay for UPI
-      setTimeout(() => {
-        handlePaymentSuccess({});
-      }, 5000);
+    // Initiate Razorpay payment - FIXED VERSION
+    async function initiateRazorpayPayment(paymentRecord) {
+      try {
+        // Make sure user is authenticated
+        if (!currentUser) {
+          throw new Error("User not authenticated");
+        }
+
+        // Create Razorpay order directly in frontend (fallback approach)
+        const amount = currentCourseToEnroll.price * 100; // Amount in paise
+        const currency = "INR";
+        const receipt = paymentRecord.transactionId;
+        
+        // Create options for Razorpay
+        const options = {
+          key: "rzp_test_Rg4QEqb0YajyRz", // Your Razorpay key
+          amount: amount,
+          currency: currency,
+          name: "SkillUp Learning Platform",
+          description: currentCourseToEnroll.name,
+          order_id: null, // We'll create order without server
+          prefill: {
+            name: currentUser.displayName || "Student",
+            email: currentUser.email,
+            contact: currentUser.phoneNumber || ""
+          },
+          notes: {
+            courseId: currentCourseToEnroll.id,
+            courseName: currentCourseToEnroll.name,
+            studentId: currentUser.uid,
+            paymentRecordId: paymentRecord.id
+          },
+          theme: {
+            color: "#4361ee"
+          },
+          handler: async function (response) {
+            // Payment successful
+            console.log("Razorpay payment successful:", response);
+            await handleRazorpaySuccess(response, paymentRecord.id);
+          },
+          modal: {
+            ondismiss: function() {
+              // Payment cancelled
+              handleRazorpayFailure("Payment cancelled by user", paymentRecord.id);
+            }
+          }
+        };
+
+        // If we can't create order on server, proceed without order_id
+        const razorpay = new Razorpay(options);
+        
+        razorpay.on('payment.failed', async function (response) {
+          // Payment failed
+          console.error("Razorpay payment failed:", response.error);
+          await handleRazorpayFailure(response.error.description, paymentRecord.id);
+        });
+
+        razorpay.open();
+      } catch (error) {
+        console.error("Error initiating Razorpay:", error);
+        showMessage("Failed to open payment gateway: " + error.message, "error");
+        
+        // Re-enable buttons
+        if (proceedPayment) {
+          proceedPayment.disabled = false;
+          proceedPayment.textContent = 'Try Again';
+        }
+        if (cancelPayment) {
+          cancelPayment.disabled = false;
+        }
+      }
     }
 
-    // Store payment record in Firestore
+    // Handle Razorpay payment success - FIXED VERSION
+    async function handleRazorpaySuccess(response, paymentRecordId) {
+      try {
+        console.log("Processing successful payment:", response);
+        
+        // Create update data object with only defined values
+        const updateData = {
+          status: 'success',
+          verified: true,
+          verifiedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        // Only add Razorpay fields if they exist and are not undefined
+        if (response.razorpay_payment_id) {
+          updateData.razorpayPaymentId = response.razorpay_payment_id;
+        }
+        if (response.razorpay_order_id) {
+          updateData.razorpayOrderId = response.razorpay_order_id;
+        }
+        if (response.razorpay_signature) {
+          updateData.razorpaySignature = response.razorpay_signature;
+        }
+        
+        // Update payment record with only defined values
+        await updateDoc(doc(db, "payments", paymentRecordId), updateData);
+
+        // Show processing state
+        const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+        if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
+        if (paymentProcessing) paymentProcessing.style.display = 'block';
+
+        // Simulate verification process
+        setTimeout(() => {
+          // Hide processing
+          if (paymentProcessing) paymentProcessing.style.display = 'none';
+          
+          // Show success
+          if (paymentSuccess) paymentSuccess.style.display = 'block';
+          
+          // CRITICAL FIX: Update button to go directly to teacher selection
+          if (proceedPayment) {
+            proceedPayment.disabled = false;
+            proceedPayment.textContent = 'Continue to Enrollment';
+            
+            // Remove old event listener and add new one
+            const newButton = proceedPayment.cloneNode(true);
+            proceedPayment.parentNode.replaceChild(newButton, proceedPayment);
+            
+            // Add click handler to go to teacher selection
+            newButton.addEventListener('click', () => {
+              proceedToTeacherSelection();
+            });
+          }
+          
+          showMessage("✅ Payment verified successfully!", "success");
+        }, 2000);
+      } catch (error) {
+        console.error("Error verifying payment:", error);
+        
+        // Hide processing
+        if (paymentProcessing) paymentProcessing.style.display = 'none';
+        
+        // Show error
+        if (paymentError) paymentError.style.display = 'block';
+        if (paymentErrorMessage) {
+          paymentErrorMessage.textContent = error.message || "Payment verification failed";
+        }
+        
+        // Update payment record as failed
+        try {
+          await updateDoc(doc(db, "payments", paymentRecordId), {
+            status: 'verification_failed',
+            errorMessage: error.message,
+            updatedAt: serverTimestamp()
+          });
+        } catch (updateError) {
+          console.error("Failed to update payment record:", updateError);
+        }
+        
+        // Re-enable buttons
+        if (proceedPayment) {
+          proceedPayment.disabled = false;
+          proceedPayment.textContent = 'Try Again';
+          
+          // Remove old event listener and add new one
+          const newButton = proceedPayment.cloneNode(true);
+          proceedPayment.parentNode.replaceChild(newButton, proceedPayment);
+          
+          newButton.addEventListener('click', () => {
+            resetPaymentModal();
+            showPaymentModal();
+          });
+        }
+        
+        if (cancelPayment) {
+          cancelPayment.disabled = false;
+        }
+        
+        paymentInProgress = false;
+        
+        showMessage("❌ Payment verification failed", "error");
+      }
+    }
+
+    // Handle Razorpay payment failure - UPDATED WITHOUT REDIRECT
+    async function handleRazorpayFailure(errorMessage, paymentRecordId) {
+      try {
+        // Update payment record
+        const paymentRef = doc(db, "payments", paymentRecordId);
+        const paymentDoc = await getDoc(paymentRef);
+        const retryCount = paymentDoc.exists() ? (paymentDoc.data().retryCount || 0) : 0;
+        
+        await updateDoc(paymentRef, {
+          status: 'failed',
+          errorMessage: errorMessage,
+          retryCount: retryCount,
+          failedAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+
+        // Hide all sections
+        const paymentMethodsSection = document.getElementById('paymentMethodsSection');
+        if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
+        
+        // Show error
+        if (paymentError) paymentError.style.display = 'block';
+        if (paymentErrorMessage) {
+          paymentErrorMessage.textContent = errorMessage;
+        }
+        
+        // Re-enable buttons for retry
+        if (proceedPayment) {
+          proceedPayment.disabled = false;
+          proceedPayment.textContent = 'Try Again';
+          proceedPayment.onclick = () => {
+            resetPaymentModal();
+            handlePaymentProceed();
+          };
+        }
+        
+        if (cancelPayment) {
+          cancelPayment.disabled = false;
+        }
+        
+        paymentInProgress = false;
+        unlockNavigation();
+        
+        showMessage("❌ " + errorMessage, "error");
+        
+      } catch (error) {
+        console.error("Error updating payment record:", error);
+        
+        // Re-enable buttons even if update fails
+        if (proceedPayment) {
+          proceedPayment.disabled = false;
+          proceedPayment.textContent = 'Try Again';
+          proceedPayment.onclick = () => {
+            resetPaymentModal();
+            handlePaymentProceed();
+          };
+        }
+        
+        if (cancelPayment) {
+          cancelPayment.disabled = false;
+        }
+        
+        paymentInProgress = false;
+        unlockNavigation();
+      }
+    }
+
+    // Store payment record in Firestore - FIXED VERSION
     async function storePaymentRecord() {
       try {
+        // Check authentication
+        if (!currentUser) {
+          throw new Error("User not authenticated");
+        }
+        
+        console.log("Current user:", currentUser.uid);
+        console.log("Current user email:", currentUser.email);
+        
+        // If we're retrying a payment, update existing record
+        if (currentPaymentId) {
+          console.log("Updating existing payment record:", currentPaymentId);
+          
+          try {
+            const existingPaymentDoc = await getDoc(doc(db, "payments", currentPaymentId));
+            
+            if (!existingPaymentDoc.exists()) {
+              console.error("Payment record not found, creating new one");
+              currentPaymentId = null; // Reset to create new record
+            } else {
+              const existingData = existingPaymentDoc.data();
+              const currentRetryCount = existingData.retryCount || 0;
+              
+              const updateData = {
+                status: 'pending',
+                updatedAt: serverTimestamp(),
+                retryCount: currentRetryCount + 1
+              };
+              
+              await updateDoc(doc(db, "payments", currentPaymentId), updateData);
+              
+              console.log("✅ Payment record updated for retry:", currentPaymentId);
+              
+              return {
+                id: currentPaymentId,
+                transactionId: existingData.transactionId
+              };
+            }
+          } catch (updateError) {
+            console.error("Error updating payment record, creating new one:", updateError);
+            currentPaymentId = null; // Reset to create new record
+          }
+        }
+        
+        // Create new payment record
         const transactionId = generateTransactionId();
         
         const paymentData = {
           transactionId: transactionId,
           studentId: currentUser.uid,
           studentName: currentUser.displayName || "Student",
-          studentEmail: currentUser.email,
+          studentEmail: currentUser.email || "",
           courseId: currentCourseToEnroll.id,
           courseName: currentCourseToEnroll.name,
-          amount: currentCourseToEnroll.price,
-          paymentMethod: selectedPaymentMethod,
+          amount: Number(currentCourseToEnroll.price),
+          paymentMethod: "razorpay",
           status: 'pending',
-          upiId: selectedPaymentMethod === 'upi' ? "aayushjain1811@okhdfcbank" : null,
+          razorpayPaymentId: null,
+          razorpayOrderId: null,
+          razorpaySignature: null,
+          verified: false,
+          retryCount: 0,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
         
+        console.log("Creating new payment record with data:", JSON.stringify(paymentData, null, 2));
+        
+        // Verify all required fields are present
+        const requiredFields = ['transactionId', 'studentId', 'studentName', 'studentEmail', 'courseId', 'courseName', 'amount', 'paymentMethod', 'status'];
+        for (const field of requiredFields) {
+          if (!paymentData[field] && paymentData[field] !== 0) {
+            throw new Error(`Missing required field: ${field}`);
+          }
+        }
+        
         const docRef = await addDoc(collection(db, "payments"), paymentData);
         currentPaymentId = docRef.id;
         
-        // Update display
-        const displayPaymentId = document.getElementById('displayPaymentId');
-        if (displayPaymentId) {
-          displayPaymentId.textContent = transactionId;
-        }
+        console.log("✅ Payment record created successfully:", currentPaymentId);
         
-        console.log("Payment record created:", currentPaymentId);
+        return {
+          id: docRef.id,
+          transactionId: transactionId
+        };
       } catch (error) {
-        console.error("Error creating payment record:", error);
+        console.error("❌ Error creating payment record:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
         throw error;
-      }
-    }
-
-    // Generate QR Code
-    async function generateQRCode() {
-      if (!qrCodeCanvas) return;
-      
-      if (typeof QRCode === 'undefined') {
-        console.error("QRCode library not loaded");
-        setTimeout(generateQRCode, 500);
-        return;
-      }
-      
-      const upiId = "aayushjain1811@okhdfcbank";
-      const amount = currentCourseToEnroll.price;
-      const courseName = encodeURIComponent(currentCourseToEnroll.name);
-      const transactionId = generateTransactionId();
-      
-      const upiUrl = `upi://pay?pa=${upiId}&pn=Aayush%20Jain&am=${amount}&tn=Payment%20for%20${courseName}&tr=${transactionId}`;
-      
-      if (upiIdDisplay) {
-        upiIdDisplay.textContent = upiId;
-      }
-      
-      qrCodeCanvas.innerHTML = '';
-      
-      try {
-        new QRCode(qrCodeCanvas, {
-          text: upiUrl,
-          width: 200,
-          height: 200,
-          colorDark: "#000000",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        console.log("QR code generated");
-      } catch (error) {
-        console.error("QR code generation error:", error);
       }
     }
 
@@ -3868,110 +4131,12 @@
       return `SKILLUP_${timestamp}_${random}`.toUpperCase();
     }
 
-    // Simulate payment success
-    function simulatePaymentSuccess() {
-      // Show processing state
-      const paymentMethodsSection = document.getElementById('paymentMethodsSection');
-      if (paymentMethodsSection) paymentMethodsSection.style.display = 'none';
-      
-      if (paymentProcessing) paymentProcessing.style.display = 'block';
-      
-      // Simulate payment processing
-      setTimeout(() => {
-        handlePaymentSuccess({});
-      }, 3000);
-    }
-
-    // Handle successful payment
-    async function handlePaymentSuccess(response) {
-      console.log("Payment successful:", response);
-      
-      // Hide all sections
-      qrPaymentSection.classList.remove('active');
-      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
-      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
-      if (paymentProcessing) paymentProcessing.style.display = 'none';
-      
-      // Show success
-      if (paymentSuccess) paymentSuccess.style.display = 'block';
-      
-      // Update payment record
-      if (currentPaymentId) {
-        await updateDoc(doc(db, "payments", currentPaymentId), {
-          status: 'success',
-          updatedAt: serverTimestamp()
-        });
-      }
-      
-      // Enable proceed button
-      if (proceedPayment) {
-        proceedPayment.disabled = false;
-        proceedPayment.textContent = 'Continue to Enrollment';
-        proceedPayment.onclick = proceedToTeacherSelection;
-      }
-      
-      showMessage("✅ Payment successful!", "success");
-    }
-
-    // Handle payment failure
-    async function handlePaymentFailure(errorMessage) {
-      console.error("Payment failed:", errorMessage);
-      
-      // Hide all sections
-      qrPaymentSection.classList.remove('active');
-      const paymentStatusIndicator = document.getElementById('paymentStatusIndicator');
-      if (paymentStatusIndicator) paymentStatusIndicator.style.display = 'none';
-      
-      // Show error
-      if (paymentError) paymentError.style.display = 'block';
-      if (paymentErrorMessage) {
-        paymentErrorMessage.textContent = errorMessage;
-      }
-      
-      // Update payment record
-      if (currentPaymentId) {
-        await updateDoc(doc(db, "payments", currentPaymentId), {
-          status: 'failed',
-          errorMessage: errorMessage,
-          updatedAt: serverTimestamp()
-        });
-      }
-      
-      // Re-enable buttons
-      if (proceedPayment) {
-        proceedPayment.disabled = false;
-        proceedPayment.textContent = 'Try Again';
-        proceedPayment.onclick = () => {
-          resetPaymentModal();
-          showPaymentModal();
-        };
-      }
-      
-      if (cancelPayment) {
-        cancelPayment.disabled = false;
-      }
-      
-      paymentInProgress = false;
-      
-      showMessage("❌ " + errorMessage, "error");
-    }
-
-    // Update payment record in Firestore
-    async function updatePaymentRecord(status) {
-      try {
-        if (currentPaymentId) {
-          const paymentRef = doc(db, "payments", currentPaymentId);
-          
-          await updateDoc(paymentRef, {
-            status: status,
-            updatedAt: serverTimestamp()
-          });
-          
-          console.log("Payment record updated with status:", status);
-        }
-      } catch (error) {
-        console.error("Error updating payment record:", error);
-      }
+    // Proceed to teacher selection after successful payment
+    function proceedToTeacherSelection() {
+      paymentModal.classList.remove('active');
+      resetPaymentModal();
+      unlockNavigation();
+      showTeacherModal();
     }
 
     // Function to lock navigation during payment
@@ -4042,215 +4207,495 @@
       if (overlay) overlay.remove();
     }
 
-    // Proceed to teacher selection after successful payment
-    function proceedToTeacherSelection() {
-      paymentModal.classList.remove('active');
-      resetPaymentModal();
-      unlockNavigation();
-      showTeacherModal();
+    // Show teacher selection modal
+    function showTeacherModal() {
+      if (!teacherModal) return;
+      
+      teacherModal.classList.add('active');
+      resetTeacherSelection();
+      loadTeachersForSelection();
     }
 
-    // Show course details modal before enrollment
-    function enrollInCourse(courseId) {
-      console.log("Showing course details for:", courseId);
-      
-      if (!currentUser) {
-        showMessage("Please log in to enroll in courses", "error");
-        setTimeout(() => {
-          window.location.href = "signin.html";
-        }, 2000);
-        return;
-      }
-
-      const course = courses.find(c => c.id === courseId);
-      if (!course) {
-        showMessage("Course not found", "error");
-        return;
-      }
-
-      currentCourseToEnroll = {
-        id: courseId,
-        name: course.name || course.title || "Course",
-        price: course.price || 0
-      };
-      
-      showCourseDetailsModal(course);
+    // Reset teacher selection
+    function resetTeacherSelection() {
+      selectedTeachers = [];
+      if (selectedCount) selectedCount.textContent = "0";
+      if (confirmTeacherBtn) confirmTeacherBtn.disabled = true;
+      const teacherCards = document.querySelectorAll(".teacher-card");
+      teacherCards.forEach(card => card.classList.remove("selected"));
     }
 
-// Show detailed course information modal - ENHANCED WITH TABS
-async function showCourseDetailsModal(course) {
-  let courseDetailsModal = document.getElementById('courseDetailsModal');
-  
-  if (!courseDetailsModal) {
-    courseDetailsModal = document.createElement('div');
-    courseDetailsModal.id = 'courseDetailsModal';
-    courseDetailsModal.className = 'modal course-details-modal';
-    document.body.appendChild(courseDetailsModal);
-  }
+    // Load teachers for selection modal from Firebase
+    async function loadTeachersForSelection() {
+      if (!teacherList) return;
+      
+      teacherList.innerHTML = "";
 
-  // Load data
-  let feedbackData = await loadCourseFeedback(course.id);
-  const lecturesCount = await countCourseLectures(course.id);
-  const assignmentsCount = await countCourseAssignments(course.id);
-  
-  // Course features
-  const features = [
-    { icon: 'fa-infinity', text: 'Lifetime Access' },
-    { icon: 'fa-mobile-alt', text: 'Mobile & Desktop' },
-    { icon: 'fa-certificate', text: 'Certificate' },
-    { icon: 'fa-users', text: 'Expert Instructors' },
-    { icon: 'fa-headphones', text: '24/7 Support' },
-    { icon: 'fa-cloud-download-alt', text: 'Resources' }
-  ];
-
-  courseDetailsModal.innerHTML = `
-    <div class="modal-content">
-      <!-- Course Header -->
-      <div class="course-details-header">
-        ${course.imageUrl ? 
-          `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
-          `<div class="course-details-image-placeholder">
-            <i class="fas fa-graduation-cap"></i>
-          </div>`
+      try {
+        let teachers = [];
+        
+        if (!db) {
+          throw new Error("Firestore not available");
         }
-        <div class="course-details-overlay">
-          <div class="course-details-category">${course.category || 'General'}</div>
-          <h2 class="course-details-title">${course.name || course.title}</h2>
-          <div class="course-details-meta-row">
-            <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
-            <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
-            <span><i class="fas fa-star"></i> ${feedbackData.average} (${feedbackData.total})</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Course Body with Tabs -->
-      <div class="course-details-body">
-        <!-- Tabs Navigation -->
-        <div class="course-details-tabs">
-          <button class="course-tab active" data-tab="overview">
-            <i class="fas fa-info-circle"></i> Overview
-          </button>
-          <button class="course-tab" data-tab="content">
-            <i class="fas fa-list"></i> Content
-          </button>
-          <button class="course-tab" data-tab="reviews">
-            <i class="fas fa-star"></i> Reviews
-          </button>
-        </div>
+        // Fetch teachers from Firebase and ensure consistent data structure
+        const snapshot = await getDocs(collection(db, "teachers"));
+        teachers = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || data.displayName || "Teacher",
+            displayName: data.displayName || data.name || "Teacher",
+            specialty: data.specialty || data.expertise || "General Education"
+          };
+        });
 
-        <!-- Overview Tab -->
-        <div class="tab-content active" id="overview-tab">
-          <!-- Stats Grid -->
-          <div class="course-stats-grid">
-            <div class="course-stat">
-              <div class="course-stat-icon"><i class="fas fa-video"></i></div>
-              <div class="course-stat-value">${lecturesCount}</div>
-              <div class="course-stat-label">Lectures</div>
-            </div>
-            <div class="course-stat">
-              <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
-              <div class="course-stat-value">${assignmentsCount}</div>
-              <div class="course-stat-label">Assignments</div>
-            </div>
-            <div class="course-stat">
-              <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
-              <div class="course-stat-value">${course.duration || 'N/A'}</div>
-              <div class="course-stat-label">Duration</div>
-            </div>
-            <div class="course-stat">
-              <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
-              <div class="course-stat-value">Yes</div>
-              <div class="course-stat-label">Certificate</div>
-            </div>
-          </div>
+        teachers.forEach(teacher => {
+          const teacherCard = document.createElement("div");
+          teacherCard.className = "teacher-card";
+          teacherCard.dataset.teacherId = teacher.id;
+          
+          // Generate initials for avatar
+          const teacherName = teacher.name || teacher.displayName || "Teacher";
+          const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase();
+          
+          teacherCard.innerHTML = `
+            <div class="teacher-avatar">${initials}</div>
+            <div class="teacher-name">${teacherName}</div>
+            <div class="teacher-specialty">${teacher.specialty || "General Education"}</div>
+          `;
+          
+          teacherCard.addEventListener("click", () => {
+            if (teacherCard.classList.contains("selected")) {
+              // Deselect teacher
+              teacherCard.classList.remove("selected");
+              selectedTeachers = selectedTeachers.filter(t => t.id !== teacher.id);
+            } else if (selectedTeachers.length < 5) {
+              // Select teacher
+              teacherCard.classList.add("selected");
+              selectedTeachers.push(teacher);
+            } else {
+              showMessage("You can only select up to 5 teachers", "error");
+              return;
+            }
+            
+            // Update selected count and button state
+            if (selectedCount) selectedCount.textContent = selectedTeachers.length;
+            if (confirmTeacherBtn) confirmTeacherBtn.disabled = selectedTeachers.length !== 5;
+          });
+          
+          teacherList.appendChild(teacherCard);
+        });
 
-          <!-- Description -->
-          <div class="course-description-section">
-            <h3 class="course-section-title">
-              <i class="fas fa-align-left"></i> Description
-            </h3>
-            <p class="course-description-text">${course.description || 'No description available'}</p>
-          </div>
-
-          <!-- Features -->
-          <div class="course-features-grid">
-            ${features.map(feature => `
-              <div class="course-feature-item">
-                <div class="course-feature-icon">
-                  <i class="fas ${feature.icon}"></i>
-                </div>
-                <div class="course-feature-text">${feature.text}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- Content Tab -->
-        <div class="tab-content" id="content-tab">
-          <div class="course-description-section">
-            <h3 class="course-section-title">
-              <i class="fas fa-book"></i> Course Content
-            </h3>
-            <p class="course-description-text">
-              This course includes ${lecturesCount} lectures and ${assignmentsCount} assignments.
-              You'll get lifetime access to all course materials.
-            </p>
-          </div>
-        </div>
-
-        <!-- Reviews Tab -->
-        <div class="tab-content" id="reviews-tab">
-          ${generateFeedbackHTML(feedbackData)}
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="course-details-footer">
-        <div class="footer-price-info">
-          <div class="footer-price-label">Total Price</div>
-          <div class="footer-price">₹${course.price || 0}</div>
-        </div>
-        <div class="footer-actions">
-          <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
-            Cancel
-          </button>
-          <button class="modal-btn confirm" onclick="proceedToPayment()">
-            <i class="fas fa-shopping-cart"></i> Enroll Now
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  courseDetailsModal.classList.add('active');
-
-  // Tab switching functionality
-  const tabs = courseDetailsModal.querySelectorAll('.course-tab');
-  const tabContents = courseDetailsModal.querySelectorAll('.tab-content');
-  
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const tabName = tab.dataset.tab;
-      
-      // Remove active class from all tabs and contents
-      tabs.forEach(t => t.classList.remove('active'));
-      tabContents.forEach(tc => tc.classList.remove('active'));
-      
-      // Add active class to clicked tab and corresponding content
-      tab.classList.add('active');
-      const targetContent = courseDetailsModal.querySelector(`#${tabName}-tab`);
-      if (targetContent) targetContent.classList.add('active');
-    });
-  });
-
-  // Close on outside click
-  courseDetailsModal.addEventListener('click', (e) => {
-    if (e.target === courseDetailsModal) {
-      closeCourseDetailsModal();
+        if (teachers.length === 0) {
+          teacherList.innerHTML = '<p class="no-results">No teachers available at the moment.</p>';
+        }
+      } catch (error) {
+        console.error("Error loading teachers:", error);
+        teacherList.innerHTML = '<p class="no-results">Error loading teachers. Please try again.</p>';
+      }
     }
-  });
-}
+
+    // Handle teacher confirmation
+    async function handleTeacherConfirmation() {
+      if (selectedTeachers.length !== 5) {
+        showMessage("Please select exactly 5 teachers", "error");
+        return;
+      }
+
+      try {
+        // Show loading state
+        confirmTeacherBtn.disabled = true;
+        confirmTeacherBtn.textContent = "Enrolling...";
+
+        // Get teacher with the least students for balanced distribution
+        const assignedTeacher = await getTeacherWithLeastStudents(selectedTeachers);
+        
+        // Complete enrollment
+        const success = await completeEnrollment(assignedTeacher);
+        
+        if (success) {
+          // Close teacher modal
+          teacherModal.classList.remove('active');
+          
+          // Show success modal
+          showSuccessModal(currentCourseToEnroll.name, assignedTeacher);
+          
+          // Refresh courses to show enrolled status
+          await fetchCourses();
+          
+          resetTeacherSelection();
+        } else {
+          showMessage("Failed to enroll in course. Please try again.", "error");
+        }
+      } catch (error) {
+        console.error("Error in teacher confirmation:", error);
+        showMessage("An error occurred during enrollment. Please try again.", "error");
+      } finally {
+        // Reset button state
+        confirmTeacherBtn.disabled = false;
+        confirmTeacherBtn.textContent = "Enroll Now";
+      }
+    }
+
+    // Get teacher with the least students for balanced distribution - IMPROVED
+    async function getTeacherWithLeastStudents(teachers) {
+      try {
+        console.log("Finding teacher with least students from:", teachers.map(t => t.name));
+        
+        // Get all teacher data with their current student counts
+        const teacherDataPromises = teachers.map(async (teacher) => {
+          try {
+            // Count students for this teacher by querying user enrollments
+            const usersQuery = query(collection(db, "users"));
+            const usersSnap = await getDocs(usersQuery);
+            
+            let studentCount = 0;
+            usersSnap.forEach(userDoc => {
+              const userData = userDoc.data();
+              if (userData.enrollments) {
+                Object.values(userData.enrollments).forEach(enrollment => {
+                  if (enrollment.teacherId === teacher.id) {
+                    studentCount++;
+                  }
+                });
+              }
+            });
+            
+            console.log(`Teacher ${teacher.name} has ${studentCount} students`);
+            
+            return {
+              ...teacher,
+              studentCount: studentCount
+            };
+          } catch (error) {
+            console.error(`Error counting students for teacher ${teacher.name}:`, error);
+            return {
+              ...teacher,
+              studentCount: 0
+            };
+          }
+        });
+        
+        const teachersWithCounts = await Promise.all(teacherDataPromises);
+        
+        // Sort by student count (ascending) and return the one with the least students
+        teachersWithCounts.sort((a, b) => a.studentCount - b.studentCount);
+        
+        console.log("Teacher distribution:", teachersWithCounts.map(t => ({
+          name: t.name,
+          studentCount: t.studentCount
+        })));
+        
+        // If there's a tie, randomly select from the least burdened teachers
+        const minCount = teachersWithCounts[0].studentCount;
+        const leastBurdenedTeachers = teachersWithCounts.filter(t => t.studentCount === minCount);
+        
+        // Randomly select from least burdened teachers
+        const randomIndex = Math.floor(Math.random() * leastBurdenedTeachers.length);
+        const selectedTeacher = leastBurdenedTeachers[randomIndex];
+        
+        console.log("Selected teacher:", selectedTeacher.name, "with", selectedTeacher.studentCount, "students");
+        
+        return selectedTeacher;
+      } catch (error) {
+        console.error("Error finding teacher with least students:", error);
+        // Fallback: return random teacher
+        const randomIndex = Math.floor(Math.random() * teachers.length);
+        return teachers[randomIndex];
+      }
+    }
+
+    // Show success modal with teacher info
+    function showSuccessModal(courseName, teacher) {
+      if (!successModal || !successMessage || !successTeacherName || !successTeacherSpecialty || !successTeacherAvatar) {
+        console.error("Success modal elements not found");
+        return;
+      }
+      
+      // Store the enrolled course ID for navigation
+      enrolledCourseId = currentCourseToEnroll.id;
+      
+      // Update success message
+      successMessage.textContent = `You have been successfully enrolled in "${courseName}"!`;
+      
+      // Update teacher info
+      const teacherName = teacher.name || teacher.displayName || "Teacher";
+      successTeacherName.textContent = teacherName;
+      successTeacherSpecialty.textContent = teacher.specialty || "General Education";
+      
+      // Set teacher avatar
+      const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase() || "T";
+      successTeacherAvatar.textContent = initials;
+      
+      // Show the modal
+      successModal.classList.add('active');
+    }
+
+    // Complete enrollment with assigned teacher - UPDATED with payment verification
+    async function completeEnrollment(teacher) {
+      try {
+        // First verify payment was successful
+        const paymentVerified = await verifyPaymentForCourse(currentUser.uid, currentCourseToEnroll.id);
+        
+        if (!paymentVerified) {
+          showMessage("Payment verification failed. Please complete payment first.", "error");
+          return false;
+        }
+        
+        console.log("Payment verified, proceeding with enrollment...");
+        console.log("Updating enrollment with teacher info...");
+        
+        const userRef = doc(db, "users", currentUser.uid);
+        
+        // Update enrollment with teacher info
+        await updateDoc(userRef, {
+          [`enrollments.${currentCourseToEnroll.id}.teacherId`]: teacher.id,
+          [`enrollments.${currentCourseToEnroll.id}.teacherName`]: teacher.name,
+          [`enrollments.${currentCourseToEnroll.id}.teacherAssignedAt`]: serverTimestamp(),
+          [`enrollments.${currentCourseToEnroll.id}.enrolledAt`]: serverTimestamp(),
+          [`enrollments.${currentCourseToEnroll.id}.progress`]: 0,
+          [`enrollments.${currentCourseToEnroll.id}.completedLessons`]: []
+        });
+
+        // Get course data for notifications
+        const courseRef = doc(db, "courses", currentCourseToEnroll.id);
+        const courseSnap = await getDoc(courseRef);
+        const courseData = courseSnap.exists() ? courseSnap.data() : {};
+        const courseName = courseData.name || courseData.title || "Unknown Course";
+
+        // Create notification for student
+        await setDoc(doc(collection(db, "studentNotifications")), {
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          title: "Teacher Assigned!",
+          message: `${teacher.name} has been assigned as your instructor for "${courseName}"`,
+          timestamp: serverTimestamp(),
+          type: "enrollment",
+          courseId: currentCourseToEnroll.id,
+          courseName: courseName,
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          read: false
+        });
+
+        // Create notification for teacher
+        await setDoc(doc(collection(db, "teacherNotifications")), {
+          teacherId: teacher.id,
+          teacherName: teacher.name,
+          title: "New Student Enrolled",
+          message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
+          timestamp: serverTimestamp(),
+          type: "enrollment",
+          courseId: currentCourseToEnroll.id,
+          courseName: courseName,
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || "Student",
+          studentEmail: currentUser.email,
+          read: false
+        });
+
+        console.log("Teacher assignment and notifications created successfully");
+        return true;
+
+      } catch (error) {
+        console.error("Error in enrollCourse:", error);
+        return false;
+      }
+    }
+
+    // Verify payment was successful for this course
+    async function verifyPaymentForCourse(userId, courseId) {
+      try {
+        const paymentsQuery = query(
+          collection(db, "payments"),
+          where("studentId", "==", userId),
+          where("courseId", "==", courseId),
+          where("status", "==", "success"),
+          limit(1)
+        );
+        
+        const paymentsSnap = await getDocs(paymentsQuery);
+        
+        if (paymentsSnap.empty) {
+          console.error("No successful payment found for this course");
+          return false;
+        }
+        
+        console.log("Payment verified successfully");
+        return true;
+      } catch (error) {
+        console.error("Error verifying payment:", error);
+        return false;
+      }
+    }
+
+    // Show detailed course information modal - UPDATED: Single view with scrolling
+    async function showCourseDetailsModal(course) {
+      let courseDetailsModal = document.getElementById('courseDetailsModal');
+      
+      if (!courseDetailsModal) {
+        courseDetailsModal = document.createElement('div');
+        courseDetailsModal.id = 'courseDetailsModal';
+        courseDetailsModal.className = 'modal course-details-modal';
+        document.body.appendChild(courseDetailsModal);
+      }
+
+      // Load data
+      let feedbackData = await loadCourseFeedback(course.id);
+      const lecturesCount = await countCourseLectures(course.id);
+      const assignmentsCount = await countCourseAssignments(course.id);
+      
+      // Course features
+      const features = [
+        { icon: 'fa-infinity', text: 'Lifetime Access' },
+        { icon: 'fa-mobile-alt', text: 'Mobile & Desktop' },
+        { icon: 'fa-certificate', text: 'Certificate' },
+        { icon: 'fa-users', text: 'Expert Instructors' },
+        { icon: 'fa-headphones', text: '24/7 Support' },
+        { icon: 'fa-cloud-download-alt', text: 'Resources' }
+      ];
+
+      courseDetailsModal.innerHTML = `
+        <div class="modal-content">
+          <!-- Course Header -->
+          <div class="course-details-header">
+            ${course.imageUrl ? 
+              `<img src="${course.imageUrl}" alt="${course.name}" class="course-details-image">` :
+              `<div class="course-details-image-placeholder">
+                <i class="fas fa-graduation-cap"></i>
+              </div>`
+            }
+            <div class="course-details-overlay">
+              <div class="course-details-category">${course.category || 'General'}</div>
+              <h2 class="course-details-title">${course.name || course.title}</h2>
+              <div class="course-details-meta-row">
+                <span><i class="fas fa-signal"></i> ${course.level || 'All Levels'}</span>
+                <span><i class="fas fa-clock"></i> ${course.duration || 'Self-paced'}</span>
+                <span><i class="fas fa-star"></i> ${feedbackData.average} (${feedbackData.total})</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Course Body with Single View -->
+          <div class="course-details-body">
+            <!-- Quick Navigation Buttons -->
+            <div class="quick-nav-buttons">
+              <button class="quick-nav-btn" data-section="overview">
+                <i class="fas fa-info-circle"></i> Overview
+              </button>
+              <button class="quick-nav-btn" data-section="reviews">
+                <i class="fas fa-star"></i> Reviews
+              </button>
+            </div>
+            
+            <!-- Section Anchors -->
+            <div id="overview-section" class="section-anchor"></div>
+            
+            <!-- Stats Grid -->
+            <div class="course-stats-grid">
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-video"></i></div>
+                <div class="course-stat-value">${lecturesCount}</div>
+                <div class="course-stat-label">Lectures</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-tasks"></i></div>
+                <div class="course-stat-value">${assignmentsCount}</div>
+                <div class="course-stat-label">Assignments</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="course-stat-value">${course.duration || 'N/A'}</div>
+                <div class="course-stat-label">Duration</div>
+              </div>
+              <div class="course-stat">
+                <div class="course-stat-icon"><i class="fas fa-certificate"></i></div>
+                <div class="course-stat-value">Yes</div>
+                <div class="course-stat-label">Certificate</div>
+              </div>
+            </div>
+
+            <!-- Price Section -->
+            <div class="course-price-section">
+              <div class="course-price-label">Total Price</div>
+              <div class="course-price">₹${course.price || 0}</div>
+              <div class="course-price-note">One-time payment • Lifetime access</div>
+            </div>
+
+            <!-- Description -->
+            <div class="course-description-section">
+              <h3 class="course-section-title">
+                <i class="fas fa-align-left"></i> Description
+              </h3>
+              <p class="course-description-text">${course.description || 'No description available'}</p>
+            </div>
+
+            <!-- Features -->
+            <div class="course-features-grid">
+              ${features.map(feature => `
+                <div class="course-feature-item">
+                  <div class="course-feature-icon">
+                    <i class="fas ${feature.icon}"></i>
+                  </div>
+                  <div class="course-feature-text">${feature.text}</div>
+                </div>
+              `).join('')}
+            </div>
+            
+            <!-- Reviews Section Anchor -->
+            <div id="reviews-section" class="section-anchor"></div>
+            
+            <!-- Reviews Section -->
+            ${generateFeedbackHTML(feedbackData)}
+          </div>
+
+          <!-- Footer -->
+          <div class="course-details-footer">
+            <div class="footer-price-info">
+              <div class="footer-price-label">Total Price</div>
+              <div class="footer-price">₹${course.price || 0}</div>
+            </div>
+            <div class="footer-actions">
+              <button class="modal-btn cancel" onclick="closeCourseDetailsModal()">
+                Cancel
+              </button>
+              <button class="modal-btn confirm" onclick="proceedToPayment()">
+                <i class="fas fa-shopping-cart"></i> Enroll Now
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      courseDetailsModal.classList.add('active');
+
+      // Quick navigation functionality
+      const quickNavButtons = courseDetailsModal.querySelectorAll('.quick-nav-btn');
+      const courseDetailsBody = courseDetailsModal.querySelector('.course-details-body');
+      
+      quickNavButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const section = button.dataset.section;
+          const targetElement = courseDetailsModal.querySelector(`#${section}-section`);
+          
+          if (targetElement) {
+            courseDetailsBody.scrollTo({
+              top: targetElement.offsetTop - 20,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+
+      // Close on outside click
+      courseDetailsModal.addEventListener('click', (e) => {
+        if (e.target === courseDetailsModal) {
+          closeCourseDetailsModal();
+        }
+      });
+    }
 
     // Load course feedback from Firestore
     async function loadCourseFeedback(courseId) {
@@ -4357,13 +4802,15 @@ async function showCourseDetailsModal(course) {
                       <div class="feedback-student-avatar">
                         ${(feedback.studentName || 'S').charAt(0).toUpperCase()}
                       </div>
-                      <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
+                      <div class="feedback-student-details">
+                        <div class="feedback-student-name">${feedback.studentName || 'Student'}</div>
+                        <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
+                      </div>
                     </div>
                     <div class="feedback-rating">
                       <div class="feedback-stars">${generateStarRating(feedback.rating)}</div>
                     </div>
                   </div>
-                  <div class="feedback-text">${feedback.feedback || 'No comment provided'}</div>
                 </div>
               `).join('')}
             </div>
@@ -4432,350 +4879,6 @@ async function showCourseDetailsModal(course) {
       closeCourseDetailsModal();
       showPaymentModal();
     };
-
-    // Show teacher selection modal
-    function showTeacherModal() {
-      if (!teacherModal) return;
-      
-      teacherModal.classList.add('active');
-      resetTeacherSelection();
-      loadTeachersForSelection();
-    }
-
-    // Reset teacher selection
-    function resetTeacherSelection() {
-      selectedTeachers = [];
-      if (selectedCount) selectedCount.textContent = "0";
-      if (confirmTeacherBtn) confirmTeacherBtn.disabled = true;
-      const teacherCards = document.querySelectorAll(".teacher-card");
-      teacherCards.forEach(card => card.classList.remove("selected"));
-    }
-
-    // Load teachers for selection modal from Firebase
-    async function loadTeachersForSelection() {
-      if (!teacherList) return;
-      
-      teacherList.innerHTML = "";
-
-      try {
-        let teachers = [];
-        
-        if (!db) {
-          throw new Error("Firestore not available");
-        }
-
-        // Fetch teachers from Firebase and ensure consistent data structure
-        const snapshot = await getDocs(collection(db, "teachers"));
-        teachers = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            name: data.name || data.displayName || "Teacher",
-            displayName: data.displayName || data.name || "Teacher",
-            specialty: data.specialty || data.expertise || "General Education"
-          };
-        });
-
-        teachers.forEach(teacher => {
-          const teacherCard = document.createElement("div");
-          teacherCard.className = "teacher-card";
-          teacherCard.dataset.teacherId = teacher.id;
-          
-          // Generate initials for avatar
-          const teacherName = teacher.name || teacher.displayName || "Teacher";
-          const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase();
-          
-          teacherCard.innerHTML = `
-            <div class="teacher-avatar">${initials}</div>
-            <div class="teacher-name">${teacherName}</div>
-            <div class="teacher-specialty">${teacher.specialty || "General Education"}</div>
-          `;
-          
-          teacherCard.addEventListener("click", () => {
-            if (teacherCard.classList.contains("selected")) {
-              // Deselect teacher
-              teacherCard.classList.remove("selected");
-              selectedTeachers = selectedTeachers.filter(t => t.id !== teacher.id);
-            } else if (selectedTeachers.length < 5) {
-              // Select teacher
-              teacherCard.classList.add("selected");
-              selectedTeachers.push(teacher);
-            } else {
-              showMessage("You can only select up to 5 teachers", "error");
-              return;
-            }
-            
-            // Update selected count and button state
-            if (selectedCount) selectedCount.textContent = selectedTeachers.length;
-            if (confirmTeacherBtn) confirmTeacherBtn.disabled = selectedTeachers.length !== 5;
-          });
-          
-          teacherList.appendChild(teacherCard);
-        });
-
-        if (teachers.length === 0) {
-          teacherList.innerHTML = '<p class="no-results">No teachers available at the moment.</p>';
-        }
-      } catch (error) {
-        console.error("Error loading teachers:", error);
-        teacherList.innerHTML = '<p class="no-results">Error loading teachers. Please try again.</p>';
-      }
-    }
-
-    // Get teacher with the least students for balanced distribution
-    async function getTeacherWithLeastStudents(teachers) {
-      try {
-        console.log("Finding teacher with least students from:", teachers.map(t => t.name));
-        
-        // Get all teacher data with their current student counts
-        const teacherDataPromises = teachers.map(async (teacher) => {
-          try {
-            // Count students for this teacher by querying user enrollments
-            const usersQuery = query(collection(db, "users"));
-            const usersSnap = await getDocs(usersQuery);
-            
-            let studentCount = 0;
-            usersSnap.forEach(userDoc => {
-              const userData = userDoc.data();
-              if (userData.enrollments) {
-                Object.values(userData.enrollments).forEach(enrollment => {
-                  if (enrollment.teacherId === teacher.id) {
-                    studentCount++;
-                  }
-                });
-              }
-            });
-            
-            console.log(`Teacher ${teacher.name} has ${studentCount} students`);
-            
-            return {
-              ...teacher,
-              studentCount: studentCount
-            };
-          } catch (error) {
-            console.error(`Error counting students for teacher ${teacher.name}:`, error);
-            return {
-              ...teacher,
-              studentCount: 0
-            };
-          }
-        });
-        
-        const teachersWithCounts = await Promise.all(teacherDataPromises);
-        
-        // Sort by student count (ascending) and return the one with the least students
-        teachersWithCounts.sort((a, b) => a.studentCount - b.studentCount);
-        
-        console.log("Teacher distribution:", teachersWithCounts.map(t => ({
-          name: t.name,
-          studentCount: t.studentCount
-        })));
-        
-        // If there's a tie, randomly select from the least burdened teachers
-        const minCount = teachersWithCounts[0].studentCount;
-        const leastBurdenedTeachers = teachersWithCounts.filter(t => t.studentCount === minCount);
-        
-        // Randomly select from least burdened teachers
-        const randomIndex = Math.floor(Math.random() * leastBurdenedTeachers.length);
-        const selectedTeacher = leastBurdenedTeachers[randomIndex];
-        
-        console.log("Selected teacher:", selectedTeacher.name, "with", selectedTeacher.studentCount, "students");
-        
-        return selectedTeacher;
-      } catch (error) {
-        console.error("Error finding teacher with least students:", error);
-        // Fallback: return random teacher
-        const randomIndex = Math.floor(Math.random() * teachers.length);
-        return teachers[randomIndex];
-      }
-    }
-
-    // Handle teacher confirmation
-    async function handleTeacherConfirmation() {
-      if (selectedTeachers.length !== 5) {
-        showMessage("Please select exactly 5 teachers", "error");
-        return;
-      }
-
-      try {
-        // Show loading state
-        confirmTeacherBtn.disabled = true;
-        confirmTeacherBtn.textContent = "Enrolling...";
-
-        // Get teacher with the least students for balanced distribution
-        const assignedTeacher = await getTeacherWithLeastStudents(selectedTeachers);
-        
-        const success = await completeEnrollment(assignedTeacher);
-        
-        if (success) {
-          // Show success modal
-          showSuccessModal(currentCourseToEnroll.name, assignedTeacher);
-          
-          if (teacherModal) teacherModal.classList.remove('active');
-          
-          // Refresh courses to show enrolled status
-          if (currentUser) {
-            await fetchCourses();
-          }
-          
-          resetTeacherSelection();
-        } else {
-          showMessage("Failed to enroll in course. Please try again.", "error");
-        }
-      } catch (error) {
-        console.error("Error in teacher confirmation:", error);
-        showMessage("An error occurred during enrollment. Please try again.", "error");
-      } finally {
-        // Reset button state
-        confirmTeacherBtn.disabled = false;
-        confirmTeacherBtn.textContent = "Enroll Now";
-      }
-    }
-
-    // Show success modal with teacher info
-    function showSuccessModal(courseName, teacher) {
-      if (!successModal || !successMessage || !successTeacherName || !successTeacherSpecialty || !successTeacherAvatar) {
-        console.error("Success modal elements not found");
-        return;
-      }
-      
-      // Store the enrolled course ID for navigation
-      enrolledCourseId = currentCourseToEnroll.id;
-      
-      // Update success message
-      successMessage.textContent = `You have been successfully enrolled in "${courseName}"!`;
-      
-      // Update teacher info
-      const teacherName = teacher.name || teacher.displayName || "Teacher";
-      successTeacherName.textContent = teacherName;
-      successTeacherSpecialty.textContent = teacher.specialty || "General Education";
-      
-      // Set teacher avatar
-      const initials = teacherName.split(' ').map(n => n[0]).join('').toUpperCase() || "T";
-      successTeacherAvatar.textContent = initials;
-      
-      // Show the modal
-      successModal.classList.add('active');
-    }
-
-    // Complete enrollment with assigned teacher - UPDATED with proper notification system
-    async function completeEnrollment(teacher) {
-      try {
-        console.log("Completing enrollment with teacher:", teacher);
-        
-        if (!db) {
-          throw new Error("Firestore not available");
-        }
-
-        const userRef = doc(db, "users", currentUser.uid);
-        const courseRef = doc(db, "courses", currentCourseToEnroll.id);
-
-        // Check if user exists, create if not
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          console.log("User document doesn't exist, creating...");
-          await setDoc(userRef, {
-            name: currentUser.displayName || "Student",
-            email: currentUser.email,
-            createdAt: new Date(),
-            enrollments: {},
-            profileComplete: false,
-            role: "student"
-          });
-        }
-
-        // Check if already enrolled
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        if (userData.enrollments && userData.enrollments[currentCourseToEnroll.id]) {
-          console.log("User already enrolled in this course");
-          return true;
-        }
-
-        // Get course data
-        const courseSnap = await getDoc(courseRef);
-        if (!courseSnap.exists()) {
-          throw new Error("Course not found");
-        }
-
-        const courseData = courseSnap.data();
-        const courseName = courseData.name || courseData.title || "Unknown Course";
-
-        console.log("Course data:", courseData);
-
-        // Create enrollment data - MATCHING YOUR EXACT FIRESTORE STRUCTURE
-        const enrollmentData = {
-          progress: 0,
-          completedLessons: [],
-          courseName: courseName,
-          enrolledAt: new Date(),
-          hasPassedTest: false,
-          lastAccessed: new Date(),
-          lectureProgress: 0,
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          testProgress: 0,
-          assignmentProgress: 0
-        };
-
-        console.log("Enrollment data to save:", enrollmentData);
-
-        // Update user document with enrollment
-        await updateDoc(userRef, {
-          [`enrollments.${currentCourseToEnroll.id}`]: enrollmentData
-        });
-
-        console.log("Enrollment saved to user document");
-
-        // Import serverTimestamp
-        const { serverTimestamp } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
-
-        // Create notification in studentNotifications collection
-        const studentNotificationRef = doc(collection(db, "studentNotifications"));
-        await setDoc(studentNotificationRef, {
-          studentId: currentUser.uid,
-          studentName: currentUser.displayName || "Student",
-          studentEmail: currentUser.email,
-          title: "Course Enrolled Successfully!",
-          message: `You have been enrolled in "${courseName}" with ${teacher.name}`,
-          timestamp: serverTimestamp(),
-          type: "enrollment",
-          courseId: currentCourseToEnroll.id,
-          courseName: courseName,
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          read: false
-        });
-
-        // Create notification for teacher in teacherNotifications collection
-        const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
-        await setDoc(teacherNotificationRef, {
-          teacherId: teacher.id,
-          teacherName: teacher.name,
-          title: "New Student Enrolled",
-          message: `${currentUser.displayName || "A student"} has enrolled in "${courseName}" under your guidance`,
-          timestamp: serverTimestamp(),
-          type: "enrollment",
-          courseId: currentCourseToEnroll.id,
-          courseName: courseName,
-          studentId: currentUser.uid,
-          studentName: currentUser.displayName || "Student",
-          studentEmail: currentUser.email,
-          read: false
-        });
-
-        console.log("Enrollment and notifications created successfully");
-        return true;
-
-      } catch (error) {
-        console.error("Error in enrollCourse:", error);
-        console.error("Error details:", {
-          message: error.message,
-          code: error.code,
-          stack: error.stack
-        });
-        return false;
-      }
-    }
 
     // Handle search
     function handleSearch(e) {
