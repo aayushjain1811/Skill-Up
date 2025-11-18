@@ -2057,9 +2057,15 @@ function updateTeacherAvatar() {
     }
   }
 
-  // Create a new conversation for a student
-  async function createConversation(student) {
+// Create a new conversation for a student
+async function createConversation(student) {
     try {
+        // Check if conversation already exists
+        const existingConv = conversations.find(c => c.studentId === student.id);
+        if (existingConv) {
+            return existingConv;
+        }
+        
         // Create conversation
         const conversationData = {
             teacherId: currentTeacher.id,
@@ -2072,7 +2078,7 @@ function updateTeacherAvatar() {
         // Add conversation to Firestore
         const conversationRef = await addDoc(collection(db, "conversations"), conversationData);
         
-        conversations.push({
+        const newConversation = {
             id: conversationRef.id,
             studentId: student.id,
             studentName: `${student.firstName} ${student.lastName}`,
@@ -2080,17 +2086,66 @@ function updateTeacherAvatar() {
             studentProfilePictureURL: student.profilePictureURL,
             courseName: student.courseName,
             lastMessage: "No messages yet",
-            lastMessageTime: new Date(), // Ensure this is a Date object
+            lastMessageTime: new Date(),
             unreadCount: 0
-        });
+        };
+        
+        conversations.push(newConversation);
+        
+        // Sort conversations by time
+        conversations.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+        
+        // Update filtered conversations
+        filteredConversations = [...conversations];
+        
+        // Re-render conversations list
+        renderConversations();
         
         console.log(`Created conversation for student: ${student.firstName} ${student.lastName}`);
         
+        return newConversation;
+        
     } catch (error) {
         console.error("Error creating conversation:", error);
+        return null;
     }
-  }
+}
 
+// Start a new chat with a student
+async function startNewChat(student) {
+    try {
+        // Find existing conversation
+        let conversation = conversations.find(c => c.studentId === student.id);
+        
+        if (!conversation) {
+            // Show loading state
+            contactsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);"><i class="fas fa-spinner fa-spin"></i><p>Starting conversation...</p></div>';
+            
+            // Create new conversation
+            conversation = await createConversation(student);
+            
+            if (!conversation) {
+                alert("Failed to create conversation. Please try again.");
+                loadContacts(); // Reload contacts
+                return;
+            }
+        }
+        
+        // Close the new chat modal
+        newChatModal.classList.remove('active');
+        
+        // Small delay to allow modal to close smoothly
+        setTimeout(() => {
+            // Select the conversation
+            selectConversation(conversation);
+        }, 100);
+        
+    } catch (error) {
+        console.error("Error starting new chat:", error);
+        alert("Failed to start chat. Please try again.");
+        loadContacts(); // Reload contacts
+    }
+}
   // Fallback to mock conversations if Firebase query fails
   async function loadMockConversations() {
     const mockConversations = [
@@ -2562,8 +2617,8 @@ async function clearAllNotifications() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  // Load contacts for new chat
-  function loadContacts(searchTerm = '') {
+// Load contacts for new chat
+function loadContacts(searchTerm = '') {
     contactsList.innerHTML = '';
     
     const filteredStudents = allStudents.filter(student => 
@@ -2585,7 +2640,6 @@ async function clearAllNotifications() {
     filteredStudents.forEach(student => {
       const contactItem = document.createElement('div');
       contactItem.className = 'contact-item';
-      contactItem.addEventListener('click', () => startNewChat(student));
       
       const initials = getInitials(student.firstName, student.lastName);
       
@@ -2602,32 +2656,15 @@ async function clearAllNotifications() {
         </div>
       `;
       
+      // Add click handler - IMPORTANT: Use arrow function to preserve context
+      contactItem.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await startNewChat(student);
+      });
+      
       contactsList.appendChild(contactItem);
     });
-  }
-
-  // Start a new chat with a student
-  function startNewChat(student) {
-    // Find existing conversation or create a new one
-    const existingConversation = conversations.find(c => c.studentId === student.id);
-    
-    if (existingConversation) {
-      // Select the existing conversation
-      selectConversation(existingConversation);
-    } else {
-      // Create a new conversation
-      createConversation(student).then(() => {
-        // After creating, select the new conversation
-        const newConversation = conversations.find(c => c.studentId === student.id);
-        if (newConversation) {
-          selectConversation(newConversation);
-        }
-      });
-    }
-    
-    // Close the new chat modal
-    newChatModal.classList.remove('active');
-  }
+}
 
   // Clear chat history
   function clearChat() {
@@ -2773,14 +2810,25 @@ function setupSampleNotifications() {
   muteChatBtn.addEventListener('click', muteChat);
 
   // Plus button functionality
-  newChatBtn.addEventListener('click', () => {
+// Plus button functionality
+newChatBtn.addEventListener('click', () => {
     newChatModal.classList.add('active');
+    searchContacts.value = ''; // Clear search
     loadContacts();
-  });
+});
 
-  closeNewChatModal.addEventListener('click', () => {
+closeNewChatModal.addEventListener('click', () => {
     newChatModal.classList.remove('active');
-  });
+    searchContacts.value = ''; // Clear search
+});
+
+// Also close when clicking outside
+newChatModal.addEventListener('click', (e) => {
+    if (e.target === newChatModal) {
+        newChatModal.classList.remove('active');
+        searchContacts.value = ''; // Clear search
+    }
+});
 
   searchContacts.addEventListener('input', (e) => {
     loadContacts(e.target.value);

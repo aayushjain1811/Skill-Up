@@ -9,8 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   
   <style>
     /* Reset and Base Styles */
@@ -498,60 +496,6 @@
 
 .profile-avatar-large {
   position: relative;
-}
-
-/* Image Crop Styles */
-/* Ensure crop modal is visible */
-#imageCropModal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 3000;
-  backdrop-filter: blur(5px);
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-#imageCropModal.show {
-  display: flex !important;
-}
-
-#imageCropModal .modal-content {
-  position: relative;
-  top: auto;
-  transform: none;
-  margin: auto;
-}
-#imageCropContainer {
-  position: relative;
-  width: 100%;
-  margin: 0 auto;
-}
-
-#imageToCrop {
-  max-height: 400px;
-  width: auto;
-  margin: 0 auto;
-  display: block;
-}
-
-.cropper-view-box {
-  outline: 2px solid var(--primary-red);
-  outline-offset: -1px;
-}
-
-.cropper-face {
-  background-color: transparent !important;
-}
-
-.cropper-container {
-  border-radius: 10px;
 }
 
 /* Toast notification styles */
@@ -1509,7 +1453,7 @@
         </div>
         
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-          <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelCrop()">
+          <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('editProfileModal')">
             Cancel
           </button>
           <button type="submit" class="btn btn-primary" style="flex: 1;">
@@ -1586,45 +1530,6 @@
       </div>
     </div>
   </div>
-<!-- Image Crop Modal -->
-<div class="modal" id="imageCropModal">  <!-- REMOVED: style="display: none;" -->
-  <div class="modal-content" style="max-width: 700px;">
-    <div class="modal-header">
-      <h2 class="modal-title">Crop Profile Picture</h2>
-      <button class="modal-close" onclick="cancelCrop()">&times;</button>
-    </div>
-    
-    <div style="margin-bottom: 1.5rem;">
-      <div id="imageCropContainer" style="max-height: 400px; overflow: hidden; background: #000; border-radius: 10px;">
-        <img id="imageToCrop" style="max-width: 100%; display: block;">
-      </div>
-    </div>
-    
-    <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
-      <button type="button" class="btn btn-secondary" onclick="rotateCropImage(-90)" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-undo"></i> Rotate Left
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="rotateCropImage(90)" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-redo"></i> Rotate Right
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="flipCropImage('horizontal')" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-arrows-alt-h"></i> Flip H
-      </button>
-      <button type="button" class="btn btn-secondary" onclick="flipCropImage('vertical')" style="padding: 0.7rem 1rem;">
-        <i class="fas fa-arrows-alt-v"></i> Flip V
-      </button>
-    </div>
-    
-    <div style="display: flex; gap: 1rem;">
-      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelCrop()">
-        Cancel
-      </button>
-      <button type="button" class="btn btn-primary" style="flex: 1;" id="applyCropBtn" onclick="applyCrop()">
-        <i class="fas fa-check"></i> Apply & Upload
-      </button>
-    </div>
-  </div>
-</div>
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -1636,7 +1541,7 @@ import {
   EmailAuthProvider,
   deleteUser,
   signOut,
-  updateProfile  // Add this
+  updateProfile
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import { 
   getFirestore, 
@@ -1650,7 +1555,7 @@ import {
   deleteDoc,
   orderBy,
   serverTimestamp,
-  onSnapshot  // Add this
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
     import { 
   getStorage, 
@@ -2116,13 +2021,6 @@ window.closeModal = (modalId) => {
     modal.classList.remove('active');
   }
   
-  // Destroy cropper when closing crop modal
-  if (modalId === 'imageCropModal' && cropper) {
-    cropper.destroy();
-    cropper = null;
-    selectedImageFile = null;
-  }
-  
   // Clear any alerts when closing the modal
   if (modalId === 'editProfileModal') {
     personalInfoAlert.innerHTML = '';
@@ -2146,31 +2044,6 @@ window.closeModal = (modalId) => {
     if (matchIndicator) {
       matchIndicator.style.display = 'none';
     }
-  }
-};
-// Cancel crop and return to edit modal
-window.cancelCrop = function() {
-  console.log('Cancel crop clicked');
-  
-  if (cropper) {
-    cropper.destroy();
-    cropper = null;
-  }
-  
-  selectedImageFile = null;
-  
-  // Close crop modal first
-  const cropModal = document.getElementById('imageCropModal');
-  if (cropModal) {
-    cropModal.style.display = 'none';
-    cropModal.classList.remove('active');
-  }
-  
-  // Open edit modal
-  const editModal = document.getElementById('editProfileModal');
-  if (editModal) {
-    editModal.style.display = 'flex';
-    editModal.classList.add('active');
   }
 };
 
@@ -2524,142 +2397,52 @@ function showMessage(message, type = "success") {
     document.addEventListener('DOMContentLoaded', function() {
       createParticles();
     });
-// Global variables for cropper
-let cropper = null;
-let selectedImageFile = null;
 
-// Handle profile picture upload
+// Handle profile picture upload without cropping
 document.addEventListener('DOMContentLoaded', function() {
   const profilePicInput = document.getElementById('profilePicInput');
   
   if (profilePicInput) {
     console.log('Profile pic input found');
     
-// REPLACE the profilePicInput event listener (around line 900) with:
-profilePicInput.addEventListener('change', function(e) {
-  console.log('File selected');
-  const file = e.target.files[0];
-  
-  if (!file) {
-    console.log('No file selected');
-    return;
-  }
-  
-  console.log('File:', file.name, file.type, file.size);
-  
-  // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    alert("Image size should be less than 5MB");
-    this.value = '';
-    return;
-  }
-  
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    alert("Please select an image file");
-    this.value = '';
-    return;
-  }
-  
-  selectedImageFile = file;
-  
-  // Read and display image for cropping
-  const reader = new FileReader();
-  
-  reader.onload = function(event) {
-    console.log('Image loaded, opening crop modal');
-    
-    const imageToCrop = document.getElementById('imageToCrop');
-    if (!imageToCrop) {
-      console.error('imageToCrop element not found');
-      return;
-    }
-    
-    imageToCrop.src = event.target.result;
-    
-    // Close edit modal and open crop modal
-    closeModal('editProfileModal');
-    openModal('imageCropModal');
-    
-    console.log('Modals switched');
-    
-    // Initialize cropper after a short delay
-    setTimeout(() => {
-      console.log('Initializing cropper');
+    profilePicInput.addEventListener('change', function(e) {
+      console.log('File selected');
+      const file = e.target.files[0];
       
-      // Destroy existing cropper if any
-      if (cropper) {
-        cropper.destroy();
+      if (!file) {
+        console.log('No file selected');
+        return;
       }
       
-      cropper = new Cropper(imageToCrop, {
-        aspectRatio: 1,
-        viewMode: 1,
-        dragMode: 'move',
-        autoCropArea: 0.9,
-        restore: false,
-        guides: true,
-        center: true,
-        highlight: false,
-        cropBoxMovable: true,
-        cropBoxResizable: true,
-        toggleDragModeOnDblclick: false,
-        responsive: true,
-        background: false,
-        minContainerWidth: 200,
-        minContainerHeight: 200,
-      });
+      console.log('File:', file.name, file.type, file.size);
       
-      console.log('Cropper initialized');
-    }, 200);
-  };
-  
-  reader.onerror = function(error) {
-    console.error('Error reading file:', error);
-    alert('Error reading file');
-  };
-  
-  reader.readAsDataURL(file);
-  
-  // Clear the input
-  this.value = '';
-});
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        this.value = '';
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert("Please select an image file");
+        this.value = '';
+        return;
+      }
+      
+      // Upload the image directly without cropping
+      uploadProfilePicture(file);
+      
+      // Clear the input
+      this.value = '';
+    });
   } else {
     console.error('profilePicInput not found');
   }
 });
 
-
-// Rotate crop image
-window.rotateCropImage = function(degree) {
-  console.log('Rotate:', degree);
-  if (cropper) {
-    cropper.rotate(degree);
-  }
-};
-
-// Flip crop image
-window.flipCropImage = function(direction) {
-  console.log('Flip:', direction);
-  if (!cropper) return;
-  
-  if (direction === 'horizontal') {
-    const scaleX = cropper.getData().scaleX || 1;
-    cropper.scaleX(-scaleX);
-  } else if (direction === 'vertical') {
-    const scaleY = cropper.getData().scaleY || 1;
-    cropper.scaleY(-scaleY);
-  }
-};
-
-window.applyCrop = async function() {
-  console.log('Apply crop clicked');
-  
-  if (!cropper) {
-    console.error('No cropper instance');
-    return;
-  }
-  
+// Upload profile picture directly without cropping
+async function uploadProfilePicture(file) {
   try {
     if (!currentTeacher) {
       alert('User not logged in');
@@ -2667,25 +2450,10 @@ window.applyCrop = async function() {
     }
     
     // Show loading
-    const applyBtn = document.getElementById('applyCropBtn');
-    const originalText = applyBtn.innerHTML;
-    applyBtn.innerHTML = '<span class="spinner"></span> Uploading...';
-    applyBtn.disabled = true;
-    
-    console.log('Getting cropped canvas');
-    
-    // Get cropped canvas
-    const canvas = cropper.getCroppedCanvas({
-      width: 400,
-      height: 400,
-      imageSmoothingEnabled: true,
-      imageSmoothingQuality: 'high',
-    });
-    
-    console.log('Converting to blob');
-    
-    // Convert canvas to blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    const uploadBtn = document.querySelector('label[for="profilePicInput"]');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '<span class="spinner"></span> Uploading...';
+    uploadBtn.style.pointerEvents = 'none';
     
     console.log('Uploading to storage');
     
@@ -2693,7 +2461,7 @@ window.applyCrop = async function() {
     const storageRef = ref(storage, `teacher-profile-pictures/${currentTeacher.id}/${Date.now()}.jpg`);
     
     // Upload file
-    await uploadBytes(storageRef, blob);
+    await uploadBytes(storageRef, file);
     
     console.log('Getting download URL');
     
@@ -2717,16 +2485,6 @@ window.applyCrop = async function() {
     
     console.log('Profile updated successfully');
     
-    // Destroy cropper
-    if (cropper) {
-      cropper.destroy();
-      cropper = null;
-    }
-    
-    // *** KEY CHANGE: Close crop modal and reopen edit modal ***
-    closeModal('imageCropModal');
-    openModal('editProfileModal');
-    
     // Update the edit modal avatar to show new picture
     const editAvatarInitials = document.getElementById('editAvatarInitials');
     const editProfileAvatar = document.getElementById('editProfileAvatar');
@@ -2746,20 +2504,20 @@ window.applyCrop = async function() {
     populateProfileData();
     
     // Restore button
-    applyBtn.innerHTML = originalText;
-    applyBtn.disabled = false;
+    uploadBtn.innerHTML = originalText;
+    uploadBtn.style.pointerEvents = 'auto';
     
   } catch (error) {
     console.error("Error uploading avatar:", error);
     alert("❌ Error uploading image: " + error.message);
     
-    const applyBtn = document.getElementById('applyCropBtn');
-    if (applyBtn) {
-      applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply & Upload';
-      applyBtn.disabled = false;
+    const uploadBtn = document.querySelector('label[for="profilePicInput"]');
+    if (uploadBtn) {
+      uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Picture';
+      uploadBtn.style.pointerEvents = 'auto';
     }
   }
-};
+}
 
 // Remove profile picture
 const removeProfilePicBtn = document.getElementById('removeProfilePicBtn');
