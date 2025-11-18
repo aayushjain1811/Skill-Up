@@ -1295,6 +1295,38 @@
       margin-bottom: 1.5rem;
     }
     
+    /* Featured Course Styles */
+    .featured-course {
+      border: 2px solid var(--success);
+      position: relative;
+    }
+    
+    .featured-badge {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: linear-gradient(45deg, var(--light), var(--success));
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      z-index: 2;
+    }
+    
+    .course-rating-badge {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #ffd700;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      z-index: 2;
+    }
+    
     /* Animation for course cards */
     @keyframes fadeInUp {
       from {
@@ -1383,7 +1415,7 @@
       }
     }
 
-        .footer {
+    .footer {
       background: var(--bg-secondary);
       color: var(--gray);
       padding: 2rem 5%;
@@ -1524,15 +1556,15 @@
     </div>
   </section>
   
-  <!-- Courses Section -->
+  <!-- Courses Section - Now Only Shows Top 3 Rated Courses -->
   <section id="courses" class="courses">
-    <h2>Featured Courses</h2>
+    <h2>Top Rated Courses</h2>
     <div class="courses-container">
       <div id="coursesGrid" class="courses-grid">
-        <!-- Courses will be dynamically loaded here -->
+        <!-- Only top 3 rated courses will be dynamically loaded here -->
         <div class="courses-loading">
           <i class="fas fa-spinner fa-spin"></i>
-          <p>Loading courses...</p>
+          <p>Loading top rated courses...</p>
         </div>
       </div>
     </div>
@@ -1592,7 +1624,8 @@
       </div>
     </div>
   </section>
-   <footer class="footer">
+  
+  <footer class="footer">
     <div class="footer-content">
       <p class="copyright">© 2025 SkillUp. All rights reserved.</p>
     </div>
@@ -2243,7 +2276,7 @@
         const price = course.price || 0;
         modalCoursePrice.textContent = price === 0 ? "Free" : `$${price}`;
 
-        const rating = course.rating || 4.5;
+        const rating = course.averageRating || 4.5;
         modalCourseRatingValue.textContent = rating.toFixed(1);
 
         const enrolledCount = course.enrolledCount || 0;
@@ -2268,21 +2301,47 @@
         currentCourseId = null;
       }
 
-      // Function to fetch and display courses
+      // Function to fetch and display course feedback
+      async function fetchCourseFeedback() {
+        try {
+          const feedbackSnapshot = await db.collection("courseFeedback").get();
+          
+          if (feedbackSnapshot.empty) {
+            console.log("No feedback available");
+            return;
+          }
+          
+          const feedbackData = [];
+          feedbackSnapshot.forEach(doc => {
+            const feedback = doc.data();
+            feedback.id = doc.id;
+            feedbackData.push(feedback);
+          });
+          
+          // Display feedback in the console for now
+          console.log("Course Feedback:", feedbackData);
+          
+        } catch (error) {
+          console.error("Error fetching course feedback:", error);
+        }
+      }
+
+      // Updated fetchCourses function to only show top 3 rated courses
       async function fetchCourses() {
         const coursesGrid = document.getElementById('coursesGrid');
 
         coursesGrid.innerHTML = `
           <div class="courses-loading">
             <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading courses...</p>
+            <p>Loading top rated courses...</p>
           </div>
         `;
 
         try {
-          const querySnapshot = await db.collection("courses").limit(6).get();
+          // First, get all courses
+          const coursesSnapshot = await db.collection("courses").get();
           
-          if (querySnapshot.empty) {
+          if (coursesSnapshot.empty) {
             coursesGrid.innerHTML = `
               <div class="courses-empty">
                 <i class="fas fa-book-open"></i>
@@ -2292,13 +2351,73 @@
             return;
           }
 
-          coursesGrid.innerHTML = '';
+          // Get all course feedback to calculate ratings
+          const feedbackSnapshot = await db.collection("courseFeedback").get();
+          const courseRatings = {};
+          
+          // Calculate average ratings for each course
+          feedbackSnapshot.forEach(doc => {
+            const feedback = doc.data();
+            const courseId = feedback.courseId;
+            
+            if (!courseRatings[courseId]) {
+              courseRatings[courseId] = {
+                totalRating: 0,
+                count: 0
+              };
+            }
+            
+            courseRatings[courseId].totalRating += feedback.rating;
+            courseRatings[courseId].count += 1;
+          });
+          
+          // Calculate average ratings
+          for (const courseId in courseRatings) {
+            courseRatings[courseId].average = 
+              courseRatings[courseId].totalRating / courseRatings[courseId].count;
+          }
 
-          const coursePromises = [];
-          querySnapshot.forEach((doc, index) => {
+          // Prepare courses with their ratings
+          const coursesWithRatings = [];
+          coursesSnapshot.forEach(doc => {
             const course = doc.data();
             const courseId = doc.id;
             course.id = courseId;
+            
+            // Add rating if available
+            if (courseRatings[courseId]) {
+              course.averageRating = courseRatings[courseId].average;
+              course.ratingCount = courseRatings[courseId].count;
+            } else {
+              course.averageRating = 0;
+              course.ratingCount = 0;
+            }
+            
+            coursesWithRatings.push(course);
+          });
+
+          // Sort courses by rating (highest first)
+          coursesWithRatings.sort((a, b) => b.averageRating - a.averageRating);
+          
+          // Get top 3 rated courses only
+          const topRatedCourses = coursesWithRatings.slice(0, 3);
+          
+          // Display only the top 3 rated courses
+          coursesGrid.innerHTML = '';
+
+          if (topRatedCourses.length === 0) {
+            coursesGrid.innerHTML = `
+              <div class="courses-empty">
+                <i class="fas fa-book-open"></i>
+                <p>No top rated courses available at the moment. Check back soon!</p>
+              </div>
+            `;
+            return;
+          }
+
+          const coursePromises = [];
+          topRatedCourses.forEach((course, index) => {
+            const courseId = course.id;
 
             // Create a promise for each course to get its image
             const coursePromise = getCourseImage(course).then(imageUrl => {
@@ -2310,12 +2429,10 @@
           // Wait for all images to load
           const coursesWithImages = await Promise.all(coursePromises);
 
-          // Sort courses by original index to maintain order
-          coursesWithImages.sort((a, b) => a.index - b.index);
-
+          // Display only the top 3 courses
           coursesWithImages.forEach(({ course, imageUrl, index }) => {
             const courseCard = document.createElement('div');
-            courseCard.className = 'course-card';
+            courseCard.className = 'course-card featured-course';
             courseCard.style.animationDelay = `${index * 0.1}s`;
 
             const courseName = course.name || course.title || "Untitled Course";
@@ -2326,7 +2443,8 @@
             const price = course.price || 0;
             const formattedPrice = price === 0 ? "Free" : `$${price}`;
 
-            const rating = course.rating || 4.5;
+            // Use the calculated average rating
+            const rating = course.averageRating || 0;
             const stars = "★".repeat(Math.floor(rating)) + "☆".repeat(5 - Math.floor(rating));
 
             courseCard.innerHTML = `
@@ -2334,6 +2452,8 @@
                 <div class="course-level">${courseLevel}</div>
                 <div class="course-category">${courseCategory}</div>
                 <img src="${imageUrl}" alt="${courseName}" onerror="this.src='${defaultCourseImages.default}'">
+                <div class="featured-badge">Top Rated</div>
+                ${rating > 0 ? `<div class="course-rating-badge">${rating.toFixed(1)}★</div>` : ''}
               </div>
               <div class="course-content">
                 <h3 class="course-title">${courseName}</h3>
@@ -2341,7 +2461,7 @@
                 <div class="course-meta">
                   <div class="course-rating">
                     <div class="stars">${stars}</div>
-                    <div class="rating-value">${rating.toFixed(1)}</div>
+                    <div class="rating-value">${rating.toFixed(1)} (${course.ratingCount || 0})</div>
                   </div>
                   <div class="course-price ${price === 0 ? 'free' : ''}">${formattedPrice}</div>
                 </div>
@@ -2435,8 +2555,11 @@
       // Setup real-time statistics
       setupRealTimeStats();
 
-      // Fetch courses
+      // Fetch courses (only top 3 rated)
       fetchCourses();
+
+      // Fetch course feedback
+      fetchCourseFeedback();
 
       // Smooth scrolling
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
