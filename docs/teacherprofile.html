@@ -501,6 +501,33 @@
 }
 
 /* Image Crop Styles */
+/* Ensure crop modal is visible */
+#imageCropModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 3000;
+  backdrop-filter: blur(5px);
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+#imageCropModal.show {
+  display: flex !important;
+}
+
+#imageCropModal .modal-content {
+  position: relative;
+  top: auto;
+  transform: none;
+  margin: auto;
+}
 #imageCropContainer {
   position: relative;
   width: 100%;
@@ -952,7 +979,7 @@
   margin-right: 10px;
   vertical-align: middle;
 }
-    
+/* Fix modal positioning */
 .modal {
   display: none;
   position: fixed;
@@ -960,11 +987,16 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
   z-index: 2000;
-  backdrop-filter: blur(5px);
-  overflow-y: auto;
-  padding: 20px 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal .modal-content {
+  position: relative;
+  top: auto;
+  transform: none;
+  margin: auto;
 }
     
  .modal-content {
@@ -1477,7 +1509,7 @@
         </div>
         
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-          <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('editProfileModal')">
+          <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelCrop()">
             Cancel
           </button>
           <button type="submit" class="btn btn-primary" style="flex: 1;">
@@ -1555,11 +1587,11 @@
     </div>
   </div>
 <!-- Image Crop Modal -->
-<div class="modal" id="imageCropModal">
+<div class="modal" id="imageCropModal">  <!-- REMOVED: style="display: none;" -->
   <div class="modal-content" style="max-width: 700px;">
     <div class="modal-header">
       <h2 class="modal-title">Crop Profile Picture</h2>
-      <button class="modal-close" onclick="closeModal('imageCropModal')">&times;</button>
+      <button class="modal-close" onclick="cancelCrop()">&times;</button>
     </div>
     
     <div style="margin-bottom: 1.5rem;">
@@ -1584,7 +1616,7 @@
     </div>
     
     <div style="display: flex; gap: 1rem;">
-      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('imageCropModal')">
+      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelCrop()">
         Cancel
       </button>
       <button type="button" class="btn btn-primary" style="flex: 1;" id="applyCropBtn" onclick="applyCrop()">
@@ -2013,10 +2045,59 @@ passwordForm.addEventListener('submit', async (e) => {
         }
       }
     });
+// Initialize profile picture in edit modal
+function initEditModalProfilePic() {
+  if (!currentTeacher) return;
+  
+  const editAvatarInitials = document.getElementById('editAvatarInitials');
+  const editProfileAvatar = document.getElementById('editProfileAvatar');
+  const removeBtn = document.getElementById('removeProfilePicBtn');
+  
+  if (!editAvatarInitials || !removeBtn) return;
+  
+  if (currentTeacher.photoURL) {
+    editAvatarInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    removeBtn.style.display = 'inline-flex';
+    if (editProfileAvatar) editProfileAvatar.classList.add('has-image');
+  } else {
+    const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
+    editAvatarInitials.textContent = initials;
+    removeBtn.style.display = 'none';
+    if (editProfileAvatar) editProfileAvatar.classList.remove('has-image');
+  }
+}
 
-// Modal functions
+
+// Open edit profile modal specifically for picture upload
+window.openEditProfileForPicture = function() {
+  openModal('editProfileModal');
+  setTimeout(() => {
+    initEditModalProfilePic();
+    const editProfileAvatar = document.getElementById('editProfileAvatar');
+    if (editProfileAvatar) {
+      editProfileAvatar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 100);
+};
 window.openModal = (modalId) => {
-  document.getElementById(modalId).style.display = 'flex';
+  console.log('Opening modal:', modalId);
+  
+  // Close all other modals first
+  const allModals = document.querySelectorAll('.modal');
+  allModals.forEach(modal => {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  });
+  
+  // Open the requested modal
+  const targetModal = document.getElementById(modalId);
+  if (targetModal) {
+    targetModal.style.display = 'flex';
+    targetModal.classList.add('active');
+    console.log('Modal opened:', modalId);
+  } else {
+    console.error('Modal not found:', modalId);
+  }
   
   // Initialize profile picture when opening edit modal
   if (modalId === 'editProfileModal') {
@@ -2026,9 +2107,21 @@ window.openModal = (modalId) => {
   }
 };
 
-// Modal functions
 window.closeModal = (modalId) => {
-  document.getElementById(modalId).style.display = 'none';
+  console.log('Closing modal:', modalId);
+  
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+  
+  // Destroy cropper when closing crop modal
+  if (modalId === 'imageCropModal' && cropper) {
+    cropper.destroy();
+    cropper = null;
+    selectedImageFile = null;
+  }
   
   // Clear any alerts when closing the modal
   if (modalId === 'editProfileModal') {
@@ -2053,6 +2146,31 @@ window.closeModal = (modalId) => {
     if (matchIndicator) {
       matchIndicator.style.display = 'none';
     }
+  }
+};
+// Cancel crop and return to edit modal
+window.cancelCrop = function() {
+  console.log('Cancel crop clicked');
+  
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+  
+  selectedImageFile = null;
+  
+  // Close crop modal first
+  const cropModal = document.getElementById('imageCropModal');
+  if (cropModal) {
+    cropModal.style.display = 'none';
+    cropModal.classList.remove('active');
+  }
+  
+  // Open edit modal
+  const editModal = document.getElementById('editProfileModal');
+  if (editModal) {
+    editModal.style.display = 'flex';
+    editModal.classList.add('active');
   }
 };
 
@@ -2406,106 +2524,115 @@ function showMessage(message, type = "success") {
     document.addEventListener('DOMContentLoaded', function() {
       createParticles();
     });
-    // Global variables for cropper
+// Global variables for cropper
 let cropper = null;
 let selectedImageFile = null;
 
-// Open edit profile modal specifically for picture upload
-window.openEditProfileForPicture = function() {
-  openModal('editProfileModal');
-  setTimeout(() => {
-    initEditModalProfilePic();
-    const editProfileAvatar = document.getElementById('editProfileAvatar');
-    if (editProfileAvatar) {
-      editProfileAvatar.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, 100);
-};
-
-// Initialize profile picture in edit modal
-function initEditModalProfilePic() {
-  if (!currentTeacher) return;
-  
-  const editAvatarInitials = document.getElementById('editAvatarInitials');
-  const editProfileAvatar = document.getElementById('editProfileAvatar');
-  const removeBtn = document.getElementById('removeProfilePicBtn');
-  
-  if (!editAvatarInitials || !removeBtn) return;
-  
-  if (currentTeacher.photoURL) {
-    editAvatarInitials.innerHTML = `<img src="${currentTeacher.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    removeBtn.style.display = 'inline-flex';
-  } else {
-    const initials = currentTeacher.firstName.charAt(0) + currentTeacher.lastName.charAt(0);
-    editAvatarInitials.textContent = initials;
-    removeBtn.style.display = 'none';
-  }
-}
-
 // Handle profile picture upload
-const profilePicInput = document.getElementById('profilePicInput');
-if (profilePicInput) {
-  profilePicInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+document.addEventListener('DOMContentLoaded', function() {
+  const profilePicInput = document.getElementById('profilePicInput');
+  
+  if (profilePicInput) {
+    console.log('Profile pic input found');
     
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showMessage("❌ Image size should be less than 5MB", "error");
-      this.value = '';
-      return;
-    }
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      showMessage("❌ Please select an image file", "error");
-      this.value = '';
-      return;
-    }
-    
-    selectedImageFile = file;
-    
-    // Read and display image for cropping
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const imageToCrop = document.getElementById('imageToCrop');
-      imageToCrop.src = event.target.result;
-      
-      // Close edit modal and open crop modal
-      closeModal('editProfileModal');
-      openModal('imageCropModal');
-      
-      // Initialize cropper
-      setTimeout(() => {
-        if (cropper) {
-          cropper.destroy();
-        }
-        
-        cropper = new Cropper(imageToCrop, {
-          aspectRatio: 1,
-          viewMode: 1,
-          dragMode: 'move',
-          autoCropArea: 1,
-          restore: false,
-          guides: true,
-          center: true,
-          highlight: false,
-          cropBoxMovable: true,
-          cropBoxResizable: true,
-          toggleDragModeOnDblclick: false,
-          responsive: true,
-          background: false,
-        });
-      }, 100);
-    };
-    
-    reader.readAsDataURL(file);
+// REPLACE the profilePicInput event listener (around line 900) with:
+profilePicInput.addEventListener('change', function(e) {
+  console.log('File selected');
+  const file = e.target.files[0];
+  
+  if (!file) {
+    console.log('No file selected');
+    return;
+  }
+  
+  console.log('File:', file.name, file.type, file.size);
+  
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Image size should be less than 5MB");
     this.value = '';
-  });
-}
+    return;
+  }
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert("Please select an image file");
+    this.value = '';
+    return;
+  }
+  
+  selectedImageFile = file;
+  
+  // Read and display image for cropping
+  const reader = new FileReader();
+  
+  reader.onload = function(event) {
+    console.log('Image loaded, opening crop modal');
+    
+    const imageToCrop = document.getElementById('imageToCrop');
+    if (!imageToCrop) {
+      console.error('imageToCrop element not found');
+      return;
+    }
+    
+    imageToCrop.src = event.target.result;
+    
+    // Close edit modal and open crop modal
+    closeModal('editProfileModal');
+    openModal('imageCropModal');
+    
+    console.log('Modals switched');
+    
+    // Initialize cropper after a short delay
+    setTimeout(() => {
+      console.log('Initializing cropper');
+      
+      // Destroy existing cropper if any
+      if (cropper) {
+        cropper.destroy();
+      }
+      
+      cropper = new Cropper(imageToCrop, {
+        aspectRatio: 1,
+        viewMode: 1,
+        dragMode: 'move',
+        autoCropArea: 0.9,
+        restore: false,
+        guides: true,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+        responsive: true,
+        background: false,
+        minContainerWidth: 200,
+        minContainerHeight: 200,
+      });
+      
+      console.log('Cropper initialized');
+    }, 200);
+  };
+  
+  reader.onerror = function(error) {
+    console.error('Error reading file:', error);
+    alert('Error reading file');
+  };
+  
+  reader.readAsDataURL(file);
+  
+  // Clear the input
+  this.value = '';
+});
+  } else {
+    console.error('profilePicInput not found');
+  }
+});
+
 
 // Rotate crop image
 window.rotateCropImage = function(degree) {
+  console.log('Rotate:', degree);
   if (cropper) {
     cropper.rotate(degree);
   }
@@ -2513,6 +2640,7 @@ window.rotateCropImage = function(degree) {
 
 // Flip crop image
 window.flipCropImage = function(direction) {
+  console.log('Flip:', direction);
   if (!cropper) return;
   
   if (direction === 'horizontal') {
@@ -2524,18 +2652,27 @@ window.flipCropImage = function(direction) {
   }
 };
 
-// Apply crop and upload
 window.applyCrop = async function() {
-  if (!cropper) return;
+  console.log('Apply crop clicked');
+  
+  if (!cropper) {
+    console.error('No cropper instance');
+    return;
+  }
   
   try {
-    if (!currentTeacher) return;
+    if (!currentTeacher) {
+      alert('User not logged in');
+      return;
+    }
     
     // Show loading
     const applyBtn = document.getElementById('applyCropBtn');
     const originalText = applyBtn.innerHTML;
     applyBtn.innerHTML = '<span class="spinner"></span> Uploading...';
     applyBtn.disabled = true;
+    
+    console.log('Getting cropped canvas');
     
     // Get cropped canvas
     const canvas = cropper.getCroppedCanvas({
@@ -2545,8 +2682,12 @@ window.applyCrop = async function() {
       imageSmoothingQuality: 'high',
     });
     
+    console.log('Converting to blob');
+    
     // Convert canvas to blob
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    
+    console.log('Uploading to storage');
     
     // Create storage reference
     const storageRef = ref(storage, `teacher-profile-pictures/${currentTeacher.id}/${Date.now()}.jpg`);
@@ -2554,8 +2695,12 @@ window.applyCrop = async function() {
     // Upload file
     await uploadBytes(storageRef, blob);
     
+    console.log('Getting download URL');
+    
     // Get download URL
     const photoURL = await getDownloadURL(storageRef);
+    
+    console.log('Updating profile:', photoURL);
     
     // Update teacher profile in Auth
     await updateProfile(auth.currentUser, { photoURL });
@@ -2570,9 +2715,31 @@ window.applyCrop = async function() {
     // Update current teacher object
     currentTeacher.photoURL = photoURL;
     
-    // Close crop modal
-    closeModal('imageCropModal');
+    console.log('Profile updated successfully');
     
+    // Destroy cropper
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+    
+    // *** KEY CHANGE: Close crop modal and reopen edit modal ***
+    closeModal('imageCropModal');
+    openModal('editProfileModal');
+    
+    // Update the edit modal avatar to show new picture
+    const editAvatarInitials = document.getElementById('editAvatarInitials');
+    const editProfileAvatar = document.getElementById('editProfileAvatar');
+    if (editAvatarInitials && editProfileAvatar) {
+      editAvatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+      editProfileAvatar.classList.add('has-image');
+    }
+    
+    // Show remove button
+    const removeBtn = document.getElementById('removeProfilePicBtn');
+    if (removeBtn) removeBtn.style.display = 'inline-flex';
+    
+    // Show success message
     showMessage("✅ Profile picture uploaded successfully!");
     
     // Update main profile display
@@ -2584,7 +2751,7 @@ window.applyCrop = async function() {
     
   } catch (error) {
     console.error("Error uploading avatar:", error);
-    showMessage("❌ Error uploading image: " + error.message, "error");
+    alert("❌ Error uploading image: " + error.message);
     
     const applyBtn = document.getElementById('applyCropBtn');
     if (applyBtn) {
