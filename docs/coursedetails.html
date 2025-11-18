@@ -468,17 +468,6 @@ body::before {
   overflow: hidden;
 }
 
-.avatar::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
-  animation: rotate 3s linear infinite;
-}
-
 @keyframes rotate {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -1948,75 +1937,92 @@ body::before {
   background: var(--bg-secondary);
   border-radius: 20px;
   width: 95%;
-  max-width: 1200px;
+  max-width: 1100px;
   max-height: 95vh;
   overflow-y: auto;
   padding: 30px;
   position: relative;
   border: 1px solid rgba(67, 97, 238, 0.3);
 }
+/* Ensure certificate modal prints correctly */
+#certificateModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
 
+#certificateModal.active {
+  display: flex !important;
+}
+
+/* Certificate Container - Compact Size */
 .certificate-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
-  padding: 40px 50px;
-  border-radius: 15px;
-  color: #1a202c;
+  background: #ffffff;
+  padding: 30px 40px;
+  border-radius: 10px;
+  color: #1a1d29;
   text-align: center;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
-  border: 15px solid #4361ee;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 10px solid #4361ee;
   position: relative;
-  overflow: hidden;
-  max-height: 750px;
+  overflow: visible;
+  max-height: none;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-family: 'Georgia', serif;
+  font-family: 'Georgia', 'Times New Roman', serif;
   margin: 0 auto;
+  page-break-inside: avoid;
+  z-index: 1;
+  max-width: 900px;
+  min-height: auto;
 }
 
-/* Certificate Border Decoration */
-.certificate-container::before {
+/* Remove all animations and decorative elements */
+.certificate-container::before,
+.certificate-container::after {
+  display: none !important;
+}
+
+/* Simple Inner Border */
+.certificate-container::after {
   content: '';
+  display: block;
   position: absolute;
   top: 20px;
   left: 20px;
   right: 20px;
   bottom: 20px;
   border: 2px solid #4361ee;
-  border-radius: 10px;
+  border-radius: 5px;
   pointer-events: none;
+  z-index: 0;
 }
 
-/* Decorative Corner Elements */
-.certificate-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(circle at 20% 80%, rgba(67, 97, 238, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(0, 245, 255, 0.03) 0%, transparent 50%);
-  pointer-events: none;
-}
-
+/* Certificate Header */
 .certificate-header {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   position: relative;
-  z-index: 2;
+  z-index: 10;
 }
 
 .certificate-logo {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   color: #4361ee;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  letter-spacing: 2px;
+  gap: 10px;
+  letter-spacing: 1px;
 }
 
 .certificate-logo i {
@@ -2024,11 +2030,19 @@ body::before {
   font-size: 28px;
 }
 
+.certificate-subtitle {
+  font-size: 12px;
+  color: #4a5568;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
 .certificate-title {
-  font-size: 42px;
+  font-size: 32px;
   font-weight: 700;
-  color: #1a202c;
-  margin: 15px 0;
+  color: #1a1d29;
+  margin: 10px 0;
   text-transform: uppercase;
   letter-spacing: 3px;
   background: linear-gradient(135deg, #4361ee, #3a0ca3);
@@ -2036,33 +2050,26 @@ body::before {
   -webkit-text-fill-color: transparent;
   position: relative;
   font-family: 'Georgia', serif;
+  z-index: 10;
 }
 
 .certificate-title::after {
   content: '';
   position: absolute;
-  bottom: -10px;
+  bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
-  height: 3px;
-  background: linear-gradient(90deg, #4361ee, #3a0ca3);
+  width: 100px;
+  height: 2px;
+  background: #4361ee;
   border-radius: 2px;
 }
 
-.certificate-subtitle {
-  font-size: 16px;
-  color: #4a5568;
-  font-weight: 500;
-  margin-bottom: 8px;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-}
-
+/* Certificate Body */
 .certificate-body {
-  margin: 20px 0;
+  margin: 15px 0;
   position: relative;
-  z-index: 2;
+  z-index: 10;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -2070,11 +2077,11 @@ body::before {
 }
 
 .certificate-student-name {
-  font-size: 44px;
+  font-size: 36px;
   font-weight: 700;
-  color: #1a202c;
+  color: #1a1d29;
   margin: 15px 0;
-  background: linear-gradient(135deg, #1a202c, #4361ee);
+  background: linear-gradient(135deg, #1a1d29, #4361ee);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-family: 'Georgia', serif;
@@ -2082,35 +2089,209 @@ body::before {
   text-decoration: underline;
   text-decoration-color: #4361ee;
   text-underline-offset: 8px;
+  text-decoration-thickness: 2px;
 }
 
 .certificate-course-name {
-  font-size: 26px;
+  font-size: 22px;
   color: #4361ee;
   font-weight: 600;
   margin: 15px 0;
   line-height: 1.4;
   font-style: italic;
   font-family: 'Georgia', serif;
+  padding: 0 20px;
 }
 
 .certificate-text {
-  font-size: 15px;
-  color: #2d3748 !important;
-  margin: 12px 0;
-  line-height: 1.6;
-  max-width: 850px;
-  margin-left: auto;
-  margin-right: auto;
-  background: transparent !important;
-  text-decoration: none !important;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
+  font-size: 14px;
+  color: #2d3748;
+  margin: 10px auto;
+  line-height: 1.5;
+  max-width: 600px;
 }
 
-/* Prevent blue highlighting in certificate */
-.certificate-container *,
+/* Certificate Details Grid - Compact */
+.certificate-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(67, 97, 238, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(67, 97, 238, 0.15);
+}
+
+.detail-item {
+  text-align: center;
+  padding: 8px;
+}
+
+.detail-label {
+  font-size: 11px;
+  color: #4a5568;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+.detail-value {
+  font-size: 14px;
+  color: #1a1d29;
+  font-weight: 700;
+}
+
+/* Certificate Footer - Signatures */
+.certificate-footer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin-top: 20px;
+  position: relative;
+  z-index: 2;
+  padding: 0 20px;
+}
+
+.certificate-signature {
+  text-align: center;
+  max-width: 180px;
+}
+
+.signature-image {
+  height: 40px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-image i {
+  font-size: 32px;
+  color: #4361ee;
+}
+
+
+.signature-line {
+  width: 140px;
+  height: 2px;
+  background: #1a1d29;
+  margin: 0 auto 6px;
+  position: relative;
+}
+
+.signature-line::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, #4361ee, transparent);
+  border-radius: 3px;
+}
+.signature-name {
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #1a1d29;
+  font-size: 14px;
+  font-family: 'Georgia', serif;
+}
+
+.signature-title {
+  font-size: 11px;
+  color: #4a5568;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+
+/* Certificate Seal - Simple */
+.certificate-seal {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #4361ee, #3a0ca3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  border: 4px solid white;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  z-index: 3;
+}
+
+.certificate-seal::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+}
+
+/* Certificate Actions */
+.certificate-actions {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 15px;
+  padding: 15px;
+  background: transparent;
+}
+
+.certificate-print-btn,
+.certificate-share-btn {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: linear-gradient(45deg, #4361ee, #3a0ca3);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+  font-size: 14px;
+}
+.certificate-print-btn:hover,
+.certificate-share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+}
+
+.certificate-print-btn {
+  background: linear-gradient(135deg, #48bb78, #38a169);
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+.certificate-print-btn:hover {
+  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+}
+
+/* Prevent text selection in certificate */
+.certificate-container * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
 .certificate-container *::selection {
   background: transparent !important;
   color: inherit !important;
@@ -2125,179 +2306,6 @@ body::before {
   background: transparent !important;
 }
 
-.certificate-details {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
-  margin: 25px 0;
-  padding: 20px;
-  background: rgba(67, 97, 238, 0.05);
-  border-radius: 12px;
-  border: 2px solid rgba(67, 97, 238, 0.15);
-}
-
-.detail-item {
-  text-align: center;
-  padding: 10px;
-}
-
-.detail-label {
-  font-size: 13px;
-  color: #4a5568;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  margin-bottom: 8px;
-  font-weight: 700;
-}
-
-.detail-value {
-  font-size: 17px;
-  color: #1a202c;
-  font-weight: 700;
-  word-break: break-all;
-}
-
-.certificate-footer {
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
-  margin-top: 25px;
-  position: relative;
-  z-index: 2;
-  padding: 0 40px;
-}
-
-.certificate-signature {
-  text-align: center;
-  flex: 1;
-}
-
-.signature-image {
-  height: 60px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.signature-image i {
-  font-size: 50px;
-  color: #4361ee;
-  opacity: 0.9;
-}
-
-.signature-line {
-  width: 180px;
-  height: 2px;
-  background: #1a202c;
-  margin: 0 auto 10px;
-  position: relative;
-}
-
-.signature-line::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, transparent, #4361ee, transparent);
-  border-radius: 4px;
-}
-
-.signature-name {
-  font-weight: 700;
-  margin-bottom: 5px;
-  color: #1a202c;
-  font-size: 17px;
-  font-family: 'Georgia', serif;
-}
-
-.signature-title {
-  font-size: 13px;
-  color: #4a5568;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  font-weight: 600;
-}
-
-.certificate-actions {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 20px;
-  padding: 20px;
-  background: transparent;
-}
-
-.certificate-download-btn,
-.certificate-print-btn {
-  display: inline-flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background: linear-gradient(45deg, #4361ee, #3a0ca3);
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
-}
-
-.certificate-print-btn {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-  box-shadow: 0 5px 20px rgba(72, 187, 120, 0.3);
-}
-
-.certificate-download-btn:hover,
-.certificate-print-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(67, 97, 238, 0.4);
-}
-
-.certificate-print-btn:hover {
-  box-shadow: 0 8px 30px rgba(72, 187, 120, 0.4);
-}
-
-/* Certificate Seal */
-.certificate-seal {
-  position: absolute;
-  top: 40px;
-  right: 40px;
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(135deg, #4361ee, #3a0ca3);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  border: 4px solid white;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  z-index: 3;
-}
-
-.certificate-seal::before {
-  content: '';
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  right: 6px;
-  bottom: 6px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 50%;
-}
-
 /* Responsive Design for Certificate */
 @media (max-width: 768px) {
   .certificate-modal-content {
@@ -2310,7 +2318,7 @@ body::before {
     max-height: none;
   }
 
-  .certificate-container::before {
+  .certificate-container::after {
     top: 12px;
     left: 12px;
     right: 12px;
@@ -2328,6 +2336,7 @@ body::before {
 
   .certificate-course-name {
     font-size: 22px;
+    padding: 0 20px;
   }
 
   .certificate-text {
@@ -2361,7 +2370,6 @@ body::before {
     gap: 12px;
   }
 
-  .certificate-download-btn,
   .certificate-print-btn {
     width: 100%;
     justify-content: center;
@@ -2404,91 +2412,355 @@ body::before {
   }
 }
 
-/* Print Styles for Certificate - ONLY CERTIFICATE, NO BUTTONS */
+/* Print-specific styles for certificate - FINAL CENTERED VERSION */
 @media print {
- * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-    background: transparent !important;
-  }
-  
-  ::selection {
-    background: transparent !important;
-  }
-  
-  body * {
-    visibility: hidden;
-  }
-  
-  .certificate-modal,
-  .certificate-modal * {
-    visibility: visible;
-  }
-  
-  .certificate-modal {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .certificate-modal-content {
-    box-shadow: none;
-    border: none;
-    max-width: 100%;
-    width: 100%;
-    height: 100%;
+  /* Set page to landscape with margins */
+  @page {
+    size: A4 landscape;
     margin: 0;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
-  .certificate-container {
-    box-shadow: none;
-    border: 15px solid #4361ee !important;
-    margin: 0;
-    padding: 40px 50px;
-    page-break-after: avoid;
-    page-break-inside: avoid;
-    max-height: none;
-    width: 100%;
-    max-width: 900px;
+  /* Reset and style body */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
   }
   
-  .certificate-actions,
-  .modal-header {
+  /* Hide everything except certificate */
+  body > *:not(#certificateModal) {
     display: none !important;
-    visibility: hidden !important;
   }
-
-  /* Ensure all colors print correctly */
-  .certificate-container,
-  .certificate-title,
-  .certificate-student-name,
-  .certificate-course-name,
-  .certificate-seal,
-  .signature-line,
+  
+  /* Show certificate modal - fill page with white background */
+  #certificateModal {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 15mm !important;
+  }
+  
+  /* Hide modal wrapper elements */
+  #certificateModal .modal-header,
+  #certificateModal .close-modal,
+  #certificateModal .certificate-actions {
+    display: none !important;
+  }
+  
+  /* Modal content - centered */
+  .certificate-modal-content {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+  
+  #certificateModalContent {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  
+  /* Certificate container - centered and properly framed */
+  .certificate-container {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    position: relative !important;
+    width: 95% !important;
+    max-width: 95% !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 25px 35px !important;
+    border: 10px solid #4361ee !important;
+    background: white !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+    font-family: 'Georgia', 'Times New Roman', serif !important;
+  }
+  
+  /* Inner border */
+  .certificate-container::after {
+    content: '' !important;
+    display: block !important;
+    position: absolute !important;
+    top: 18px !important;
+    left: 18px !important;
+    right: 18px !important;
+    bottom: 18px !important;
+    border: 2px solid #4361ee !important;
+    border-radius: 5px !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+  }
+  
+  /* Certificate sections */
+  .certificate-header,
+  .certificate-body,
+  .certificate-footer,
+  .certificate-seal {
+    display: block !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+  
+  .certificate-header {
+    margin-bottom: 10px !important;
+  }
+  
+  .certificate-body {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    margin: 8px 0 !important;
+  }
+  
+  .certificate-footer {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    margin-top: 12px !important;
+    padding: 0 20px !important;
+  }
+  
+  /* Header - compact */
+  .certificate-logo {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #4361ee !important;
+    margin-bottom: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    letter-spacing: 1px !important;
+  }
+  
+  .certificate-logo i {
+    color: #4361ee !important;
+    font-size: 26px !important;
+  }
+  
+  .certificate-subtitle {
+    font-size: 11px !important;
+    color: #4a5568 !important;
+    font-weight: 600 !important;
+    margin-bottom: 6px !important;
+    letter-spacing: 1px !important;
+  }
+  
+  .certificate-title {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: #1a1d29 !important;
+    margin: 8px 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 3px !important;
+    font-family: 'Georgia', serif !important;
+    position: relative !important;
+  }
+  
+  .certificate-title::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: -6px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 100px !important;
+    height: 2px !important;
+    background: #4361ee !important;
+    border-radius: 2px !important;
+  }
+  
+  /* Body - compact spacing */
+  .certificate-text {
+    font-size: 13px !important;
+    color: #2d3748 !important;
+    margin: 8px auto !important;
+    line-height: 1.4 !important;
+    max-width: 600px !important;
+  }
+  
+  .certificate-student-name {
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: #1a1d29 !important;
+    margin: 12px 0 !important;
+    font-family: 'Georgia', serif !important;
+    letter-spacing: 1px !important;
+    text-decoration: underline !important;
+    text-decoration-color: #4361ee !important;
+    text-underline-offset: 8px !important;
+    text-decoration-thickness: 2px !important;
+  }
+  
+  .certificate-course-name {
+    font-size: 20px !important;
+    color: #4361ee !important;
+    font-weight: 600 !important;
+    margin: 12px 0 !important;
+    line-height: 1.4 !important;
+    font-style: italic !important;
+    font-family: 'Georgia', serif !important;
+    padding: 0 20px !important;
+  }
+  
+  /* Details grid - compact */
   .certificate-details {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
+    margin: 15px 0 !important;
+    padding: 12px !important;
+    background: rgba(67, 97, 238, 0.05) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(67, 97, 238, 0.15) !important;
   }
-
-  /* Force background colors to print */
+  
+  .detail-item {
+    text-align: center !important;
+    padding: 6px !important;
+  }
+  
+  .detail-label {
+    font-size: 10px !important;
+    color: #4a5568 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 5px !important;
+    font-weight: 700 !important;
+  }
+  
+  .detail-value {
+    font-size: 13px !important;
+    color: #1a1d29 !important;
+    font-weight: 700 !important;
+  }
+  
+  /* Seal */
+  .certificate-seal {
+    position: absolute !important;
+    top: 28px !important;
+    right: 28px !important;
+    width: 75px !important;
+    height: 75px !important;
+    background: linear-gradient(135deg, #4361ee, #3a0ca3) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: white !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    border: 4px solid white !important;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2) !important;
+    z-index: 3 !important;
+  }
+  
+  .certificate-seal::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 5px !important;
+    left: 5px !important;
+    right: 5px !important;
+    bottom: 5px !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 50% !important;
+  }
+  
+  /* Signature section - CENTERED */
+  .certificate-signature {
+    text-align: center !important;
+    max-width: 180px !important;
+    margin: 0 auto !important;
+  }
+  
+  .signature-image {
+    height: 38px !important;
+    margin-bottom: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .signature-image i {
+    font-size: 30px !important;
+    color: #4361ee !important;
+  }
+  
+  .signature-line {
+    width: 140px !important;
+    height: 2px !important;
+    background: #1a1d29 !important;
+    margin: 0 auto 5px !important;
+    position: relative !important;
+  }
+  
+  .signature-line::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -2px !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 6px !important;
+    background: linear-gradient(90deg, transparent, #4361ee, transparent) !important;
+    border-radius: 3px !important;
+  }
+  
+  .signature-name {
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
+    color: #1a1d29 !important;
+    font-size: 13px !important;
+    font-family: 'Georgia', serif !important;
+  }
+  
+  .signature-title {
+    font-size: 10px !important;
+    color: #4a5568 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Force exact colors and white background */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+  
+  /* Ensure white background everywhere */
+  html {
+    background: white !important;
+  }
+  
+  body {
+    background: white !important;
+  }
 }
+
 /* Success Animation */
 .success-animation {
   display: flex;
@@ -4184,7 +4456,6 @@ body::before {
         <section class="course-header">
           <h1 class="course-name" id="courseName">Loading course...</h1>
           
-          
           <!-- Course Provider and Instructor -->
           <div class="course-providers">
             <div class="provider-card">
@@ -4374,72 +4645,73 @@ body::before {
       </div>
     </div>
   </div>
+
   <!-- Feedback Modal -->
-<div class="modal" id="feedbackModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title">Course Feedback</h2>
-      <button class="close-modal" id="closeFeedbackModal">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div style="text-align: center; margin: 20px 0;">
-      <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
-      <h3 style="color: var(--primary); margin-bottom: 10px;">Congratulations!</h3>
-      <p style="color: var(--gray); margin-bottom: 30px;">You've completed this course. Please share your feedback to help us improve.</p>
-    </div>
-    <form id="feedbackForm">
-      <div class="form-group" style="margin-bottom: 20px;">
-        <label style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
-          <i class="fas fa-star"></i> Rate this course
-        </label>
-        <div class="star-rating" id="starRating" style="display: flex; gap: 10px; justify-content: center; font-size: 32px; cursor: pointer;">
-          <i class="far fa-star" data-rating="1"></i>
-          <i class="far fa-star" data-rating="2"></i>
-          <i class="far fa-star" data-rating="3"></i>
-          <i class="far fa-star" data-rating="4"></i>
-          <i class="far fa-star" data-rating="5"></i>
+  <div class="modal" id="feedbackModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Course Feedback</h2>
+        <button class="close-modal" id="closeFeedbackModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="text-align: center; margin: 20px 0;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🎉</div>
+        <h3 style="color: var(--primary); margin-bottom: 10px;">Congratulations!</h3>
+        <p style="color: var(--gray); margin-bottom: 30px;">You've completed this course. Please share your feedback to help us improve.</p>
+      </div>
+      <form id="feedbackForm">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
+            <i class="fas fa-star"></i> Rate this course
+          </label>
+          <div class="star-rating" id="starRating" style="display: flex; gap: 10px; justify-content: center; font-size: 32px; cursor: pointer;">
+            <i class="far fa-star" data-rating="1"></i>
+            <i class="far fa-star" data-rating="2"></i>
+            <i class="far fa-star" data-rating="3"></i>
+            <i class="far fa-star" data-rating="4"></i>
+            <i class="far fa-star" data-rating="5"></i>
+          </div>
+          <input type="hidden" id="ratingValue" value="0" required>
         </div>
-        <input type="hidden" id="ratingValue" value="0" required>
-      </div>
-      <div class="form-group" style="margin-bottom: 20px;">
-        <label for="feedbackText" style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
-          <i class="fas fa-comment"></i> Your feedback
-        </label>
-        <textarea 
-          id="feedbackText" 
-          rows="5" 
-          placeholder="Tell us about your experience with this course..."
-          style="width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid rgba(67, 97, 238, 0.3); border-radius: 8px; color: var(--primary); resize: vertical;"
-          required
-        ></textarea>
-      </div>
-      <div class="form-group" style="margin-bottom: 20px;">
-        <label style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
-          <i class="fas fa-lightbulb"></i> What did you like most?
-        </label>
-        <div style="display: flex; flex-wrap: wrap; gap: 90px;">
-          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
-            <input type="checkbox" name="liked" value="content" style="cursor: pointer;"> Content Quality
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="feedbackText" style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
+            <i class="fas fa-comment"></i> Your feedback
           </label>
-          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
-            <input type="checkbox" name="liked" value="instructor" style="cursor: pointer;"> Instructor
-          </label>
-          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
-            <input type="checkbox" name="liked" value="pace" style="cursor: pointer;"> Learning Pace
-          </label>
-          <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
-            <input type="checkbox" name="liked" value="assignments" style="cursor: pointer;"> Assignments
-          </label>
+          <textarea 
+            id="feedbackText" 
+            rows="5" 
+            placeholder="Tell us about your experience with this course..."
+            style="width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid rgba(67, 97, 238, 0.3); border-radius: 8px; color: var(--primary); resize: vertical;"
+            required
+          ></textarea>
         </div>
-      </div>
-      <div class="feedback-actions" style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
-        <button type="button" class="btn btn-secondary" id="skipFeedback">Skip</button>
-        <button type="submit" class="btn btn-primary" id="submitFeedback">Submit Feedback</button>
-      </div>
-    </form>
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label style="color: var(--primary); display: block; margin-bottom: 10px; font-weight: 600;">
+            <i class="fas fa-lightbulb"></i> What did you like most?
+          </label>
+          <div style="display: flex; flex-wrap: wrap; gap: 90px;">
+            <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+              <input type="checkbox" name="liked" value="content" style="cursor: pointer;"> Content Quality
+            </label>
+            <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+              <input type="checkbox" name="liked" value="instructor" style="cursor: pointer;"> Instructor
+            </label>
+            <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+              <input type="checkbox" name="liked" value="pace" style="cursor: pointer;"> Learning Pace
+            </label>
+            <label style="display: flex; align-items: center; gap: 5px; color: var(--gray); cursor: pointer;">
+              <input type="checkbox" name="liked" value="assignments" style="cursor: pointer;"> Assignments
+            </label>
+          </div>
+        </div>
+        <div class="feedback-actions" style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+          <button type="button" class="btn btn-secondary" id="skipFeedback">Skip</button>
+          <button type="submit" class="btn btn-primary" id="submitFeedback">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
   <footer class="footer">
     <p>&copy; 2025 SkillUp Platform. All rights reserved.</p>
@@ -4451,7 +4723,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { 
   getFirestore, collection, query, limit, getDocs, doc, getDoc, updateDoc, arrayUnion, setDoc,
-  where, orderBy, addDoc, onSnapshot, serverTimestamp, increment, Timestamp
+  where, orderBy, addDoc, onSnapshot, serverTimestamp, increment, Timestamp, deleteDoc
 } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { getStorage, ref, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
@@ -4504,6 +4776,52 @@ let testEvaluationData = null;
 
 // Track shown notifications to prevent duplicates
 let shownNotifications = new Set();
+
+// NEW: Track which notifications have been shown in localStorage
+const NOTIFICATION_STORAGE_KEY = 'skillup_shown_notifications';
+
+function hasNotificationBeenShown(notificationKey) {
+  try {
+    const shownNotifications = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) || '{}');
+    const userId = currentUser?.uid;
+    
+    if (!userId) return false;
+    
+    // Clean up old notifications (older than 7 days)
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    if (shownNotifications[userId]) {
+      Object.keys(shownNotifications[userId]).forEach(key => {
+        if (shownNotifications[userId][key] < sevenDaysAgo) {
+          delete shownNotifications[userId][key];
+        }
+      });
+      localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(shownNotifications));
+    }
+    
+    return shownNotifications[userId]?.[notificationKey] !== undefined;
+  } catch (error) {
+    console.error("Error checking notification:", error);
+    return false;
+  }
+}
+
+function markNotificationAsShown(notificationKey) {
+  try {
+    const shownNotifications = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) || '{}');
+    const userId = currentUser?.uid;
+    
+    if (!userId) return;
+    
+    if (!shownNotifications[userId]) {
+      shownNotifications[userId] = {};
+    }
+    
+    shownNotifications[userId][notificationKey] = Date.now();
+    localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(shownNotifications));
+  } catch (error) {
+    console.error("Error marking notification:", error);
+  }
+}
 
 // Track if we've already processed evaluations for this session
 let processedEvaluations = new Set();
@@ -4708,18 +5026,18 @@ function initCoursePage() {
   console.log("Event listeners attached");
 
   // Check auth state
-onAuthStateChanged(auth, async (user) => {
-  console.log("=== AUTH STATE CHANGED ===");
-  console.log("User:", user ? user.email : "Not logged in");
-  
-  if (user) {
-    currentUser = user;
+  onAuthStateChanged(auth, async (user) => {
+    console.log("=== AUTH STATE CHANGED ===");
+    console.log("User:", user ? user.email : "Not logged in");
     
-    // Update user display with profile picture
-    await updateUserDisplay(user);
-    
-    console.log("Loading course data...");
+    if (user) {
+      currentUser = user;
       
+      // Update user display with profile picture
+      await updateUserDisplay(user);
+      
+      console.log("Loading course data...");
+        
       // Load data
       await loadCourse();
       await loadUserEnrollmentData();
@@ -4755,6 +5073,7 @@ onAuthStateChanged(auth, async (user) => {
     }
   });
 }
+
 // Update user display with profile picture
 async function updateUserDisplay(user) {
   const displayName = user.displayName || "Learner";
@@ -4983,7 +5302,6 @@ function toggleFullscreen(element) {
 }
 
 // Mark lecture as complete
-// After line 1063, replace the updateProgressInFirestore call:
 async function markLectureComplete(lectureId) {
   console.log(`=== MARKING LECTURE AS COMPLETE ===`);
   console.log(`Lecture ID: ${lectureId}`);
@@ -5023,6 +5341,7 @@ async function markLectureComplete(lectureId) {
     console.error("Error marking lecture as complete:", error);
   }
 }
+
 // NEW: Centralized progress calculation
 async function calculateAndUpdateProgress() {
   console.log("=== CALCULATING AND UPDATING PROGRESS ===");
@@ -5107,7 +5426,6 @@ async function calculateAndUpdateProgress() {
   }
 }
 
-// Update progress calculation to equal distribution
 // Update progress calculation to use centralized function
 async function updateProgressInFirestore() {
   await calculateAndUpdateProgress();
@@ -5433,7 +5751,7 @@ async function buildCurriculum() {
     
     console.log("Curriculum built successfully");
     
-await calculateAndUpdateProgress();
+    await calculateAndUpdateProgress();
 
   } catch (err) {
     console.error("Error building curriculum:", err);
@@ -5719,8 +6037,8 @@ async function loadInstructorData() {
   }
 }
 
-// Set instructor data in UI
-function setInstructorData(instructorData) {
+// Replace the setInstructorData function
+async function setInstructorData(instructorData) {
   const instructorName = document.getElementById("instructorName");
   const instructorBio = document.getElementById("instructorBio");
   const instructorAvatar = document.getElementById("instructorAvatar");
@@ -5743,23 +6061,58 @@ function setInstructorData(instructorData) {
   if (instructorNameMini) instructorNameMini.textContent = name;
   if (instructorBioMini) instructorBioMini.textContent = bio;
   
-  // Set avatar
-  if (instructorData.avatar || instructorData.photoURL || instructorData.profileImage) {
-    const avatarUrl = instructorData.avatar || instructorData.photoURL || instructorData.profileImage;
-    instructorAvatar.innerHTML = `<img src="${avatarUrl}" alt="${name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-  } else {
-    // Create colorful avatar based on name
-    const colors = ['#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0'];
-    const color = colors[name.length % colors.length];
-    instructorAvatar.style.background = `linear-gradient(45deg, ${color}, ${color}dd)`;
-    instructorAvatar.textContent = name.charAt(0).toUpperCase();
-    instructorAvatar.style.color = 'white';
-    instructorAvatar.style.fontWeight = 'bold';
-    instructorAvatar.style.fontSize = '28px';
-    instructorAvatar.style.display = 'flex';
-    instructorAvatar.style.alignItems = 'center';
-    instructorAvatar.style.justifyContent = 'center';
+  // NEW: Load teacher profile picture from Firebase Storage
+  await loadTeacherProfilePicture(instructorData, instructorAvatar, name);
+}
+
+// NEW: Add this function after setInstructorData
+async function loadTeacherProfilePicture(instructorData, avatarElement, name) {
+  try {
+    // Get teacher ID from enrollment data
+    const teacherId = userEnrollmentData?.teacherId || instructorData.id || instructorData.teacherId;
+    
+    if (teacherId) {
+      console.log("Loading profile picture for teacher:", teacherId);
+      
+      // List all files in teacher profile pictures folder
+      const profilePicsRef = ref(storage, `teacher-profile-pictures/${teacherId}`);
+      const fileList = await listAll(profilePicsRef);
+      
+      if (fileList.items.length > 0) {
+        // Get the first profile picture found (since filename is random)
+        const profilePicRef = fileList.items[0];
+        const profilePicUrl = await getDownloadURL(profilePicRef);
+        
+        console.log("Profile picture found:", profilePicUrl);
+        
+        // Display profile picture
+        avatarElement.innerHTML = `<img src="${profilePicUrl}" alt="${name}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        return;
+      }
+    }
+    
+    // Fallback: Create colorful avatar based on name
+    createFallbackAvatar(avatarElement, name);
+    
+  } catch (error) {
+    console.error("Error loading teacher profile picture:", error);
+    // Fallback on error
+    createFallbackAvatar(avatarElement, name);
   }
+}
+
+// NEW: Add this helper function
+function createFallbackAvatar(avatarElement, name) {
+  const colors = ['#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0'];
+  const color = colors[name.length % colors.length];
+  avatarElement.style.background = `linear-gradient(45deg, ${color}, ${color}dd)`;
+  avatarElement.textContent = name.charAt(0).toUpperCase();
+  avatarElement.style.color = 'white';
+  avatarElement.style.fontWeight = 'bold';
+  avatarElement.style.fontSize = '28px';
+  avatarElement.style.display = 'flex';
+  avatarElement.style.alignItems = 'center';
+  avatarElement.style.justifyContent = 'center';
 }
 
 // Load assignments from Firestore
@@ -5785,7 +6138,7 @@ async function loadAssignments() {
             "Submit your solution as a PDF document",
             "Include screenshots where applicable"
           ]
-          }
+        }
       ];
     } else {
       // Load assignments
@@ -5856,7 +6209,6 @@ async function findAndDisplayNotes() {
   }
 }
 
-// Display all PDF files found
 async function displayNotesFiles(pdfFiles) {
   const resourcesGrid = document.getElementById("resourcesGrid");
   
@@ -5875,7 +6227,6 @@ async function displayNotesFiles(pdfFiles) {
     try {
       const url = await getDownloadURL(fileRef);
       const fileName = fileRef.name;
-      const fileSize = await getFileSize(fileRef); // Optional: get file size
       
       const displayName = getDisplayName(fileName);
       
@@ -5888,10 +6239,10 @@ async function displayNotesFiles(pdfFiles) {
         <div class="resource-info">
           <h4>${displayName}</h4>
           <p>Course study material</p>
-          <small>PDF • ${fileSize}</small>
+          <small>PDF Document</small>
         </div>
-        <button class="btn-download" onclick="downloadResource('${url}', '${fileName}')">
-          <i class="fas fa-download"></i> Download
+        <button class="btn-download" onclick="openResourceInNewTab('${url}', '${fileName}')">
+          <i class="fas fa-external-link-alt"></i> Open in New Tab
         </button>
       `;
       
@@ -5902,7 +6253,6 @@ async function displayNotesFiles(pdfFiles) {
     }
   }
   
-  // If no PDFs were successfully loaded, show unavailable message
   if (notesSection.querySelectorAll('.resource-item').length === 0) {
     showUnavailableState();
   }
@@ -5972,17 +6322,6 @@ function getDisplayName(fileName) {
   return nameMap[displayName.toLowerCase()] || displayName;
 }
 
-// Helper function to get file size (optional)
-async function getFileSize(fileRef) {
-  try {
-    const metadata = await getMetadata(fileRef);
-    const sizeInMB = (metadata.size / (1024 * 1024)).toFixed(1);
-    return `${sizeInMB} MB`;
-  } catch (error) {
-    return 'PDF Document';
-  }
-}
-
 // Show unavailable state
 function showUnavailableState() {
   const resourcesGrid = document.getElementById("resourcesGrid");
@@ -6041,24 +6380,12 @@ async function loadCertificates() {
   console.log("Loading certificates...");
 }
 
-// Check certificate eligibility
 function checkCertificateEligibility() {
   // This would check if the user is eligible for a certificate
   // For now, we'll just check if progress is 100%
   if (userEnrollmentData?.progress === 100) {
     console.log("User is eligible for certificate");
-    // Show notification only if not already shown
-    const notificationKey = 'certificate-eligible';
-    if (!shownNotifications.has(notificationKey)) {
-      addNotification({
-        title: "Certificate Eligible",
-        message: "You are eligible for a certificate! Complete the final test to receive it.",
-        type: "certificate_eligible",
-        courseId: courseId,
-        read: false
-      });
-      shownNotifications.add(notificationKey);
-    }
+    
   }
 }
 
@@ -6120,19 +6447,6 @@ function unlockFinalTest() {
   }
   
   console.log("Final test unlocked");
-  
-  // Show notification - only if not already shown
-  const notificationKey = 'final-test-unlocked';
-  if (!shownNotifications.has(notificationKey)) {
-    addNotification({
-      title: "Final Test Unlocked",
-      message: "Final test unlocked! Complete the test to get your certificate.",
-      type: "test_unlocked",
-      courseId: courseId,
-      read: false
-    });
-    shownNotifications.add(notificationKey);
-  }
 }
 
 // Update test section UI based on evaluation status
@@ -6398,7 +6712,7 @@ function openTestWindow() {
   // Open test.html in a new window with courseId parameter
   const testWindow = window.open(testUrl, 'TestWindow', 'width=1200,height=800,resizable=yes,scrollbars=yes');
   
-if (testWindow) {
+  if (testWindow) {
     // *** Pass complete course and teacher data to the test window ***
     testWindow.courseData = {
       courseId: courseId,
@@ -6580,10 +6894,10 @@ async function updateUserTestEvaluation(testSubmissionData) {
     await updateProgressInFirestore();
     updateProgressDisplay();
     
-    // Show notification only once
-    if (!wasAlreadyEvaluated && !wasAlreadyNotified) {
-      const notificationKey = `test-evaluated-${finalGrade}`;
-      shownNotifications.add(notificationKey);
+    // Show notification only once - with persistent tracking
+    const notificationKey = `test-evaluated-${courseId}-${finalGrade}`;
+    if (!wasAlreadyEvaluated && !hasNotificationBeenShown(notificationKey)) {
+      markNotificationAsShown(notificationKey);
       
       if (passed) {
         await addNotification({
@@ -6706,7 +7020,8 @@ function showTestResults() {
     console.error("Test results content element not found");
   }
 }
-// Load assignments for the assignments tab
+
+// Load assignments for the assignments tab - FIXED VERSION
 async function loadAssignmentsForTab() {
   console.log("=== LOADING ASSIGNMENTS FOR TAB ===");
   
@@ -6806,7 +7121,7 @@ async function loadAssignmentsForTab() {
             ` : ''}
             
             <div class="assignment-actions">
-              <button class="btn-view-assignment" data-assignment-id="${assignment.id}">
+              <button class="btn-view-assignment" data-assignment-id="${assignment.id}" data-is-completed="${isCompleted}">
                 <i class="fas fa-external-link-alt"></i> 
                 ${isCompleted ? 'View Submission' : 'Open Assignment'}
               </button>
@@ -6836,7 +7151,7 @@ async function loadAssignmentsForTab() {
     document.querySelectorAll('.btn-view-assignment').forEach(button => {
       button.addEventListener('click', function() {
         const assignmentId = this.getAttribute('data-assignment-id');
-        const isCompleted = userEnrollmentData?.completedAssignments?.includes(assignmentId);
+        const isCompleted = this.getAttribute('data-is-completed') === 'true';
         
         console.log(`View assignment clicked: ${assignmentId}, completed: ${isCompleted}`);
         
@@ -6844,8 +7159,8 @@ async function loadAssignmentsForTab() {
           // Show submission details in modal
           showAssignmentSubmission(assignmentId);
         } else {
-          // Redirect to assignment.html for new submissions
-          window.location.href = `assignment.html?courseId=${courseId}&assignmentId=${assignmentId}`;
+          // Open in new tab
+          window.open(`assignment.html?courseId=${courseId}&assignmentId=${assignmentId}`, '_blank');
         }
       });
     });
@@ -7362,8 +7677,8 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
     
     // Show notification only if assignment passed and it was not already evaluated
     if (!wasAlreadyEvaluated) {
-      const notificationKey = `assignment-${assignmentId}-evaluated-${submissionData.grade}`;
-      if (!shownNotifications.has(notificationKey)) {
+      const notificationKey = `assignment-${courseId}-${assignmentId}-evaluated-${submissionData.grade}`;
+      if (!hasNotificationBeenShown(notificationKey)) {
         if (submissionData.grade >= 70) {
           await addNotification({
             title: "Assignment Passed",
@@ -7383,7 +7698,7 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
             read: false
           });
         }
-        shownNotifications.add(notificationKey);
+        markNotificationAsShown(notificationKey);
       }
     }
     
@@ -7395,7 +7710,7 @@ async function updateUserEnrollmentWithEvaluation(assignmentId, submissionData) 
 // Track notifications already added in this session
 const notificationCache = new Set();
 
-// Add notification to user's notifications - UPDATED to prevent duplicates
+// Replace addNotification function
 async function addNotification(notificationData) {
   if (!currentUser) return;
   
@@ -7433,15 +7748,21 @@ async function addNotification(notificationData) {
       }
     }
     
-    // Add to studentNotifications collection
-    const notificationRef = doc(collection(db, "studentNotifications"));
-    await setDoc(notificationRef, {
+    // Add to studentNotifications collection (for student)
+    const studentNotificationRef = doc(collection(db, "studentNotifications"));
+    await setDoc(studentNotificationRef, {
       studentId: currentUser.uid,
       studentName: currentUser.displayName || currentUser.email,
       studentEmail: currentUser.email,
       ...notificationData,
       timestamp: serverTimestamp()
     });
+    
+    // NEW: Also send notification to teacher if needed
+    if (notificationData.type === 'assignment_submission' || 
+        notificationData.type === 'test_submission') {
+      await sendNotificationToTeacher(notificationData);
+    }
     
     // Add to cache
     notificationCache.add(notificationKey);
@@ -7455,10 +7776,46 @@ async function addNotification(notificationData) {
   }
 }
 
-// Load notifications - UPDATED to use studentNotifications collection
+// NEW: Add this function to send notifications to teachers
+async function sendNotificationToTeacher(notificationData) {
+  try {
+    // Get teacher ID from enrollment data
+    const teacherId = userEnrollmentData?.teacherId;
+    
+    if (!teacherId) {
+      console.log("No teacher ID found in enrollment data");
+      return;
+    }
+    
+    console.log("Sending notification to teacher:", teacherId);
+    
+    // Add to teacherNotifications collection
+    const teacherNotificationRef = doc(collection(db, "teacherNotifications"));
+    await setDoc(teacherNotificationRef, {
+      teacherId: teacherId,
+      studentId: currentUser.uid,
+      studentName: currentUser.displayName || currentUser.email,
+      studentEmail: currentUser.email,
+      courseId: notificationData.courseId,
+      courseName: courseData?.name || 'Unknown Course',
+      ...notificationData,
+      timestamp: serverTimestamp(),
+      read: false
+    });
+    
+    console.log("Teacher notification sent successfully");
+    
+  } catch (error) {
+    console.error("Error sending notification to teacher:", error);
+  }
+}
+
 async function loadNotifications(userId) {
   try {
     if (!notificationList) return;
+
+    // Show loading state
+    notificationList.innerHTML = '<div class="notification-empty">Loading notifications...</div>';
 
     // Query studentNotifications collection for this user
     const notificationsQuery = query(
@@ -7470,6 +7827,7 @@ async function loadNotifications(userId) {
     
     const notificationsSnap = await getDocs(notificationsQuery);
     
+    // Clear the loading state
     notificationList.innerHTML = "";
 
     if (!notificationsSnap.empty) {
@@ -7529,6 +7887,9 @@ async function loadNotifications(userId) {
         else if (notification.type === 'video_error') icon = '⚠️';
         else if (notification.type === 'assignment_success') icon = '✅';
         else if (notification.type === 'test_success') icon = '🎉';
+        else if (notification.type === 'test_unlocked') icon = '🔓';
+        else if (notification.type === 'certificate_eligible') icon = '🎓';
+        else if (notification.type === 'certificate_success') icon = '🏆';
         
         notificationItem.innerHTML = `
           <div class="notification-title">${icon} ${notification.title}</div>
@@ -7561,17 +7922,24 @@ async function loadNotifications(userId) {
   } catch (error) {
     console.error("Error loading notifications:", error);
     if (notificationList) {
-      notificationList.innerHTML = "<p class='error-msg'>Error loading notifications.</p>";
+      notificationList.innerHTML = "<p class='error-msg' style='color: #ff4757; padding: 20px; text-align: center;'>Error loading notifications. Please refresh the page.</p>";
     }
   }
 }
 
-// Clear all notifications - UPDATED to delete all notifications
+// Clear all notifications - from page, Firebase, and localStorage
 async function clearAllNotifications() {
   try {
     if (!currentUser) return;
     
-    // Query all notifications for this student
+    console.log("=== CLEARING ALL NOTIFICATIONS ===");
+    
+    // Show loading state
+    if (notificationList) {
+      notificationList.innerHTML = '<div class="notification-empty">Clearing notifications...</div>';
+    }
+    
+    // 1. Query all notifications for this student from Firebase
     const notificationsQuery = query(
       collection(db, "studentNotifications"),
       where("studentId", "==", currentUser.uid)
@@ -7579,20 +7947,68 @@ async function clearAllNotifications() {
     
     const notificationsSnap = await getDocs(notificationsQuery);
     
-    // Delete all notifications
+    console.log(`Found ${notificationsSnap.size} notifications to delete from Firebase`);
+    
+    // 2. Delete all notifications from Firebase
     const deletePromises = [];
     notificationsSnap.forEach(docSnap => {
       deletePromises.push(deleteDoc(doc(db, "studentNotifications", docSnap.id)));
     });
     
     await Promise.all(deletePromises);
+    console.log("✓ All notifications deleted from Firebase");
     
-    console.log("All notifications cleared");
-    loadNotifications(currentUser.uid);
+    // 3. Clear localStorage tracking for this user
+    try {
+      const shownNotifications = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) || '{}');
+      const userId = currentUser.uid;
+      
+      if (shownNotifications[userId]) {
+        delete shownNotifications[userId];
+        localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(shownNotifications));
+        console.log("✓ Notification tracking cleared from localStorage");
+      }
+    } catch (error) {
+      console.error("Error clearing localStorage:", error);
+    }
+    
+    // 4. Clear in-memory notification cache
+    notificationCache.clear();
+    shownNotifications.clear();
+    console.log("✓ In-memory notification cache cleared");
+    
+    // 5. Update UI immediately
+    if (notificationList) {
+      notificationList.innerHTML = '<div class="notification-empty">No notifications</div>';
+    }
+    
+    if (notificationBadge) {
+      notificationBadge.textContent = '0';
+      notificationBadge.style.display = 'none';
+    }
+    
+    console.log("✓ All notifications cleared successfully");
+    
+    // 6. Show success message
+    showNotification('All notifications cleared', 'success');
+    
+    // 7. Reload notifications to confirm
+    setTimeout(() => {
+      loadNotifications(currentUser.uid);
+    }, 500);
+    
   } catch (error) {
     console.error("Error clearing notifications:", error);
+    
+    // Show error message
+    if (notificationList) {
+      notificationList.innerHTML = '<div class="notification-empty" style="color: #ff4757;">Error clearing notifications. Please try again.</div>';
+    }
+    
+    showNotification('Error clearing notifications. Please try again.', 'error');
   }
 }
+
 // Award certificate when course is completed
 async function awardCertificate() {
   console.log("=== AWARDING CERTIFICATE ===");
@@ -7630,9 +8046,9 @@ async function awardCertificate() {
     // Update UI to show certificate button
     updateTestSectionUI();
     
-    // Show notification only if not already shown
-    const notificationKey = 'certificate-awarded';
-    if (!shownNotifications.has(notificationKey)) {
+    // Show notification - with persistent tracking
+    const notificationKey = `certificate-awarded-${courseId}`;
+    if (!hasNotificationBeenShown(notificationKey)) {
       await addNotification({
         title: "🎉 Congratulations!",
         message: "You have completed the course and earned a certificate!",
@@ -7640,7 +8056,7 @@ async function awardCertificate() {
         courseId: courseId,
         read: false
       });
-      shownNotifications.add(notificationKey);
+      markNotificationAsShown(notificationKey);
     }
     
     // *** NEW: Show feedback modal after certificate is awarded ***
@@ -7652,6 +8068,7 @@ async function awardCertificate() {
     console.error("Error awarding certificate:", error);
   }
 }
+
 // Show feedback modal when course is completed
 function showFeedbackModal() {
   const feedbackModal = document.getElementById('feedbackModal');
@@ -7795,14 +8212,27 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// UPDATED: Generate certificate with proper button display
+// FIXED: Generate certificate function - opens in modal, downloads directly as PDF
 async function generateCertificate() {
   console.log("=== GENERATING CERTIFICATE ===");
   
   try {
-    const userName = currentUser.displayName || currentUser.email.split('@')[0];
+    // Get user name from displayName, or extract from email
+    let userName = currentUser.displayName;
+    if (!userName) {
+      userName = currentUser.email.split('@')[0]
+        .split(/[._-]/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    
+    // Get course name from courseData
     const courseName = courseData?.name || "Advanced Web Development";
-    const instructorName = document.getElementById('instructorName')?.textContent || "Sarah Johnson";
+    
+    // Get instructor name
+    const instructorName = document.getElementById('instructorName')?.textContent || "Course Instructor";
+    
+    // Other data
     const providerName = "SkillUp Academy";
     const completionDate = new Date().toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -7811,11 +8241,11 @@ async function generateCertificate() {
     });
     const certificateId = `CERT-${courseId}-${currentUser.uid}-${Date.now()}`;
     
-    // Calculate grade if available
+    // Calculate grade
     const finalGrade = userEnrollmentData?.testGrade || testEvaluationData?.finalGrade || testEvaluationData?.grade;
-    const gradeDisplay = finalGrade ? `${finalGrade}%` : "Completed";
+    const gradeDisplay = finalGrade ? `${finalGrade}%` : "Pass";
     
-    console.log(`Generating certificate for ${userName}, grade: ${gradeDisplay}`);
+    console.log(`Certificate Data: userName="${userName}", courseName="${courseName}"`);
     
     const certificateHTML = `
       <div class="certificate-container" id="certificate-content">
@@ -7832,20 +8262,20 @@ async function generateCertificate() {
         <div class="certificate-header">
           <div class="certificate-logo">
             <i class="fas fa-graduation-cap"></i>
-            SkillUp
+            SkillUp Academy
           </div>
-          <div class="certificate-subtitle">Online Learning Platform | skillup.com</div>
-          <h1 class="certificate-title">Certificate of Completion</h1>
+          <div class="certificate-subtitle">Professional Online Learning Platform</div>
+          <h1 class="certificate-title">CERTIFICATE OF COMPLETION</h1>
         </div>
 
         <!-- Certificate Body -->
         <div class="certificate-body">
-          <p class="certificate-subtitle" style="font-size: 15px; margin-bottom: 10px;">This certificate is proudly presented to</p>
+          <p class="certificate-text" style="font-size: 15px; margin-bottom: 12px; font-weight: 500;">This is to certify that</p>
           <h2 class="certificate-student-name">${userName}</h2>
-          <p class="certificate-text" style="font-size: 16px; margin: 12px 100px;">
-            has successfully completed all requirements and demonstrated exceptional proficiency in
+          <p class="certificate-text" style="font-size: 15px; margin: 15px auto; max-width: 650px; line-height: 1.7;">
+            has successfully completed all course requirements and demonstrated proficiency in
           </p>
-          <h3 class="certificate-course-name">"${courseName}"</h3>
+          <h3 class="certificate-course-name">${courseName}</h3>
           
           <!-- Certificate Details -->
           <div class="certificate-details">
@@ -7862,49 +8292,57 @@ async function generateCertificate() {
               <div class="detail-value" style="font-size: 13px;">${certificateId}</div>
             </div>
           </div>
-
-    
         </div>
 
-       
-    </div>
-      
-      <!-- Certificate Actions - OUTSIDE certificate container -->
-      <div class="certificate-actions" style="display: flex !important; visibility: visible !important; opacity: 1 !important; justify-content: center; gap: 15px; margin-top: 20px; padding: 20px;">
-        <button class="certificate-download-btn" id="downloadCertificatePDFBtn" style="display: inline-flex !important; visibility: visible !important;">
-          <i class="fas fa-file-pdf"></i> Download PDF
-        </button>
-        <button class="certificate-print-btn" id="shareCertificateBtn" style="display: inline-flex !important; visibility: visible !important; background: linear-gradient(135deg, #667eea, #764ba2);">
-          <i class="fas fa-share-alt"></i> Share Link
-        </button>
+        <!-- Certificate Footer - Only Instructor Signature -->
+        <div class="certificate-footer" style="justify-content: center;">
+          <div class="certificate-signature">
+            <div class="signature-image">
+              <i class="fas fa-signature"></i>
+            </div>
+            <div class="signature-line"></div>
+            <div class="signature-name">${instructorName}</div>
+            <div class="signature-title">Course Instructor</div>
+          </div>
+        </div>
       </div>
+      
+<!-- Certificate Actions -->
+<div class="certificate-actions">
+  <button class="certificate-share-btn" id="shareCertificateBtn">
+    <i class="fas fa-share-alt"></i> Share Certificate Link
+  </button>
+  <button class="certificate-print-btn" id="printCertificateBtn">
+    <i class="fas fa-print"></i> Print Certificate
+  </button>
+</div>
     `;
-    
     
     // Remove any existing certificate modal first
     const existingModal = document.getElementById('certificateModal');
     if (existingModal) {
       existingModal.remove();
     }
-    
-    // Create a new modal for the certificate
-    const certificateModal = document.createElement('div');
-    certificateModal.className = 'modal active certificate-modal';
-    certificateModal.id = 'certificateModal';
-    certificateModal.style.display = 'flex';
-    certificateModal.innerHTML = `
-      <div class="certificate-modal-content" style="max-width: 1000px; width: 95%;">
-        <div class="modal-header">
-          <h2 class="modal-title">Your Certificate of Completion</h2>
-          <button class="close-modal" id="closeCertificateModal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div id="certificateModalContent" style="padding: 0;">
-          ${certificateHTML}
-        </div>
-      </div>
-    `;
+
+// Create a new modal for the certificate
+const certificateModal = document.createElement('div');
+certificateModal.className = 'modal active certificate-modal';
+certificateModal.id = 'certificateModal';
+certificateModal.style.display = 'flex';
+certificateModal.style.zIndex = '10000';
+certificateModal.innerHTML = `
+  <div class="certificate-modal-content" style="max-height: 80vh; overflow-y: auto;">
+    <div class="modal-header">
+      <h2 class="modal-title">Your Certificate of Completion</h2>
+      <button class="close-modal" id="closeCertificateModal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="certificateModalContent" style="padding: 20px;">
+      ${certificateHTML}
+    </div>
+  </div>
+`;
     
     document.body.appendChild(certificateModal);
     
@@ -7915,25 +8353,24 @@ async function generateCertificate() {
       certificateModal.remove();
     });
     
-    // Add event listeners for new buttons - with delay to ensure DOM is ready
-    setTimeout(() => {
-      const downloadBtn = document.getElementById('downloadCertificatePDFBtn');
-      const shareBtn = document.getElementById('shareCertificateBtn');
-      
-      if (downloadBtn) {
-        downloadBtn.addEventListener('click', downloadCertificateAsPDF);
-        console.log("Download PDF button event listener attached");
-      } else {
-        console.error("Download PDF button not found");
-      }
-      
-      if (shareBtn) {
-        shareBtn.addEventListener('click', shareCertificateLink);
-        console.log("Share button event listener attached");
-      } else {
-        console.error("Share button not found");
-      }
-    }, 100);
+ // Add event listeners for buttons
+setTimeout(() => {
+  const shareBtn = document.getElementById('shareCertificateBtn');
+  const printBtn = document.getElementById('printCertificateBtn');
+  
+  if (shareBtn) {
+    shareBtn.addEventListener('click', shareCertificateLink);
+    console.log("Share certificate button event listener attached");
+  }
+  
+if (printBtn) {
+  printBtn.addEventListener('click', () => {
+    console.log("Print button clicked");
+    window.print();
+  });
+  console.log("Print button event listener attached");
+}
+}, 100);
     
     // Save certificate to user data
     await saveCertificate(certificateId, userName, courseName, instructorName, providerName, completionDate, finalGrade);
@@ -7944,249 +8381,6 @@ async function generateCertificate() {
   }
 }
 
-async function downloadCertificateAsPDF() {
-  console.log("=== DOWNLOADING CERTIFICATE AS PDF ===");
-  
-  try {
-    const certificateElement = document.getElementById('certificate-content');
-    if (!certificateElement) {
-      throw new Error('Certificate element not found');
-    }
-
-    // Show loading state
-    const downloadBtn = document.getElementById('downloadCertificatePDFBtn');
-    const originalText = downloadBtn.innerHTML;
-    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
-    downloadBtn.disabled = true;
-
-    console.log("Generating PDF certificate...");
-
-    // Remove any text selection
-    window.getSelection().removeAllRanges();
-    
-    // Force remove any highlight styling
-    const allTextElements = certificateElement.querySelectorAll('*');
-    allTextElements.forEach(el => {
-      el.style.background = 'transparent';
-      el.style.backgroundColor = 'transparent';
-      el.style.color = el.style.color || 'inherit';
-      el.style.userSelect = 'none';
-      el.style.webkitUserSelect = 'none';
-    });
-
-    // Get the computed dimensions
-    const elementWidth = certificateElement.scrollWidth;
-    const elementHeight = certificateElement.scrollHeight;
-
-    console.log(`Certificate dimensions: ${elementWidth}x${elementHeight}`);
-
-    // Wait for fonts and layout to settle
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Use html2canvas with optimal settings
-    const canvas = await html2canvas(certificateElement, {
-      scale: 4, // Very high quality
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: '#ffffff',
-      logging: false,
-      width: elementWidth,
-      height: elementHeight,
-      windowWidth: elementWidth,
-      windowHeight: elementHeight,
-      scrollX: 0,
-      scrollY: -window.scrollY,
-      x: 0,
-      y: 0,
-      foreignObjectRendering: false,
-      imageTimeout: 15000,
-      onclone: (clonedDoc) => {
-        // Clean the cloned document
-        const clonedElement = clonedDoc.getElementById('certificate-content');
-        if (clonedElement) {
-          const allElements = clonedElement.querySelectorAll('*');
-          allElements.forEach(el => {
-            // Remove all selection/highlight styles
-            el.style.background = 'transparent';
-            el.style.backgroundColor = el.style.backgroundColor === 'transparent' ? 'transparent' : el.style.backgroundColor;
-            el.style.webkitUserSelect = 'none';
-            el.style.mozUserSelect = 'none';
-            el.style.msUserSelect = 'none';
-            el.style.userSelect = 'none';
-            el.style.webkitTapHighlightColor = 'transparent';
-            
-            // Ensure text elements maintain proper colors
-            if (el.classList.contains('certificate-text')) {
-              el.style.color = '#2d3748';
-              el.style.background = 'transparent';
-            }
-          });
-        }
-      }
-    });
-
-    console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
-
-    // Convert canvas to PDF
-    const { jsPDF } = window.jspdf;
-    
-    const canvasAspectRatio = canvas.width / canvas.height;
-    let pdfOrientation = canvasAspectRatio > 1.3 ? 'landscape' : 'portrait';
-    
-    const pdf = new jsPDF(pdfOrientation, 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    console.log(`PDF page size: ${pdfWidth}x${pdfHeight}mm`);
-    
-    // Calculate dimensions to fit certificate perfectly
-    let imgWidth, imgHeight, imgX, imgY;
-    
-    if (canvasAspectRatio > (pdfWidth / pdfHeight)) {
-      imgWidth = pdfWidth * 0.95;
-      imgHeight = imgWidth / canvasAspectRatio;
-      imgX = (pdfWidth - imgWidth) / 2;
-      imgY = (pdfHeight - imgHeight) / 2;
-    } else {
-      imgHeight = pdfHeight * 0.95;
-      imgWidth = imgHeight * canvasAspectRatio;
-      imgX = (pdfWidth - imgWidth) / 2;
-      imgY = (pdfHeight - imgHeight) / 2;
-    }
-    
-    console.log(`Image placement: ${imgX}, ${imgY}, ${imgWidth}x${imgHeight}mm`);
-    
-    // Convert canvas to high-quality image
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-    
-    // Add image to PDF
-    pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth, imgHeight, undefined, 'FAST');
-    
-    // Generate clean filename
-    const userName = (currentUser.displayName || currentUser.email.split('@')[0])
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .replace(/\s+/g, '_')
-      .substring(0, 50);
-    const courseName = (courseData?.name || 'Course')
-      .replace(/[^a-zA-Z0-9\s]/g, '')
-      .replace(/\s+/g, '_')
-      .substring(0, 50);
-    const dateStr = new Date().toISOString().split('T')[0];
-    const fileName = `Certificate_${courseName}_${userName}_${dateStr}.pdf`;
-    
-    console.log(`Filename: ${fileName}`);
-    
-    // Save the PDF
-    pdf.save(fileName);
-
-    console.log(`✓ Certificate downloaded as PDF: ${fileName}`);
-
-    // Restore button state
-    downloadBtn.innerHTML = originalText;
-    downloadBtn.disabled = false;
-
-    // Show success message
-    showNotification('✓ PDF downloaded successfully!', 'success');
-    
-  } catch (error) {
-    console.error("Error downloading certificate as PDF:", error);
-    
-    const downloadBtn = document.getElementById('downloadCertificatePDFBtn');
-    if (downloadBtn) {
-      downloadBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
-      downloadBtn.disabled = false;
-    }
-    
-    showNotification('Error downloading PDF. Please try again.', 'error');
-  }
-}
-
-// FIXED: Share certificate link with better error handling
-async function shareCertificateLink() {
-  console.log("=== SHARING CERTIFICATE LINK ===");
-  
-  try {
-    const certificateId = `CERT-${courseId}-${currentUser.uid}-${Date.now()}`;
-    const shareUrl = `${window.location.origin}/certificate.html?id=${certificateId}`;
-    const courseName = courseData?.name || 'the course';
-    const userName = currentUser.displayName || currentUser.email.split('@')[0];
-    
-    // Show loading state
-    const shareBtn = document.getElementById('shareCertificateBtn');
-    const originalText = shareBtn.innerHTML;
-    shareBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-    shareBtn.disabled = true;
-
-    // Try to use the Web Share API if available
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'My Course Certificate',
-          text: `I completed "${courseName}" on SkillUp! Check out my certificate.`,
-          url: shareUrl
-        });
-        console.log('Certificate shared successfully');
-        showNotification('Certificate shared successfully!', 'success');
-        
-      } catch (error) {
-        console.log('Error sharing:', error);
-        if (error.name !== 'AbortError') {
-          fallbackShare(shareUrl, courseName, userName);
-        }
-      }
-    } else {
-      fallbackShare(shareUrl, courseName, userName);
-    }
-
-    // Restore button state
-    shareBtn.innerHTML = originalText;
-    shareBtn.disabled = false;
-    
-  } catch (error) {
-    console.error("Error sharing certificate:", error);
-    
-    // Restore button state on error
-    const shareBtn = document.getElementById('shareCertificateBtn');
-    if (shareBtn) {
-      shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Link';
-      shareBtn.disabled = false;
-    }
-    
-    showNotification('Error sharing certificate. Please try again.', 'error');
-  }
-}
-
-// Enhanced fallback share function
-function fallbackShare(shareUrl, courseName, userName) {
-  // Copy to clipboard
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      showNotification('Certificate link copied to clipboard!', 'success');
-      console.log("Certificate link copied to clipboard");
-    }).catch((err) => {
-      console.error('Failed to copy: ', err);
-      prompt("Copy this certificate link to share:", shareUrl);
-    });
-  } else {
-    // Fallback for older browsers
-    const textArea = document.createElement('textarea');
-    textArea.value = shareUrl;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      showNotification('Certificate link copied to clipboard!', 'success');
-    } catch (err) {
-      console.error('Fallback: Oops, unable to copy', err);
-      prompt("Copy this certificate link to share:", shareUrl);
-    }
-    document.body.removeChild(textArea);
-  }
-}
 
 // Save certificate to user data
 async function saveCertificate(certificateId, userName, courseName, instructorName, providerName, completionDate, finalGrade) {
@@ -8228,22 +8422,100 @@ async function saveCertificate(certificateId, userName, courseName, instructorNa
     console.error("Error saving certificate:", error);
   }
 }
+// Share certificate link function
+async function shareCertificateLink() {
+  console.log("=== SHARING CERTIFICATE LINK ===");
+  
+  try {
+    const shareBtn = document.getElementById('shareCertificateBtn');
+    const originalText = shareBtn.innerHTML;
+    shareBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Link...';
+    shareBtn.disabled = true;
 
-// Download resource function
-window.downloadResource = function(url, fileName) {
-  console.log(`Downloading resource: ${url}`);
+    // Get certificate data
+    const userName = currentUser.displayName || currentUser.email.split('@')[0];
+    const courseName = courseData?.name || "Course";
+    const certificateId = `CERT-${courseId}-${currentUser.uid}-${Date.now()}`;
+    const completionDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const instructorName = document.getElementById('instructorName')?.textContent || "Course Instructor";
+    const finalGrade = userEnrollmentData?.testGrade || testEvaluationData?.finalGrade || testEvaluationData?.grade;
+
+    // Create shareable certificate data
+    const certificateData = {
+      id: certificateId,
+      studentName: userName,
+      courseName: courseName,
+      instructorName: instructorName,
+      completionDate: completionDate,
+      grade: finalGrade,
+      issuedAt: Timestamp.now(),
+      courseId: courseId,
+      studentId: currentUser.uid
+    };
+
+    // Save to public certificates collection
+    const certRef = doc(db, "publicCertificates", certificateId);
+    await setDoc(certRef, certificateData);
+
+    // Generate shareable link
+    const shareableLink = `${window.location.origin}/certificate.html?id=${certificateId}`;
+
+    // Copy to clipboard
+    await navigator.clipboard.writeText(shareableLink);
+
+    // Restore button
+    shareBtn.innerHTML = '<i class="fas fa-check"></i> Link Copied!';
+    setTimeout(() => {
+      shareBtn.innerHTML = originalText;
+      shareBtn.disabled = false;
+    }, 2000);
+
+    // Show success notification with the link
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div><i class="fas fa-check-circle"></i> Certificate link copied to clipboard!</div>
+        <input type="text" value="${shareableLink}" readonly 
+          style="padding: 8px; border-radius: 5px; border: 1px solid rgba(67, 97, 238, 0.3); 
+          background: var(--bg-main); color: var(--primary); font-size: 12px;">
+      </div>
+    `;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 5000);
+
+    console.log("Certificate link generated and copied:", shareableLink);
+
+  } catch (error) {
+    console.error("Error sharing certificate:", error);
+    
+    const shareBtn = document.getElementById('shareCertificateBtn');
+    if (shareBtn) {
+      shareBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Certificate Link';
+      shareBtn.disabled = false;
+    }
+    
+    showNotification('Error generating share link. Please try again.', 'error');
+  }
+}
+
+// Open resource in new tab
+window.openResourceInNewTab = function(url, fileName) {
+  console.log(`Opening resource in new tab: ${fileName}`);
   
   if (url) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName || 'resource';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.open(url, '_blank');
   } else {
     addNotification({
-      title: "Download Unavailable",
-      message: "Download link not available",
+      title: "Resource Unavailable",
+      message: "Resource link not available",
       type: "resource_error",
       courseId: courseId,
       read: false

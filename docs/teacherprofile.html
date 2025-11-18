@@ -469,17 +469,6 @@
        line-height: 0;
     }
 
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
-
     @keyframes rotate {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -1310,7 +1299,7 @@
         <div class="profile-card">
           <div class="profile-avatar-large" id="profileAvatar">
             AJ
-            <div class="avatar-upload" onclick="uploadAvatar()">
+            <div class="avatar-upload" onclick="openEditProfileForPicture()">
               <i class="fas fa-camera"></i>
             </div>
           </div>
@@ -1570,7 +1559,7 @@
   <div class="modal-content" style="max-width: 700px;">
     <div class="modal-header">
       <h2 class="modal-title">Crop Profile Picture</h2>
-      <button class="close-modal" onclick="closeCropModal()">&times;</button>
+      <button class="modal-close" onclick="closeModal('imageCropModal')">&times;</button>
     </div>
     
     <div style="margin-bottom: 1.5rem;">
@@ -1595,7 +1584,7 @@
     </div>
     
     <div style="display: flex; gap: 1rem;">
-      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeCropModal()">
+      <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('imageCropModal')">
         Cancel
       </button>
       <button type="button" class="btn btn-primary" style="flex: 1;" id="applyCropBtn" onclick="applyCrop()">
@@ -1732,19 +1721,21 @@ function populateProfileData() {
   const teacher = currentTeacher;
   const initials = teacher.firstName.charAt(0) + teacher.lastName.charAt(0);
   
-  // Navigation - with profile picture support
-  const teacherAvatar = document.getElementById('teacherAvatar');
+  // Update topbar display name
   const teacherDisplayName = document.getElementById('teacherDisplayName');
-  
-  if (teacher.photoURL) {
-    userInitials.innerHTML = `<img src="${teacher.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    teacherAvatar.classList.add('has-image');
-  } else {
-    userInitials.textContent = initials;
-    teacherAvatar.classList.remove('has-image');
+  if (teacherDisplayName) {
+    teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
   }
   
-  teacherDisplayName.textContent = `${teacher.firstName} ${teacher.lastName}`;
+  // Update topbar avatar with profile picture support
+  const teacherAvatar = document.getElementById('teacherAvatar');
+  if (teacher.photoURL) {
+    userInitials.innerHTML = `<img src="${teacher.photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+    if (teacherAvatar) teacherAvatar.classList.add('has-image');
+  } else {
+    userInitials.textContent = initials;
+    if (teacherAvatar) teacherAvatar.classList.remove('has-image');
+  }
   
   // Profile card
   if (teacher.photoURL) {
@@ -2480,8 +2471,9 @@ if (profilePicInput) {
       const imageToCrop = document.getElementById('imageToCrop');
       imageToCrop.src = event.target.result;
       
-      // Open crop modal
-      document.getElementById('imageCropModal').style.display = 'flex';
+      // Close edit modal and open crop modal
+      closeModal('editProfileModal');
+      openModal('imageCropModal');
       
       // Initialize cropper
       setTimeout(() => {
@@ -2511,17 +2503,6 @@ if (profilePicInput) {
     this.value = '';
   });
 }
-
-// Close crop modal
-window.closeCropModal = function() {
-  const cropModal = document.getElementById('imageCropModal');
-  if (cropModal) cropModal.style.display = 'none';
-  if (cropper) {
-    cropper.destroy();
-    cropper = null;
-  }
-  selectedImageFile = null;
-};
 
 // Rotate crop image
 window.rotateCropImage = function(degree) {
@@ -2589,17 +2570,8 @@ window.applyCrop = async function() {
     // Update current teacher object
     currentTeacher.photoURL = photoURL;
     
-    // Update edit modal preview
-    const editAvatarInitials = document.getElementById('editAvatarInitials');
-    if (editAvatarInitials) {
-      editAvatarInitials.innerHTML = `<img src="${photoURL}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-    }
-    
-    const removeBtn = document.getElementById('removeProfilePicBtn');
-    if (removeBtn) removeBtn.style.display = 'inline-flex';
-    
     // Close crop modal
-    closeCropModal();
+    closeModal('imageCropModal');
     
     showMessage("✅ Profile picture uploaded successfully!");
     

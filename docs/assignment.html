@@ -1851,108 +1851,121 @@ elements.assignmentTitle.textContent = titleText;
       window.location.href = `coursedetails.html?id=${courseId}`;
     }
 
-    async function saveAssignmentSubmission() {
-      try {
-        const teacherId = courseData?.teacherId || "default-teacher";
-        const teacherName = courseData?.teacherName || "Unknown Teacher";
-        
-        // Transform answers to match your desired format
-        const formattedAnswers = userAssignmentAnswers.map((answer, index) => {
-          if (!answer) return null;
-          
-          const question = assignmentQuestions[index];
-          
-          // Create the answer object in your specified format
-          const formattedAnswer = {
-            answer: answer.answer !== undefined ? answer.answer : "",
-            points: question.points || 20,
-            questionId: answer.questionId || question.id || `question${index + 1}`,
-            questionText: question.question || "",
-            questionType: question.type || "text_answer"
-          };
-          
-          return formattedAnswer;
-        }).filter(a => a !== null);
-        
-        // Create submission data in your exact format
-        const assignmentSubmissionData = {
-          answers: formattedAnswers,
-          assignmentId: assignmentId || "",
-          assignmentTitle: assignmentData?.title || "Assignment-1",
-          courseId: courseId || "",
-          courseName: courseData?.name || "HTML Basics",
-          deadline: assignmentData?.deadline || null,
-          evaluated: false,
-          feedback: "",
-          teacherId: teacherId,
-          teacherName: teacherName, // Add teacher name here
-          score: 0,
-          status: "pending_evaluation",
+async function saveAssignmentSubmission() {
+  try {
+    const teacherId = courseData?.teacherId || "default-teacher";
+    const teacherName = courseData?.teacherName || "Unknown Teacher";
+    
+    // Transform answers to match your desired format
+    const formattedAnswers = userAssignmentAnswers.map((answer, index) => {
+      if (!answer) return null;
+      
+      const question = assignmentQuestions[index];
+      
+      // Create the answer object in your specified format
+      const formattedAnswer = {
+        answer: answer.answer !== undefined ? answer.answer : "",
+        points: question.points || 20,
+        questionId: answer.questionId || question.id || `question${index + 1}`,
+        questionText: question.question || "",
+        questionType: question.type || "text_answer"
+      };
+      
+      return formattedAnswer;
+    }).filter(a => a !== null);
+    
+    // Create submission data in your exact format
+    const assignmentSubmissionData = {
+      answers: formattedAnswers,
+      assignmentId: assignmentId || "",
+      assignmentTitle: assignmentData?.title || "Assignment-1",
+      courseId: courseId || "",
+      courseName: courseData?.name || "HTML Basics",
+      deadline: assignmentData?.deadline || null,
+      evaluated: false,
+      feedback: "",
+      teacherId: teacherId,
+      teacherName: teacherName,
+      score: 0,
+      status: "pending_evaluation",
+      studentEmail: currentUser.email || "",
+      studentId: currentUser.uid || "",
+      studentName: currentUser.displayName || currentUser.email || "Unknown Student",
+      submittedAt: Timestamp.now(),
+      totalPoints: assignmentQuestions.reduce((sum, q) => sum + (q.points || 20), 0)
+    };
+    
+    // Use a unique submission ID instead of just teacherId to avoid overwriting
+    const submissionId = `${teacherId}_${assignmentId}_${currentUser.uid}_${Date.now()}`;
+    
+    // Save to the "Submissions" collection
+    const assignmentSubmissionRef = doc(db, "submissions", submissionId);
+    await setDoc(assignmentSubmissionRef, assignmentSubmissionData);
+    
+    console.log("Assignment submitted successfully with teacher:", teacherName);
+    
+    // Also save to teacher's personal submissions collection
+    try {
+      const teacherSubmissionRef = doc(db, "teachers", teacherId, "submissions", `${assignmentId}_${currentUser.uid}`);
+      await setDoc(teacherSubmissionRef, assignmentSubmissionData);
+      
+      console.log("Submission saved to teacher's personal collection");
+    } catch (teacherError) {
+      console.error("Error saving to teacher's collection:", teacherError);
+      // Continue even if this fails
+    }
+    
+    // Send notification to teacher
+    try {
+      const teacherRef = doc(db, "teachers", teacherId);
+      const teacherSnap = await getDoc(teacherRef);
+      
+      if (teacherSnap.exists()) {
+        const notificationData = {
+          id: `${assignmentId}_${currentUser.uid}_${Date.now()}`,
+          type: "assignment_submission",
+          title: "New Assignment Submission",
+          message: `${currentUser.displayName || currentUser.email} submitted the assignment "${assignmentData?.title || 'an assignment'}" for ${courseData?.name || 'a course'}`,
+          courseId: courseId,
+          courseName: courseData?.name || "Unknown Course",
+          assignmentId: assignmentId,
+          assignmentTitle: assignmentData?.title || "Assignment",
+          studentId: currentUser.uid,
+          studentName: currentUser.displayName || currentUser.email,
           studentEmail: currentUser.email || "",
-          studentId: currentUser.uid || "",
-          studentName: currentUser.displayName || currentUser.email || "Unknown Student",
-          submittedAt: Timestamp.now(),
-          totalPoints: assignmentQuestions.reduce((sum, q) => sum + (q.points || 20), 0)
+          submissionId: submissionId,
+          timestamp: Timestamp.now(),
+          read: false
         };
         
-        // Use a unique submission ID instead of just teacherId to avoid overwriting
-        const submissionId = `${teacherId}_${assignmentId}_${currentUser.uid}_${Date.now()}`;
+        // Save to teacher's personal notifications array (existing code)
+        await updateDoc(teacherRef, {
+          notifications: arrayUnion(notificationData)
+        });
         
-        // Save to the "Submissions" collection
-        const assignmentSubmissionRef = doc(db, "submissions", submissionId);
-        await setDoc(assignmentSubmissionRef, assignmentSubmissionData);
+        // ALSO save to teacherNotifications collection (NEW CODE)
+        const teacherNotificationRef = doc(db, "teacherNotifications", notificationData.id);
+        await setDoc(teacherNotificationRef, {
+          ...notificationData,
+          teacherId: teacherId,
+          teacherName: teacherName
+        });
         
-        console.log("Assignment submitted successfully with teacher:", teacherName);
-        
-        // Also save to teacher's personal submissions collection
-        try {
-          const teacherSubmissionRef = doc(db, "teachers", teacherId, "submissions", `${assignmentId}_${currentUser.uid}`);
-          await setDoc(teacherSubmissionRef, assignmentSubmissionData);
-          
-          console.log("Submission saved to teacher's personal collection");
-        } catch (teacherError) {
-          console.error("Error saving to teacher's collection:", teacherError);
-          // Continue even if this fails
-        }
-        
-        // Send notification to teacher
-        try {
-          const teacherRef = doc(db, "teachers", teacherId);
-          const teacherSnap = await getDoc(teacherRef);
-          
-          if (teacherSnap.exists()) {
-            const notificationData = {
-              id: `${assignmentId}_${currentUser.uid}`,
-              type: "assignment_submission",
-              title: "New Assignment Submission",
-              message: `${currentUser.displayName || currentUser.email} submitted the assignment "${assignmentData?.title || 'an assignment'}" for ${courseData?.name || 'a course'}`,
-              courseId: courseId,
-              assignmentId: assignmentId,
-              studentId: currentUser.uid,
-              studentName: currentUser.displayName || currentUser.email,
-              submissionId: submissionId,
-              timestamp: Timestamp.now(),
-              read: false
-            };
-            
-            await updateDoc(teacherRef, {
-              notifications: arrayUnion(notificationData)
-            });
-            
-            console.log("Notification sent to teacher:", teacherName);
-          } else {
-            console.warn("Teacher document not found:", teacherId);
-          }
-        } catch (notifError) {
-          console.error("Error sending notification to teacher:", notifError);
-          // Don't throw - submission was successful even if notification failed
-        }
-        
-      } catch (error) {
-        console.error("Error saving assignment submission:", error);
-        throw error;
+        console.log("Notification sent to teacher:", teacherName);
+        console.log("Notification saved to teacherNotifications collection");
+      } else {
+        console.warn("Teacher document not found:", teacherId);
       }
+    } catch (notifError) {
+      console.error("Error sending notification to teacher:", notifError);
+      // Don't throw - submission was successful even if notification failed
     }
+    
+  } catch (error) {
+    console.error("Error saving assignment submission:", error);
+    throw error;
+  }
+}
 
     initAssignmentPage();
   </script>

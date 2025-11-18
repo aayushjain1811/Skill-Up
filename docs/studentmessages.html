@@ -282,14 +282,14 @@
 .main-content {
   flex: 1;
   margin-left: 0;
-  padding-top: 80px;  /* ADD THIS - same as topbar height */
+  padding-top: 40px;  /* ADD THIS - same as topbar height */
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
 .main-content.sidebar-open {
   margin-left: 280px;
-  padding-top: 80px;  /* ADD THIS */
+  padding-top: 40px;  /* ADD THIS */
 }
 
 /* Topbar */
@@ -431,17 +431,6 @@
       transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
-    }
-
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(0, 245, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
     }
 
     @keyframes rotate {

@@ -1931,8 +1931,8 @@ async function saveTestSubmission() {
       courseName: courseData?.name || "Course",
       evaluated: false,
       feedback: "",
-      teacherId: teacherId,  // ← This now comes from enrollment
-      teacherName: teacherName, // ← This now comes from enrollment
+      teacherId: teacherId,
+      teacherName: teacherName,
       score: 0,
       status: "pending_evaluation",
       studentEmail: currentUser.email || "",
@@ -1978,23 +1978,37 @@ async function saveTestSubmission() {
           title: "New Test Submission",
           message: `${currentUser.displayName || currentUser.email} submitted the final test for ${courseData?.name || 'a course'}`,
           courseId: courseId,
+          courseName: courseData?.name || "Unknown Course",
+          testTitle: "Final Test",
           studentId: currentUser.uid,
           studentName: currentUser.displayName || currentUser.email,
+          studentEmail: currentUser.email || "",
           submissionId: submissionId,
           timestamp: Timestamp.now(),
           read: false
         };
         
+        // Save to teacher's personal notifications array
         await updateDoc(teacherRef, {
           notifications: arrayUnion(notificationData)
         });
         
+        // **NEW: ALSO save to teacherNotifications collection**
+        const teacherNotificationRef = doc(db, "teacherNotifications", notificationData.id);
+        await setDoc(teacherNotificationRef, {
+          ...notificationData,
+          teacherId: teacherId,
+          teacherName: teacherName
+        });
+        
         console.log("✓ Notification sent to teacher:", teacherName);
+        console.log("✓ Notification saved to teacherNotifications collection");
       } else {
         console.warn("⚠️ Teacher document not found:", teacherId);
       }
     } catch (notifError) {
       console.error("Error sending notification to teacher:", notifError);
+      // Don't throw - submission was successful even if notification failed
     }
     
   } catch (error) {

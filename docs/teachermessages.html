@@ -2422,7 +2422,7 @@ function setupNotifications() {
   // Set up listener for teacher notifications
   const notificationsQuery = query(
     collection(db, "teacherNotifications"),
-    where("userId", "==", currentTeacher.id),  // Changed from teacherId to userId
+    where("teacherId", "==", currentTeacher.id),  // Changed from teacherId to userId
     orderBy("timestamp", "desc")
   );
   

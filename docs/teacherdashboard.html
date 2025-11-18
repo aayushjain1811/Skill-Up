@@ -466,17 +466,6 @@
       line-height: 0;
     }
 
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
-
     @keyframes rotate {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -1809,20 +1798,19 @@ function updateTeacherProfile(teacher) {
     }
   }
   
-  // Load recent activity from teacherNotifications collection
-  async function loadRecentActivity() {
-    try {
-      activityList.innerHTML = '';
-      allActivities = [];
-      
-      // Query teacherNotifications collection for this teacher's notifications
-      const notificationsQuery = query(
-        collection(db, "teacherNotifications"),
-        where("teacherId", "==", currentTeacher.id),
-        orderBy("timestamp", "desc"),
-        limit(20)
-      );
-      
+// Load recent activity from teacherNotifications collection
+async function loadRecentActivity() {
+  try {
+    activityList.innerHTML = '';
+    allActivities = [];
+    
+// Query teacherNotifications collection for this teacher's notifications
+const notificationsQuery = query(
+  collection(db, "teacherNotifications"),
+  where("teacherId", "==", currentTeacher.id),  // ✅ CORRECT
+  orderBy("timestamp", "desc"),
+  limit(20)
+);
       const notificationsSnapshot = await getDocs(notificationsQuery);
       
       if (notificationsSnapshot.empty) {
@@ -1892,15 +1880,14 @@ function updateTeacherProfile(teacher) {
     }
   }
   
-  // Set up real-time notifications from teacherNotifications collection
-  function setupNotifications() {
-    // Query teacherNotifications collection for this teacher's unread notifications
-    const notificationsQuery = query(
-      collection(db, "teacherNotifications"),
-      where("teacherId", "==", currentTeacher.id),
-      where("read", "==", false),
-      orderBy("timestamp", "desc")
-    );
+function setupNotifications() {
+  // Query teacherNotifications collection for this teacher's unread notifications
+  const notificationsQuery = query(
+    collection(db, "teacherNotifications"),
+    where("teacherId", "==", currentTeacher.id),  // ✅ CORRECT
+    where("read", "==", false),
+    orderBy("timestamp", "desc")
+  );
     
     // Set up real-time listener for notifications
     const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {

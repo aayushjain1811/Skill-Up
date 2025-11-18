@@ -468,17 +468,6 @@
       flex-shrink: 0;
     }
 
-    .avatar::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent);
-      animation: rotate 3s linear infinite;
-    }
-
     @keyframes rotate {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -1658,27 +1647,27 @@
     }
   });
 
-// Populate teacher info - FIXED FUNCTION
-function populateTeacherInfo() {
-  const teacher = currentTeacher;
-  const initials = getInitials(teacher.firstName, teacher.lastName);
-  
-  // Update display name
-  if (teacherDisplayName) {
-    teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
+  // Populate teacher info - FIXED FUNCTION
+  function populateTeacherInfo() {
+    const teacher = currentTeacher;
+    const initials = getInitials(teacher.firstName, teacher.lastName);
+    
+    // Update display name
+    if (teacherDisplayName) {
+      teacherDisplayName.textContent = `Prof. ${teacher.lastName}`;
+    }
+    
+    // Update avatar with profile picture if available
+    if (teacher.photoURL) {
+      teacherAvatar.classList.add('has-image');
+      // Clear existing content and add image directly to avatar container
+      teacherAvatar.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.firstName} ${teacher.lastName}">`;
+    } else {
+      teacherAvatar.classList.remove('has-image');
+      // Clear and add span with initials
+      teacherAvatar.innerHTML = `<span id="userInitials">${initials}</span>`;
+    }
   }
-  
-  // Update avatar with profile picture if available
-  if (teacher.photoURL) {
-    teacherAvatar.classList.add('has-image');
-    // Clear existing content and add image directly to avatar container
-    teacherAvatar.innerHTML = `<img src="${teacher.photoURL}" alt="${teacher.firstName} ${teacher.lastName}">`;
-  } else {
-    teacherAvatar.classList.remove('has-image');
-    // Clear and add span with initials
-    teacherAvatar.innerHTML = `<span id="userInitials">${initials}</span>`;
-  }
-}
 
   // Helper function to get initials
   function getInitials(firstName, lastName) {
@@ -1704,14 +1693,21 @@ function populateTeacherInfo() {
       
       console.log("All assignment submissions in database:", assignmentSubmissionsSnapshot.size);
       
+      // Use a Set to track processed submissions to avoid duplicates
+      const processedSubmissionIds = new Set();
+      
       for (const doc of assignmentSubmissionsSnapshot.docs) {
         const submission = doc.data();
+        
+        // Skip if already processed
+        if (processedSubmissionIds.has(doc.id)) continue;
         
         // Check if this submission belongs to the teacher
         const belongsToTeacher = await checkIfSubmissionBelongsToTeacher(submission, teacherCourses);
         
         if (belongsToTeacher) {
           await processSubmission(doc, 'assignment');
+          processedSubmissionIds.add(doc.id);
         }
       }
       
@@ -1724,11 +1720,15 @@ function populateTeacherInfo() {
         for (const doc of testSubmissionsSnapshot.docs) {
           const submission = doc.data();
           
+          // Skip if already processed
+          if (processedSubmissionIds.has(doc.id)) continue;
+          
           // Check if this submission belongs to the teacher
           const belongsToTeacher = await checkIfSubmissionBelongsToTeacher(submission, teacherCourses);
           
           if (belongsToTeacher) {
             await processSubmission(doc, 'final-test');
+            processedSubmissionIds.add(doc.id);
           }
         }
       } catch (error) {
@@ -1958,315 +1958,203 @@ function populateTeacherInfo() {
     });
   }
 
-// Open evaluation modal - FULLY UPDATED (NO MARK AS READ)
-window.openEvaluationModal = async (submissionId) => {
-  try {
-    const submission = submissions.find(s => s.id === submissionId);
-    
-    if (!submission) {
-      alert('Submission not found');
-      return;
-    }
-    
-    console.log("Opening evaluation for submission:", submission);
-    
-    // Student avatar HTML for modal - UPDATED with profile picture support
-    if (submission.studentProfilePic) {
-      modalStudentAvatar.innerHTML = `<img src="${submission.studentProfilePic}" alt="${submission.studentName}">`;
-      modalStudentAvatar.classList.add('has-image');
-    } else {
-      modalStudentAvatar.innerHTML = `<span>${submission.studentInitials}</span>`;
-      modalStudentAvatar.classList.remove('has-image');
-    }
-
-    // Set modal content
-    modalStudentName.textContent = submission.studentName;
-    modalStudentEmail.textContent = submission.studentEmail;
-    modalAssignmentTitle.textContent = submission.assignmentTitle;
-    modalCourseName.textContent = submission.courseName;
-    modalAssessmentType.textContent = submission.assessmentType === 'final-test' ? 'Final Test' : 'Assignment';
-    modalSubmittedDate.textContent = submission.submittedDate;
-    modalMaxScore.textContent = 100; // Always show 100 as max score
-    
-    // Store current submission status
-    currentSubmissionStatus = submission.status;
-    
-    // Check if submission is already evaluated
-    const isEvaluated = submission.status === 'completed' || submission.evaluated === true;
-    
-    if (isEvaluated) {
-      modalTitle.textContent = "View Submission";
-      saveDraftBtn.style.display = 'none';
-      submitEvaluationBtn.style.display = 'none';
-    } else {
-      modalTitle.textContent = "Evaluate Submission";
-      saveDraftBtn.style.display = 'block';
-      submitEvaluationBtn.style.display = 'block';
-    }
-    
-    // Clear previous questions
-    questionsContainer.innerHTML = '';
-    
-    // Extract questions and answers from the answers array
-    let questionsData = [];
-    
-    if (submission.answers && Array.isArray(submission.answers)) {
-      questionsData = submission.answers.map((answerObj, index) => {
-        // Get existing evaluation for this question if available
-        const existingEvaluation = submission.evaluations && 
-          submission.evaluations.find(evaluation => evaluation.questionIndex === index);
-        
-        return {
-          question: answerObj.questionText || `Question ${index + 1}`,
-          answer: answerObj.answer || 'No answer provided',
-          maxScore: answerObj.points || 100,
-          existingScore: existingEvaluation ? existingEvaluation.score : '',
-          existingFeedback: existingEvaluation ? existingEvaluation.feedback : ''
-        };
-      });
-      console.log("Found questions in answers array:", questionsData);
-    } else {
-      // Fallback if no answers array
-      questionsData = [{
-        question: 'Complete Assessment',
-        answer: submission.answer || 'No specific answer data available',
-        maxScore: 100,
-        existingScore: submission.score || '',
-        existingFeedback: submission.feedback || ''
-      }];
-    }
-    
-    console.log("Final questions data to display:", questionsData);
-    
-    // Calculate total max score and distribute points
-    const totalQuestions = questionsData.length;
-    const basePointsPerQuestion = Math.floor(100 / totalQuestions);
-    let remainingPoints = 100 - (basePointsPerQuestion * totalQuestions);
-    
-    // Add questions to modal
-    questionsData.forEach((question, index) => {
-      // Distribute points (some questions might get 1 extra point if not divisible evenly)
-      let questionMaxScore = basePointsPerQuestion;
-      if (remainingPoints > 0) {
-        questionMaxScore++;
-        remainingPoints--;
-      }
-      
-      const questionSection = document.createElement('div');
-      questionSection.className = `question-section ${isEvaluated ? 'disabled-controls' : ''}`;
-      
-      questionSection.innerHTML = `
-        <div class="question-header">
-          <h4>Question ${index + 1}</h4>
-          <div>Max Score: ${questionMaxScore}</div>
-        </div>
-        <div class="question-text">
-          ${question.question || 'Question text not available'}
-        </div>
-        <div class="student-answer">
-          <strong>Student's Answer:</strong><br>
-          ${question.answer || 'No answer provided'}
-        </div>
-        <div class="evaluation-controls">
-          <label>Score:</label>
-          <input type="number" class="score-input" id="score-${index}" 
-                 min="0" max="${questionMaxScore}" 
-                 value="${question.existingScore}" 
-                 placeholder="0" ${isEvaluated ? 'disabled' : ''}>
-          <span>/ ${questionMaxScore}</span>
-        </div>
-        <div>
-          <label>Feedback:</label>
-          <textarea class="feedback-textarea" id="feedback-${index}" 
-                    placeholder="Provide feedback for this answer..." ${isEvaluated ? 'disabled' : ''}>${question.existingFeedback}</textarea>
-        </div>
-      `;
-      
-      questionsContainer.appendChild(questionSection);
-    });
-    
-    // Set overall feedback if it exists
-    overallFeedback.value = submission.feedback || '';
-    overallFeedback.disabled = isEvaluated;
-    
-    // If already evaluated, display the final score and status
-    if (isEvaluated) {
-      const finalScore = submission.grade || 0;
-      const passPercentage = (finalScore / 100) * 100;
-      const isPass = submission.isPass !== undefined ? submission.isPass : passPercentage >= 70;
-      
-      totalScoreDisplay.textContent = `${finalScore} / 100`;
-      
-      if (isPass) {
-        passFailStatus.textContent = 'PASS - Evaluated';
-        passFailStatus.className = 'status-badge status-completed';
-      } else {
-        passFailStatus.textContent = 'FAIL - Evaluated';
-        passFailStatus.className = 'status-badge status-pending';
-      }
-    } else {
-      // Update total score display for non-evaluated submissions
-      updateTotalScoreDisplay();
-    }
-    
-    // Store current evaluation data
-    currentEvaluation = {
-      submissionId: submissionId,
-      assignmentId: submission.assignmentId,
-      testId: submission.testId,
-      studentId: submission.studentId,
-      courseId: submission.courseId,
-      assessmentType: submission.assessmentType,
-      currentStatus: submission.status,
-      evaluated: submission.evaluated,
-      maxScore: 100, // Always 100
-      collectionType: submission.collectionType,
-      totalQuestions: questionsData.length
-    };
-    
-    // Add event listeners to score inputs to update total score (only if not evaluated)
-    if (!isEvaluated) {
-      document.querySelectorAll('.score-input').forEach(input => {
-        input.addEventListener('input', updateTotalScoreDisplay);
-      });
-    }
-    
-    // Show modal
-    evaluationModal.classList.add('active');
-    
-  } catch (error) {
-    console.error("Error opening evaluation modal:", error);
-    alert('Error loading assessment details: ' + error.message);
-  }
-};
-
-// Submit final evaluation - FULLY UPDATED (NO MARK AS READ)
-submitEvaluationBtn.addEventListener('click', async () => {
-  if (!currentEvaluation) return;
-  
-  // Check if already evaluated
-  if (currentSubmissionStatus === 'completed' || currentEvaluation.evaluated === true) {
-    alert('This submission has already been evaluated and cannot be modified.');
-    return;
-  }
-  
-  try {
-    const evaluations = [];
-    let totalScore = 0;
-    
-    // Collect all scores and feedback
-    for (let i = 0; i < currentEvaluation.totalQuestions; i++) {
-      const scoreInput = document.getElementById(`score-${i}`);
-      const feedbackInput = document.getElementById(`feedback-${i}`);
-      
-      if (scoreInput && feedbackInput) {
-        const score = parseInt(scoreInput.value) || 0;
-        const maxScore = parseInt(scoreInput.max) || 10;
-        const feedback = feedbackInput.value;
-        
-        evaluations.push({
-          questionIndex: i,
-          score: score,
-          maxScore: maxScore,
-          feedback: feedback
-        });
-        
-        totalScore += score;
-      }
-    }
-    
-    // Ensure total score doesn't exceed 100
-    totalScore = Math.min(totalScore, 100);
-    
-    const passPercentage = (totalScore / 100) * 100;
-    const isPass = passPercentage >= 70;
-    
-    // Update submission in the correct collection
-    const collectionName = currentEvaluation.collectionType || 'submissions';
-    const submissionRef = doc(db, collectionName, currentEvaluation.submissionId);
-    
-    const updateData = {
-      evaluations: evaluations,
-      feedback: overallFeedback.value,
-      grade: totalScore,
-      maxScore: 100,
-      status: 'completed',
-      evaluated: true,
-      isPass: isPass,
-      evaluatedAt: new Date(),
-      evaluatorId: currentTeacher.id,
-      evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`
-    };
-    
-    console.log("Submitting final evaluation:", updateData);
-    await updateDoc(submissionRef, updateData);
-    
-    // Send notification to student (WITHOUT read field)
+  // Open evaluation modal - FULLY UPDATED (NO MARK AS READ)
+  window.openEvaluationModal = async (submissionId) => {
     try {
-      const submission = submissions.find(s => s.id === currentEvaluation.submissionId);
+      const submission = submissions.find(s => s.id === submissionId);
       
-      if (submission && submission.studentId) {
-        const notificationId = `eval_${currentEvaluation.submissionId}_${Date.now()}`;
-        
-        await setDoc(doc(db, "studentNotifications", notificationId), {
-          studentId: submission.studentId,
-          type: 'evaluation',
-          title: 'Assessment Evaluated',
-          message: `Your ${currentEvaluation.assessmentType === 'final-test' ? 'final test' : 'assignment'} "${submission.assignmentTitle}" has been evaluated. Score: ${totalScore}/100 (${isPass ? 'PASS' : 'FAIL'})`,
-          courseName: submission.courseName,
-          assessmentTitle: submission.assignmentTitle,
-          score: totalScore,
-          maxScore: 100,
-          isPass: isPass,
-          evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`,
-          timestamp: new Date(),
-          submissionId: currentEvaluation.submissionId,
-          assessmentType: currentEvaluation.assessmentType
-        });
-        
-        console.log("Student notification sent successfully to studentId:", submission.studentId);
-      } else {
-        console.warn("Could not send notification: submission or studentId not found");
+      if (!submission) {
+        alert('Submission not found');
+        return;
       }
-    } catch (notifError) {
-      console.error("Error sending student notification:", notifError);
-      // Don't fail the whole operation if notification fails
+      
+      console.log("Opening evaluation for submission:", submission);
+      
+      // Student avatar HTML for modal - UPDATED with profile picture support
+      if (submission.studentProfilePic) {
+        modalStudentAvatar.innerHTML = `<img src="${submission.studentProfilePic}" alt="${submission.studentName}">`;
+        modalStudentAvatar.classList.add('has-image');
+      } else {
+        modalStudentAvatar.innerHTML = `<span>${submission.studentInitials}</span>`;
+        modalStudentAvatar.classList.remove('has-image');
+      }
+
+      // Set modal content
+      modalStudentName.textContent = submission.studentName;
+      modalStudentEmail.textContent = submission.studentEmail;
+      modalAssignmentTitle.textContent = submission.assignmentTitle;
+      modalCourseName.textContent = submission.courseName;
+      modalAssessmentType.textContent = submission.assessmentType === 'final-test' ? 'Final Test' : 'Assignment';
+      modalSubmittedDate.textContent = submission.submittedDate;
+      modalMaxScore.textContent = 100; // Always show 100 as max score
+      
+      // Store current submission status
+      currentSubmissionStatus = submission.status;
+      
+      // Check if submission is already evaluated
+      const isEvaluated = submission.status === 'completed' || submission.evaluated === true;
+      
+      if (isEvaluated) {
+        modalTitle.textContent = "View Submission";
+        saveDraftBtn.style.display = 'none';
+        submitEvaluationBtn.style.display = 'none';
+      } else {
+        modalTitle.textContent = "Evaluate Submission";
+        saveDraftBtn.style.display = 'block';
+        submitEvaluationBtn.style.display = 'block';
+      }
+      
+      // Clear previous questions
+      questionsContainer.innerHTML = '';
+      
+      // Extract questions and answers from the answers array
+      let questionsData = [];
+      
+      if (submission.answers && Array.isArray(submission.answers)) {
+        questionsData = submission.answers.map((answerObj, index) => {
+          // Get existing evaluation for this question if available
+          const existingEvaluation = submission.evaluations && 
+            submission.evaluations.find(evaluation => evaluation.questionIndex === index);
+          
+          return {
+            question: answerObj.questionText || `Question ${index + 1}`,
+            answer: answerObj.answer || 'No answer provided',
+            maxScore: answerObj.points || 100,
+            existingScore: existingEvaluation ? existingEvaluation.score : '',
+            existingFeedback: existingEvaluation ? existingEvaluation.feedback : ''
+          };
+        });
+        console.log("Found questions in answers array:", questionsData);
+      } else {
+        // Fallback if no answers array
+        questionsData = [{
+          question: 'Complete Assessment',
+          answer: submission.answer || 'No specific answer data available',
+          maxScore: 100,
+          existingScore: submission.score || '',
+          existingFeedback: submission.feedback || ''
+        }];
+      }
+      
+      console.log("Final questions data to display:", questionsData);
+      
+      // Calculate total max score and distribute points
+      const totalQuestions = questionsData.length;
+      const basePointsPerQuestion = Math.floor(100 / totalQuestions);
+      let remainingPoints = 100 - (basePointsPerQuestion * totalQuestions);
+      
+      // Add questions to modal
+      questionsData.forEach((question, index) => {
+        // Distribute points (some questions might get 1 extra point if not divisible evenly)
+        let questionMaxScore = basePointsPerQuestion;
+        if (remainingPoints > 0) {
+          questionMaxScore++;
+          remainingPoints--;
+        }
+        
+        const questionSection = document.createElement('div');
+        questionSection.className = `question-section ${isEvaluated ? 'disabled-controls' : ''}`;
+        
+        questionSection.innerHTML = `
+          <div class="question-header">
+            <h4>Question ${index + 1}</h4>
+            <div>Max Score: ${questionMaxScore}</div>
+          </div>
+          <div class="question-text">
+            ${question.question || 'Question text not available'}
+          </div>
+          <div class="student-answer">
+            <strong>Student's Answer:</strong><br>
+            ${question.answer || 'No answer provided'}
+          </div>
+          <div class="evaluation-controls">
+            <label>Score:</label>
+            <input type="number" class="score-input" id="score-${index}" 
+                   min="0" max="${questionMaxScore}" 
+                   value="${question.existingScore}" 
+                   placeholder="0" ${isEvaluated ? 'disabled' : ''}>
+            <span>/ ${questionMaxScore}</span>
+          </div>
+          <div>
+            <label>Feedback:</label>
+            <textarea class="feedback-textarea" id="feedback-${index}" 
+                      placeholder="Provide feedback for this answer..." ${isEvaluated ? 'disabled' : ''}>${question.existingFeedback}</textarea>
+          </div>
+        `;
+        
+        questionsContainer.appendChild(questionSection);
+      });
+      
+      // Set overall feedback if it exists
+      overallFeedback.value = submission.feedback || '';
+      overallFeedback.disabled = isEvaluated;
+      
+      // If already evaluated, display the final score and status
+      if (isEvaluated) {
+        const finalScore = submission.grade || 0;
+        const passPercentage = (finalScore / 100) * 100;
+        const isPass = submission.isPass !== undefined ? submission.isPass : passPercentage >= 70;
+        
+        totalScoreDisplay.textContent = `${finalScore} / 100`;
+        
+        if (isPass) {
+          passFailStatus.textContent = 'PASS - Evaluated';
+          passFailStatus.className = 'status-badge status-completed';
+        } else {
+          passFailStatus.textContent = 'FAIL - Evaluated';
+          passFailStatus.className = 'status-badge status-pending';
+        }
+      } else {
+        // Update total score display for non-evaluated submissions
+        updateTotalScoreDisplay();
+      }
+      
+      // Store current evaluation data
+      currentEvaluation = {
+        submissionId: submissionId,
+        assignmentId: submission.assignmentId,
+        testId: submission.testId,
+        studentId: submission.studentId,
+        courseId: submission.courseId,
+        assessmentType: submission.assessmentType,
+        currentStatus: submission.status,
+        evaluated: submission.evaluated,
+        maxScore: 100, // Always 100
+        collectionType: submission.collectionType,
+        totalQuestions: questionsData.length
+      };
+      
+      // Add event listeners to score inputs to update total score (only if not evaluated)
+      if (!isEvaluated) {
+        document.querySelectorAll('.score-input').forEach(input => {
+          // Validate score doesn't exceed max
+          input.addEventListener('input', function(e) {
+            const maxScore = parseInt(this.max);
+            const currentValue = parseInt(this.value);
+            
+            // If value exceeds max, set it to max
+            if (currentValue > maxScore) {
+              this.value = maxScore;
+              // Show visual feedback
+              this.style.borderColor = 'var(--primary-red)';
+              setTimeout(() => {
+                this.style.borderColor = '';
+              }, 1000);
+            }
+            
+            updateTotalScoreDisplay();
+          });
+        });
+      }
+      
+      // Show modal
+      evaluationModal.classList.add('active');
+      
+    } catch (error) {
+      console.error("Error opening evaluation modal:", error);
+      alert('Error loading assessment details: ' + error.message);
     }
-    
-    // Show evaluation results in success popup
-    successMessage.textContent = 'Evaluation submitted successfully! Results have been sent to the student.';
-    
-    // Display evaluation results
-    const passFailText = isPass ? 'PASS' : 'FAIL';
-    const passFailClass = isPass ? 'status-completed' : 'status-pending';
-    
-    evaluationResults.innerHTML = `
-      <div style="text-align: center;">
-        <h4 style="margin-bottom: 10px;">Evaluation Results</h4>
-        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-red); margin-bottom: 10px;">
-          ${totalScore} / 100
-        </div>
-        <div class="status-badge ${passFailClass}" style="display: inline-block;">
-          ${passFailText}
-        </div>
-        <div style="margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
-          ${passPercentage.toFixed(1)}% - ${isPass ? 'Student passed the assessment' : 'Student needs to retake the assessment'}
-        </div>
-      </div>
-    `;
-    
-    successPopup.classList.add('active');
-    
-    evaluationModal.classList.remove('active');
-    currentEvaluation = null;
-    currentSubmissionStatus = null;
-    await loadSubmissions();
-    
-  } catch (error) {
-    console.error("Error submitting evaluation:", error);
-    alert('Error submitting evaluation: ' + error.message);
-  }
-});
+  };
 
   // Update total score display and pass/fail status
   function updateTotalScoreDisplay() {
@@ -2376,133 +2264,132 @@ submitEvaluationBtn.addEventListener('click', async () => {
   });
 
   // Submit final evaluation
-submitEvaluationBtn.addEventListener('click', async () => {
-  if (!currentEvaluation) return;
-  
-  // Check if already evaluated
-  if (currentSubmissionStatus === 'completed' || currentEvaluation.evaluated === true) {
-    alert('This submission has already been evaluated and cannot be modified.');
-    return;
-  }
-  
-  try {
-    const evaluations = [];
-    let totalScore = 0;
+  submitEvaluationBtn.addEventListener('click', async () => {
+    if (!currentEvaluation) return;
     
-    // Collect all scores and feedback
-    for (let i = 0; i < currentEvaluation.totalQuestions; i++) {
-      const scoreInput = document.getElementById(`score-${i}`);
-      const feedbackInput = document.getElementById(`feedback-${i}`);
-      
-      if (scoreInput && feedbackInput) {
-        const score = parseInt(scoreInput.value) || 0;
-        const maxScore = parseInt(scoreInput.max) || 10;
-        const feedback = feedbackInput.value;
-        
-        evaluations.push({
-          questionIndex: i,
-          score: score,
-          maxScore: maxScore,
-          feedback: feedback
-        });
-        
-        totalScore += score;
-      }
+    // Check if already evaluated
+    if (currentSubmissionStatus === 'completed' || currentEvaluation.evaluated === true) {
+      alert('This submission has already been evaluated and cannot be modified.');
+      return;
     }
     
-    // Ensure total score doesn't exceed 100
-    totalScore = Math.min(totalScore, 100);
-    
-    const passPercentage = (totalScore / 100) * 100;
-    const isPass = passPercentage >= 70;
-    
-    // Update submission in the correct collection
-    const collectionName = currentEvaluation.collectionType || 'submissions';
-    const submissionRef = doc(db, collectionName, currentEvaluation.submissionId);
-    
-    const updateData = {
-      evaluations: evaluations,
-      feedback: overallFeedback.value,
-      grade: totalScore,
-      maxScore: 100,
-      status: 'completed',
-      evaluated: true,
-      isPass: isPass,
-      evaluatedAt: new Date(),
-      evaluatorId: currentTeacher.id,
-      evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`
-    };
-    
-    console.log("Submitting final evaluation:", updateData);
-    await updateDoc(submissionRef, updateData);
-    
-    // Send notification to student
     try {
-      const submission = submissions.find(s => s.id === currentEvaluation.submissionId);
+      const evaluations = [];
+      let totalScore = 0;
       
-      if (submission && submission.studentId) {
-        const notificationId = `eval_${currentEvaluation.submissionId}_${Date.now()}`;
+      // Collect all scores and feedback
+      for (let i = 0; i < currentEvaluation.totalQuestions; i++) {
+        const scoreInput = document.getElementById(`score-${i}`);
+        const feedbackInput = document.getElementById(`feedback-${i}`);
         
-        await setDoc(doc(db, "studentNotifications", notificationId), {
-          studentId: submission.studentId,
-          type: 'evaluation',
-          title: 'Assessment Evaluated',
-          message: `Your ${currentEvaluation.assessmentType === 'final-test' ? 'final test' : 'assignment'} "${submission.assignmentTitle}" has been evaluated. Score: ${totalScore}/100 (${isPass ? 'PASS' : 'FAIL'})`,
-          courseName: submission.courseName,
-          assessmentTitle: submission.assignmentTitle,
-          score: totalScore,
-          maxScore: 100,
-          isPass: isPass,
-          evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`,
-          timestamp: new Date(),
-          read: false,
-          submissionId: currentEvaluation.submissionId,
-          assessmentType: currentEvaluation.assessmentType
-        });
-        
-        console.log("Student notification sent successfully to studentId:", submission.studentId);
-      } else {
-        console.warn("Could not send notification: submission or studentId not found");
+        if (scoreInput && feedbackInput) {
+          const score = parseInt(scoreInput.value) || 0;
+          const maxScore = parseInt(scoreInput.max) || 10;
+          const feedback = feedbackInput.value;
+          
+          evaluations.push({
+            questionIndex: i,
+            score: score,
+            maxScore: maxScore,
+            feedback: feedback
+          });
+          
+          totalScore += score;
+        }
       }
-    } catch (notifError) {
-      console.error("Error sending student notification:", notifError);
-      // Don't fail the whole operation if notification fails
+      
+      // Ensure total score doesn't exceed 100
+      totalScore = Math.min(totalScore, 100);
+      
+      const passPercentage = (totalScore / 100) * 100;
+      const isPass = passPercentage >= 70;
+      
+      // Update submission in the correct collection
+      const collectionName = currentEvaluation.collectionType || 'submissions';
+      const submissionRef = doc(db, collectionName, currentEvaluation.submissionId);
+      
+      const updateData = {
+        evaluations: evaluations,
+        feedback: overallFeedback.value,
+        grade: totalScore,
+        maxScore: 100,
+        status: 'completed',
+        evaluated: true,
+        isPass: isPass,
+        evaluatedAt: new Date(),
+        evaluatorId: currentTeacher.id,
+        evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`
+      };
+      
+      console.log("Submitting final evaluation:", updateData);
+      await updateDoc(submissionRef, updateData);
+      
+      // Send notification to student (WITHOUT read field)
+      try {
+        const submission = submissions.find(s => s.id === currentEvaluation.submissionId);
+        
+        if (submission && submission.studentId) {
+          const notificationId = `eval_${currentEvaluation.submissionId}_${Date.now()}`;
+          
+          await setDoc(doc(db, "studentNotifications", notificationId), {
+            studentId: submission.studentId,
+            type: 'evaluation',
+            title: 'Assessment Evaluated',
+            message: `Your ${currentEvaluation.assessmentType === 'final-test' ? 'final test' : 'assignment'} "${submission.assignmentTitle}" has been evaluated. Score: ${totalScore}/100 (${isPass ? 'PASS' : 'FAIL'})`,
+            courseName: submission.courseName,
+            assessmentTitle: submission.assignmentTitle,
+            score: totalScore,
+            maxScore: 100,
+            isPass: isPass,
+            evaluatorName: `${currentTeacher.firstName} ${currentTeacher.lastName}`,
+            timestamp: new Date(),
+            submissionId: currentEvaluation.submissionId,
+            assessmentType: currentEvaluation.assessmentType
+          });
+          
+          console.log("Student notification sent successfully to studentId:", submission.studentId);
+        } else {
+          console.warn("Could not send notification: submission or studentId not found");
+        }
+      } catch (notifError) {
+        console.error("Error sending student notification:", notifError);
+        // Don't fail the whole operation if notification fails
+      }
+      
+      // Show evaluation results in success popup
+      successMessage.textContent = 'Evaluation submitted successfully! Results have been sent to the student.';
+      
+      // Display evaluation results
+      const passFailText = isPass ? 'PASS' : 'FAIL';
+      const passFailClass = isPass ? 'status-completed' : 'status-pending';
+      
+      evaluationResults.innerHTML = `
+        <div style="text-align: center;">
+          <h4 style="margin-bottom: 10px;">Evaluation Results</h4>
+          <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-red); margin-bottom: 10px;">
+            ${totalScore} / 100
+          </div>
+          <div class="status-badge ${passFailClass}" style="display: inline-block;">
+            ${passFailText}
+          </div>
+          <div style="margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+            ${passPercentage.toFixed(1)}% - ${isPass ? 'Student passed the assessment' : 'Student needs to retake the assessment'}
+          </div>
+        </div>
+      `;
+      
+      successPopup.classList.add('active');
+      
+      evaluationModal.classList.remove('active');
+      currentEvaluation = null;
+      currentSubmissionStatus = null;
+      await loadSubmissions();
+      
+    } catch (error) {
+      console.error("Error submitting evaluation:", error);
+      alert('Error submitting evaluation: ' + error.message);
     }
-    
-    // Show evaluation results in success popup
-    successMessage.textContent = 'Evaluation submitted successfully! Results have been sent to the student.';
-    
-    // Display evaluation results
-    const passFailText = isPass ? 'PASS' : 'FAIL';
-    const passFailClass = isPass ? 'status-completed' : 'status-pending';
-    
-    evaluationResults.innerHTML = `
-      <div style="text-align: center;">
-        <h4 style="margin-bottom: 10px;">Evaluation Results</h4>
-        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-red); margin-bottom: 10px;">
-          ${totalScore} / 100
-        </div>
-        <div class="status-badge ${passFailClass}" style="display: inline-block;">
-          ${passFailText}
-        </div>
-        <div style="margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
-          ${passPercentage.toFixed(1)}% - ${isPass ? 'Student passed the assessment' : 'Student needs to retake the assessment'}
-        </div>
-      </div>
-    `;
-    
-    successPopup.classList.add('active');
-    
-    evaluationModal.classList.remove('active');
-    currentEvaluation = null;
-    currentSubmissionStatus = null;
-    await loadSubmissions();
-    
-  } catch (error) {
-    console.error("Error submitting evaluation:", error);
-    alert('Error submitting evaluation: ' + error.message);
-  }
-});
+  });
 
   // Close success popup
   closeSuccessPopup.addEventListener('click', () => {
@@ -2574,121 +2461,121 @@ submitEvaluationBtn.addEventListener('click', async () => {
     }
   });
 
-// Set up real-time notifications
-function setupNotifications() {
-  if (!currentTeacher) return;
-  
-  // Set up real-time listener for teacher notifications
-  const notificationsQuery = query(
-    collection(db, "teacherNotifications"),
-    where("teacherId", "==", currentTeacher.id),
-    orderBy("timestamp", "desc")
-  );
-  
-  onSnapshot(notificationsQuery, (snapshot) => {
+  // Set up real-time notifications
+  function setupNotifications() {
+    if (!currentTeacher) return;
+    
+    // Set up real-time listener for teacher notifications
+    const notificationsQuery = query(
+      collection(db, "teacherNotifications"),
+      where("teacherId", "==", currentTeacher.id),
+      orderBy("timestamp", "desc")
+    );
+    
+    onSnapshot(notificationsQuery, (snapshot) => {
+      notifications = [];
+      
+      snapshot.forEach(doc => {
+        const notificationData = doc.data();
+        notifications.push({
+          id: doc.id,
+          type: notificationData.type || 'info',
+          icon: getNotificationIcon(notificationData.type),
+          title: notificationData.title || 'Notification',
+          message: notificationData.message || '',
+          time: notificationData.timestamp ? notificationData.timestamp.toDate() : new Date()
+        });
+      });
+      
+      updateNotificationDisplay();
+    }, (error) => {
+      console.error("Error listening to notifications:", error);
+      // Fallback to demo notifications
+      generateDemoNotifications();
+    });
+  }
+
+  // Add helper function for notification icons
+  function getNotificationIcon(type) {
+    switch(type) {
+      case 'submission': return 'fa-clipboard-check';
+      case 'evaluation': return 'fa-check-circle';
+      case 'message': return 'fa-envelope';
+      case 'reminder': return 'fa-bell';
+      default: return 'fa-info-circle';
+    }
+  }
+
+  // Add fallback demo notifications function
+  function generateDemoNotifications() {
     notifications = [];
     
-    snapshot.forEach(doc => {
-      const notificationData = doc.data();
-      notifications.push({
-        id: doc.id,
-        type: notificationData.type || 'info',
-        icon: getNotificationIcon(notificationData.type),
-        title: notificationData.title || 'Notification',
-        message: notificationData.message || '',
-        time: notificationData.timestamp ? notificationData.timestamp.toDate() : new Date()
+    if (submissions.length > 0) {
+      submissions.slice(0, 5).forEach(submission => {
+        const notificationTypes = [
+          {
+            type: 'submission',
+            icon: 'fa-clipboard-check',
+            title: 'New Submission',
+            message: `${submission.studentName} submitted ${submission.assignmentTitle}`,
+            time: new Date()
+          },
+          {
+            type: 'evaluation',
+            icon: 'fa-check-circle',
+            title: 'Evaluation Reminder',
+            message: `${submission.studentName}'s submission is pending evaluation`,
+            time: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
+          }
+        ];
+        
+        const randomNotification = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+        notifications.push(randomNotification);
       });
-    });
+    }
     
+    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
     updateNotificationDisplay();
-  }, (error) => {
-    console.error("Error listening to notifications:", error);
-    // Fallback to demo notifications
-    generateDemoNotifications();
-  });
-}
-
-// Add helper function for notification icons
-function getNotificationIcon(type) {
-  switch(type) {
-    case 'submission': return 'fa-clipboard-check';
-    case 'evaluation': return 'fa-check-circle';
-    case 'message': return 'fa-envelope';
-    case 'reminder': return 'fa-bell';
-    default: return 'fa-info-circle';
-  }
-}
-
-// Add fallback demo notifications function
-function generateDemoNotifications() {
-  notifications = [];
-  
-  if (submissions.length > 0) {
-    submissions.slice(0, 5).forEach(submission => {
-      const notificationTypes = [
-        {
-          type: 'submission',
-          icon: 'fa-clipboard-check',
-          title: 'New Submission',
-          message: `${submission.studentName} submitted ${submission.assignmentTitle}`,
-          time: new Date()
-        },
-        {
-          type: 'evaluation',
-          icon: 'fa-check-circle',
-          title: 'Evaluation Reminder',
-          message: `${submission.studentName}'s submission is pending evaluation`,
-          time: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-        }
-      ];
-      
-      const randomNotification = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
-      notifications.push(randomNotification);
-    });
   }
   
-  notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
-  updateNotificationDisplay();
-}
-  
-// Update notification display
-function updateNotificationDisplay() {
-  const notificationCount = notifications.length;
-  notificationBadge.textContent = notificationCount;
-  
-  // Hide badge if no notifications
-  if (notificationCount === 0) {
-    notificationBadge.style.display = 'none';
-  } else {
-    notificationBadge.style.display = 'flex';
-  }
-  
-  // Update notification dropdown
-  notificationList.innerHTML = '';
-  
-  if (notifications.length === 0) {
-    notificationList.innerHTML = `
-      <div class="notification-empty">
-        <i class="fas fa-bell-slash"></i>
-        <p>No notifications</p>
-        <small>You're all caught up!</small>
-      </div>
-    `;
-  } else {
-    notifications.forEach(notification => {
-      const notificationItem = document.createElement('div');
-      notificationItem.className = 'notification-item';
-      
-      notificationItem.innerHTML = `
-        <div class="notification-title">${notification.title}</div>
-        <div class="notification-message">${notification.message}</div>
-        <div class="notification-time">${formatDate(notification.time)}</div>
+  // Update notification display
+  function updateNotificationDisplay() {
+    const notificationCount = notifications.length;
+    notificationBadge.textContent = notificationCount;
+    
+    // Hide badge if no notifications
+    if (notificationCount === 0) {
+      notificationBadge.style.display = 'none';
+    } else {
+      notificationBadge.style.display = 'flex';
+    }
+    
+    // Update notification dropdown
+    notificationList.innerHTML = '';
+    
+    if (notifications.length === 0) {
+      notificationList.innerHTML = `
+        <div class="notification-empty">
+          <i class="fas fa-bell-slash"></i>
+          <p>No notifications</p>
+          <small>You're all caught up!</small>
+        </div>
       `;
-      
-      notificationList.appendChild(notificationItem);
-    });
+    } else {
+      notifications.forEach(notification => {
+        const notificationItem = document.createElement('div');
+        notificationItem.className = 'notification-item';
+        
+        notificationItem.innerHTML = `
+          <div class="notification-title">${notification.title}</div>
+          <div class="notification-message">${notification.message}</div>
+          <div class="notification-time">${formatDate(notification.time)}</div>
+        `;
+        
+        notificationList.appendChild(notificationItem);
+      });
+    }
   }
-}
   
   // Helper function to format date
   function formatDate(date) {
@@ -2703,39 +2590,39 @@ function updateNotificationDisplay() {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   }
 
-// Clear all notifications
-if (clearNotifications) {
-  clearNotifications.addEventListener('click', async () => {
-    if (notifications.length === 0) return;
-    
-    try {
-      // Delete all notifications from Firestore
-      const deletePromises = [];
+  // Clear all notifications
+  if (clearNotifications) {
+    clearNotifications.addEventListener('click', async () => {
+      if (notifications.length === 0) return;
       
-      for (const notification of notifications) {
-        if (notification.id) {
-          deletePromises.push(
-            deleteDoc(doc(db, "teacherNotifications", notification.id))
-          );
+      try {
+        // Delete all notifications from Firestore
+        const deletePromises = [];
+        
+        for (const notification of notifications) {
+          if (notification.id) {
+            deletePromises.push(
+              deleteDoc(doc(db, "teacherNotifications", notification.id))
+            );
+          }
         }
+        
+        await Promise.all(deletePromises);
+        
+        // Clear local notifications array
+        notifications = [];
+        updateNotificationDisplay();
+        
+        console.log("All notifications cleared successfully");
+        
+      } catch (error) {
+        console.error("Error clearing notifications:", error);
+        // Still clear local notifications even if Firestore delete fails
+        notifications = [];
+        updateNotificationDisplay();
       }
-      
-      await Promise.all(deletePromises);
-      
-      // Clear local notifications array
-      notifications = [];
-      updateNotificationDisplay();
-      
-      console.log("All notifications cleared successfully");
-      
-    } catch (error) {
-      console.error("Error clearing notifications:", error);
-      // Still clear local notifications even if Firestore delete fails
-      notifications = [];
-      updateNotificationDisplay();
-    }
-  });
-}
+    });
+  }
 
   // Logout functionality
   if (logoutBtn) {
